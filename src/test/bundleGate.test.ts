@@ -24,15 +24,20 @@ describe('the resolved-bundle gate (M-006)', () => {
       '/ai/agent-runtimes/lib/index.js',
       '/tech/primer/addons/lib/theme/themes/loopTheme.js',
       '/tech/primer/addons/lib/theme/themeRegistry.js',
-      '/tech/primer/addons/lib/components/Box.js'
+      '/tech/primer/addons/lib/components/Box.js',
+      '/node_modules/@datalayer/primer-addons/lib/index.js',
+      '/node_modules/@datalayer/primer-addons/lib/theme/themes/loopTheme.js'
     ];
     const found: Violation[] = bundleViolations(forbidden);
     expect(found.map(v => v.source)).toEqual(forbidden);
   });
 
-  it('lets the portable theme, React Native and the app through', () => {
+  it('lets the portable theme, React Native and the app through, from the workspace or from npm', () => {
     const allowed = [
       '/tech/primer/addons/lib/theme/portable.js',
+      '/node_modules/@datalayer/primer-addons/lib/theme/portable.js',
+      '/node_modules/@datalayer/primer-addons/lib/theme/colors/loopColors.js',
+      '/node_modules/@datalayer/primer-addons/lib/theme/themes/loopThemeStyles.js',
       '/tech/primer/addons/lib/theme/loopEyes.js',
       '/tech/primer/addons/lib/theme/colors/loopColors.js',
       '/tech/primer/addons/lib/theme/themes/loopThemeStyles.js',

@@ -16,7 +16,7 @@ const path = require('path');
 
 // Primer Addons' portable entry and what it reaches; anything else of the package renders Primer web.
 const PORTABLE =
-  /\/primer\/addons\/lib\/theme\/(portable|portableTheme|themeTokens|fontStacks|loopEyes|colors\/[A-Za-z]+|indicators\/[A-Za-z]+|themes\/[a-z]+ThemeStyles|css\/createThemeCSSVars)\.js$/;
+  /\/(primer\/addons|@datalayer\/primer-addons)\/lib\/theme\/(portable|portableTheme|themeTokens|fontStacks|loopEyes|colors\/[A-Za-z]+|indicators\/[A-Za-z]+|themes\/[a-z]+ThemeStyles|css\/createThemeCSSVars)\.js$/;
 
 const FORBIDDEN = [
   { pattern: /\/node_modules\/@jupyter\//, why: 'Jupyter' },
