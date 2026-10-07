@@ -122,6 +122,14 @@ npm run export           # both bundles into dist/, to prove the Metro graph res
 
 One promotion pipeline, from a committed and checked state to the stores. The Makefile runs it: `make build-preview`, `make build-staging` and `make submit-staging` for the rings before release; `make publish-ios`, `make publish-android` or `make publish` for the stores. `publish-*` refuse a dirty or unpushed tree, run `make check`, build with EAS and submit the artifact (`--auto-submit`); the console steps that follow are the release owner's.
 
+In CI, a release is a tag. Set `version` in `app.config.ts`, commit, then tag and push it:
+
+```bash
+git tag v0.1.0 && git push origin v0.1.0
+```
+
+`.github/workflows/release.yaml` checks that the tag names that version, runs `npm run check` and `npm run check:bundle`, has EAS build the `.ipa` and `.aab` and submit them (TestFlight, Google Play internal track as a draft), and creates the GitHub release with the build ids. It needs the repository secret `EXPO_TOKEN` (an Expo robot token) and the signing and submit credentials kept in EAS (`eas credentials`: the App Store Connect API key, the Google Play service account). `.github/workflows/check.yaml` runs the checks on every pull request and push to `main`.
+
 ```text
 commit → npm run check → preview build → staging (TestFlight, Play internal)
        → release candidate approved → production build → EAS Submit → store review → staged release
