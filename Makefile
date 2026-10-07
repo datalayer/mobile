@@ -83,6 +83,7 @@ dev-ios: ## boot the iOS Simulator (SIMULATOR="iPhone 16"), build the dev app on
 ##@ Dev, without an emulator
 
 dev-web: ## the app in a browser at http://localhost:8081: screens and logic only, no push, no live updates, token kept for the tab
+	@node -e "require.resolve('react-native-web/package.json')" 2>/dev/null || { echo "react-native-web is not installed: run 'npm install' at the monorepo root, then make dev-web."; exit 1; }
 	npm run dev:web
 
 dev-device-android: ## build the dev app on the plugged Android phone (USB debugging on), start Metro

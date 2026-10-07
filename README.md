@@ -19,8 +19,28 @@ Expo Go is not supported: sign-in storage, notifications, links and the native c
 - Node 20.19, 22.13 or 24.3 and later (`engines` in `package.json`); npm 10.
 - Android: what `make setup` installs, or Android Studio with the same SDK components. A device needs USB debugging on.
 - iOS (macOS only): Xcode 16 or later installed from the App Store and opened once (`make setup` cannot do that), with an iOS Simulator runtime. A physical iPhone needs Developer Mode on and, for EAS development builds, its UDID registered (`eas device:create`).
-- EAS: an Expo account in the Datalayer organization and `eas login`. The project id in `app.config.ts` is set once by `eas init`.
+- EAS: see *Accounts* below.
 - A physical iPhone and an Android phone for anything about push, links, background behaviour or the keychain; simulators do not establish them.
+
+### Accounts
+
+What each way of running the app needs:
+
+| You want to | Expo account | Apple Developer Program ($99/year) | Google Play Console ($25 once) | Mac with Xcode |
+|---|---|---|---|---|
+| `make dev-web` in a browser | no | no | no | no |
+| `make dev-android` / `make dev-device-android`, built on this machine | no | no | no | no |
+| `make dev-ios` / `make dev-device-ios`, built on this machine | no | free Apple ID on your own iPhone, re-signed every 7 days; the program otherwise | no | **yes** |
+| `make build-dev-android`, built by EAS, installed from a link | **yes** | no | no | no |
+| `make build-dev-simulator`, built by EAS | **yes** | no | no | to run the Simulator |
+| `make build-dev-ios`, built by EAS for a real iPhone | **yes** | **yes** (the iPhone registered with `eas device:create`) | no | no |
+| `make build-preview` / `build-staging` | **yes** | **yes** for iOS | for the staging track | no |
+| `make publish-ios` / `publish-android` | **yes** | **yes** | **yes** | no |
+
+- **Expo account**: free at expo.dev. The free plan gives a limited number of cloud builds a month in a slower queue; paid plans give more and faster ones (see expo.dev/pricing). Then `eas login`.
+- **This project on Expo**: `app.config.ts` names the owner `datalayer`, so your account must be a member of the Datalayer organization on Expo, or build under your own account with `EXPO_OWNER=<your-username>`. Run `eas init` once; it creates the project and gives its id, which `app.config.ts` reads from `EAS_PROJECT_ID` (put it in `.env`).
+- **Signing**: EAS creates and keeps the Android keystore and, with an Apple Developer account, the iOS certificates and profiles. Nothing is committed here.
+- **Without any account**: a plugged Android phone (`make dev-device-android`) or the browser (`make dev-web`).
 
 ### Dev mode
 
