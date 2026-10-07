@@ -33,6 +33,7 @@ make dev-android                # boot the first emulator (or AVD=<name>), build
 make dev-ios                    # boot the Simulator (SIMULATOR="iPhone 16"), build the dev app on it, start Metro (macOS)
 make dev-device-android         # same, on a plugged Android phone with USB debugging on
 make dev-device-ios             # same, on a plugged iPhone with Developer Mode on (macOS)
+make dev-web                    # in a browser, no emulator or phone (see Web preview)
 
 make start                      # Metro only, for a development build already installed
 npm run start:clear             # Metro with its cache cleared
@@ -53,6 +54,19 @@ make start                      # then connect the installed build to Metro
 ```
 
 `npm run prebuild` regenerates the `ios/` and `android/` folders (ignored by git) when a plugin or identifier changes; `run:*` does it on its own when they are missing.
+
+The iOS targets need macOS and Xcode; elsewhere they stop and point to `make build-dev-ios` or the web preview. The Android emulator needs hardware virtualization (`/dev/kvm` on Linux); when the firmware has it off, `make dev-android` says so.
+
+### Web preview
+
+With neither an emulator nor a phone, `make dev-web` runs the app in a browser at http://localhost:8081, for screens and logic. It is a development aid, not a target: the app ships on iOS and Android only.
+
+- The token is kept in the tab's session storage (`src/storage/deviceStore.web.ts`) and gone when the tab closes; on a phone it is in the keychain/keystore.
+- No live updates: a browser WebSocket cannot send the `Authorization` header and the token is never put in a URL, so lists refresh by pull.
+- Controls are `@expo/ui`'s web versions, not SwiftUI or Compose; no push, no deep links, no biometrics.
+- The services must allow the `http://localhost:8081` origin (CORS); `prod1.datalayer.run` does.
+
+Browser globals and React DOM stay out of the native code: the import gate refuses them everywhere except `*.web.ts` files, which Metro loads only for the web preview.
 
 ### Loops
 

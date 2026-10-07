@@ -13,6 +13,9 @@ export PATH := $(ANDROID_HOME)/platform-tools:$(ANDROID_HOME)/emulator:$(ANDROID
 SIMULATOR ?= iPhone 16
 AVD ?= $(shell command -v emulator >/dev/null 2>&1 && emulator -list-avds 2>/dev/null | head -1)
 
+# Xcode builds and runs iOS apps on macOS only; elsewhere, an EAS build installs on an iPhone.
+MACOS_ONLY = [[ "$$(uname -s)" == "Darwin" ]] || { echo "iOS builds need macOS and Xcode. From here: make build-dev-ios (EAS) installs on a registered iPhone, or make dev-web."; exit 1; }
+
 help: ## display this help
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
@@ -72,11 +75,15 @@ dev-android: ## boot the first Android emulator (or AVD=<name>), build the dev a
 	npm run dev:android
 
 dev-ios: ## boot the iOS Simulator (SIMULATOR="iPhone 16"), build the dev app on it, start Metro (macOS)
+	@$(MACOS_ONLY)
 	xcrun simctl boot "$(SIMULATOR)" 2>/dev/null || true
 	open -a Simulator
 	npm run dev:ios -- --device "$(SIMULATOR)"
 
 ##@ Dev, without an emulator
+
+dev-web: ## the app in a browser at http://localhost:8081: screens and logic only, no push, no live updates, token kept for the tab
+	npm run dev:web
 
 dev-device-android: ## build the dev app on the plugged Android phone (USB debugging on), start Metro
 	@command -v adb >/dev/null || { echo "adb not found: run 'make setup' first."; exit 1; }
@@ -98,6 +105,7 @@ dev-device-android: ## build the dev app on the plugged Android phone (USB debug
 	npm run dev:android -- --device "$$serial"
 
 dev-device-ios: ## build the dev app on the plugged iPhone (Developer Mode on), start Metro (macOS)
+	@$(MACOS_ONLY)
 	npm run dev:ios:device
 
 start: ## Metro only, for a development build already installed on a device or simulator
@@ -144,6 +152,6 @@ publish-android: publish-check check ## production .aab with EAS, submitted as a
 
 publish: publish-ios publish-android ## both stores
 
-.PHONY: help setup tools check doctor export clean dev-android dev-ios dev-device-android dev-device-ios start start-tunnel \
+.PHONY: help setup tools check doctor export clean dev-android dev-ios dev-device-android dev-device-ios dev-web start start-tunnel \
 	build-dev-android build-dev-ios build-dev-simulator build-preview build-staging submit-staging \
 	publish-check publish-ios publish-android publish

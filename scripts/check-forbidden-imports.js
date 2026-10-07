@@ -28,7 +28,10 @@ const FORBIDDEN = [
   { pattern: /\.css$/, why: 'CSS' }
 ];
 
-const BROWSER_GLOBALS = /\b(window|document|localStorage|sessionStorage)\s*\./;
+const BROWSER_GLOBALS = /\b(window|document|localStorage|sessionStorage)\s*\??\./;
+
+// Metro resolves `x.web.ts` only for the web preview, never for iOS or Android.
+const WEB_ONLY = /\.web\.[cm]?[jt]sx?$/;
 
 // `import … from 'x'`, `import 'x'`, `export … from 'x'`, `require('x')`, `import('x')`, type-only included.
 const SPECIFIERS = [
@@ -67,7 +70,7 @@ function violationsIn(file, text) {
       }
     }
   }
-  const global = BROWSER_GLOBALS.exec(code);
+  const global = WEB_ONLY.test(file) ? null : BROWSER_GLOBALS.exec(code);
   if (global) {
     found.push({ file, specifier: global[1], why: 'a browser global' });
   }

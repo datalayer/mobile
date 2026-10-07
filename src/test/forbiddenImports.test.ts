@@ -46,6 +46,15 @@ describe('the forbidden-import gate (M-006)', () => {
     expect(violationsIn('ok.ts', text)).toEqual([]);
   });
 
+  it('refuses a browser global, optional chaining included, except in a web-only file', () => {
+    const storage = ['session', 'Storage'].join('');
+    const text = `export const read = () => globalThis.${storage}?.getItem("k");`;
+    expect(violationsIn('store.ts', text).map((v: { specifier: string }) => v.specifier)).toEqual([storage]);
+    expect(violationsIn('store.web.ts', text)).toEqual([]);
+    const dom = ['react', 'dom/client'].join('-');
+    expect(violationsIn('store.web.ts', `import { createRoot } from '${dom}';`)).toHaveLength(1);
+  });
+
   it('finds nothing in the app itself', () => {
     expect(findViolations([path.join(root, 'app'), path.join(root, 'src')])).toEqual([]);
   });

@@ -60,6 +60,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ['expo-notifications', { defaultChannel: 'needs-attention' }]
     ],
     experiments: { typedRoutes: true },
+    // The development preview of `make dev-web`; the app ships on iOS and Android only.
+    web: { bundler: 'metro', output: 'single' },
     extra: {
       variant: VARIANT,
       eas: { projectId: process.env.EAS_PROJECT_ID }

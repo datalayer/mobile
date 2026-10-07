@@ -18,7 +18,7 @@ config.resolver.nodeModulesPaths = [
 ];
 
 // Native modules the workspace also holds in newer versions: the JS must match the native code this app links.
-const SINGLETONS = ['react', 'react-native', 'react-native-reanimated', 'react-native-worklets', 'react-native-gesture-handler'];
+const SINGLETONS = ['react', 'react-dom', 'react-native', 'react-native-reanimated', 'react-native-worklets', 'react-native-gesture-handler'];
 const upstream = config.resolver.resolveRequest;
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {

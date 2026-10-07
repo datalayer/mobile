@@ -12,7 +12,7 @@
 
 import { useQueryClient, type QueryKey } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { useSession } from '../auth/SessionProvider';
 import { environment } from '../config/environment';
 import { KEYS, RECONCILED } from '../features/queries';
@@ -47,7 +47,8 @@ export function useRealtime() {
   const signedIn = status === 'signed-in';
 
   useEffect(() => {
-    if (!signedIn) {
+    // A browser WebSocket cannot carry the Authorization header, and the token stays out of URLs: the web preview refreshes by pull.
+    if (!signedIn || Platform.OS === 'web') {
       return;
     }
     let socket: WebSocket | null = null;

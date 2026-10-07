@@ -8,7 +8,7 @@
  * Primer Addons themes, light, dark or the system's. Kept on the device.
  */
 
-import * as SecureStore from 'expo-secure-store';
+import { deviceStore } from '../storage/deviceStore';
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useColorScheme } from 'react-native';
@@ -50,8 +50,8 @@ export function preferenceOf(raw: string | null | undefined): ThemePreference {
 }
 
 export const preferenceStore = {
-  read: async (): Promise<ThemePreference> => preferenceOf(await SecureStore.getItemAsync(KEY).catch(() => null)),
-  write: (preference: ThemePreference): Promise<void> => SecureStore.setItemAsync(KEY, JSON.stringify(preference))
+  read: async (): Promise<ThemePreference> => preferenceOf(await deviceStore.get(KEY).catch(() => null)),
+  write: (preference: ThemePreference): Promise<void> => deviceStore.set(KEY, JSON.stringify(preference))
 };
 
 export type PreferenceStore = typeof preferenceStore;
