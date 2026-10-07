@@ -3,7 +3,8 @@
 # Distributed under the terms of the Modified BSD License.
 
 # Installs what `make dev-*` needs and nothing the repository already brings:
-# a JDK 17, the Android command-line tools, platform-tools (adb), the SDK
+# a JDK 17 (apt on Ubuntu, Homebrew on macOS; the system default Java is left
+# as it is, the build uses JAVA_HOME), the Android command-line tools, platform-tools (adb), the SDK
 # platform Expo SDK 57 compiles against, the emulator with one system image
 # and one virtual device, EAS CLI, and on macOS the Xcode tools and CocoaPods.
 # Idempotent: everything already present is kept.
@@ -29,27 +30,29 @@ arch="$(uname -m)"
 
 # ── JDK ─────────────────────────────────────────────────────────────────────
 
-java_major() {
-  have java || { echo 0; return; }
-  java -version 2>&1 | head -1 | sed -E 's/.*"([0-9]+)(\.[0-9]+)*.*/\1/'
+jdk17_home() {
+  case "$os" in
+    Linux) ls -d /usr/lib/jvm/java-${JDK_MAJOR}-openjdk-* 2>/dev/null | head -1 ;;
+    Darwin) /usr/libexec/java_home -v "$JDK_MAJOR" 2>/dev/null || true ;;
+  esac
 }
 
-if [[ "$(java_major)" -lt "$JDK_MAJOR" ]]; then
+if [[ -z "$(jdk17_home)" ]]; then
   say "Installing a JDK ${JDK_MAJOR}"
-  if [[ -n "${CONDA_PREFIX:-}" ]] && have conda; then
-    conda install -y -c conda-forge "openjdk=${JDK_MAJOR}"
-  elif have brew; then
+  if [[ "$os" == "Linux" ]] && have apt-get; then
+    sudo apt-get update && sudo apt-get install -y "openjdk-${JDK_MAJOR}-jdk"
+  elif [[ "$os" == "Darwin" ]] && have brew; then
     brew install "openjdk@${JDK_MAJOR}"
     sudo ln -sfn "$(brew --prefix)/opt/openjdk@${JDK_MAJOR}/libexec/openjdk.jdk" /Library/Java/JavaVirtualMachines/openjdk-${JDK_MAJOR}.jdk
-  elif have apt-get; then
-    sudo apt-get update && sudo apt-get install -y "openjdk-${JDK_MAJOR}-jdk"
   else
-    echo "Install a JDK ${JDK_MAJOR} (Temurin or OpenJDK) and run this again." >&2
+    echo "Install a JDK ${JDK_MAJOR} (openjdk-${JDK_MAJOR}-jdk or Temurin) and run this again." >&2
     exit 1
   fi
 else
-  say "JDK $(java_major) present"
+  say "JDK ${JDK_MAJOR} present at $(jdk17_home)"
 fi
+export JAVA_HOME="$(jdk17_home)"
+export PATH="$JAVA_HOME/bin:$PATH"
 
 # ── Android command-line tools ──────────────────────────────────────────────
 
@@ -125,6 +128,7 @@ cat <<EOF
 
 Add to your shell profile (~/.bashrc, ~/.zshrc), then open a new shell:
 
+  export JAVA_HOME="$JAVA_HOME"
   export ANDROID_HOME="$ANDROID_HOME"
   export PATH="\$ANDROID_HOME/platform-tools:\$ANDROID_HOME/emulator:\$ANDROID_HOME/cmdline-tools/latest/bin:\$PATH"
 

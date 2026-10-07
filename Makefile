@@ -7,7 +7,9 @@ SHELL=/bin/bash
 
 # Where `make setup` puts the Android SDK; exported so the targets below find adb and the emulator without a shell profile change.
 export ANDROID_HOME ?= $(HOME)/Android/Sdk
-export PATH := $(ANDROID_HOME)/platform-tools:$(ANDROID_HOME)/emulator:$(ANDROID_HOME)/cmdline-tools/latest/bin:$(PATH)
+# Gradle needs JDK 17; the system default Java may be older and is left alone.
+export JAVA_HOME ?= $(or $(firstword $(wildcard /usr/lib/jvm/java-17-openjdk-*)),$(shell /usr/libexec/java_home -v 17 2>/dev/null))
+export PATH := $(if $(JAVA_HOME),$(JAVA_HOME)/bin:)$(ANDROID_HOME)/platform-tools:$(ANDROID_HOME)/emulator:$(ANDROID_HOME)/cmdline-tools/latest/bin:$(PATH)
 
 # The simulator/emulator to launch; override with `make dev-ios SIMULATOR="iPhone 16 Pro"`.
 SIMULATOR ?= iPhone 16
@@ -32,7 +34,8 @@ tools: ## show which tools are found and their versions
 	printf 'eas          %s\n' "$$(v eas --version)"; \
 	printf 'xcodebuild   %s\n' "$$(v xcodebuild -version)"; \
 	printf 'pod          %s\n' "$$(v pod --version)"; \
-	printf 'ANDROID_HOME %s\n' "$(ANDROID_HOME)"
+	printf 'ANDROID_HOME %s\n' "$(ANDROID_HOME)"; \
+	printf 'JAVA_HOME    %s\n' "$(or $(JAVA_HOME),missing: run make setup)"
 
 ##@ Checks
 
