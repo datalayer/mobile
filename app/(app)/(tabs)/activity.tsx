@@ -3,39 +3,38 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { useRouter } from 'expo-router';
-import { EmptyState, Screen } from '../../../src/components/primitives';
-import { QueryView, Row } from '../../../src/components/states';
-import { useApplications, useFaces } from '../../../src/features/queries';
+import { Button, Screen } from '../../../src/components/primitives';
+import { QueryView } from '../../../src/components/states';
+import { ActivitySections, type Owners } from '../../../src/features/activity/ActivitySections';
+import { useAllActivity, useApplications, useFaces } from '../../../src/features/queries';
 import { AppFace } from '../../../src/identity/AppFace';
 
-/**
- * Until the cross-application activity contract exists (M-040), the tab
- * leads to each application's own activity rather than asking once per
- * application.
- */
+/** Every application's activity in one list (M-040), completed sessions a page at a time. */
 export default function Activity() {
-  const router = useRouter();
+  const activity = useAllActivity();
   const applications = useApplications();
   const faces = useFaces();
+  const names = new Map((applications.data ?? []).map(app => [app.appUid, app.name]));
+  const owners: Owners = {
+    nameOf: appUid => names.get(appUid) || 'An application',
+    faceOf: appUid => <AppFace face={faces.byUid.get(appUid)} />
+  };
   return (
-    <Screen refreshing={applications.isRefetching} onRefresh={() => void applications.refetch()}>
-      <QueryView query={applications}>
-        {apps =>
-          apps.length === 0 ? (
-            <EmptyState title="Activity" detail="What your applications are doing, have scheduled and have done will be here." />
-          ) : (
-            apps.map(app => (
-              <Row
-                key={app.appUid}
-                leading={<AppFace face={faces.byUid.get(app.appUid)} />}
-                title={app.name || 'Application'}
-                detail="In progress, scheduled and completed work"
-                onPress={() => router.push({ pathname: '/apps/[appUid]', params: { appUid: app.appUid } })}
+    <Screen refreshing={activity.isRefetching} onRefresh={() => void activity.refetch()}>
+      <QueryView query={activity}>
+        {work => (
+          <>
+            <ActivitySections work={work} owners={owners} />
+            {activity.hasNextPage ? (
+              <Button
+                label="Show more"
+                tone="secondary"
+                busy={activity.isFetchingNextPage}
+                onPress={() => void activity.fetchNextPage()}
               />
-            ))
-          )
-        }
+            ) : null}
+          </>
+        )}
       </QueryView>
     </Screen>
   );

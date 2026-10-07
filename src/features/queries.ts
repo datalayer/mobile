@@ -5,8 +5,8 @@
 
 /** Server truth through TanStack Query. Keys are shared so the realtime socket can invalidate them (M-017). */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { readActivity } from '../api/activity';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { mergePages, readActivity } from '../api/activity';
 import { type Approval, type Decision, decide, getApproval, listPending, markRead } from '../api/approvals';
 import { applicationsOf, listDeployments } from '../api/deployments';
 import { EMPTY_FACES, listFaces } from '../api/faces';
@@ -20,6 +20,7 @@ export const KEYS = {
   approvals: ['approvals'] as const,
   approval: (id: string) => ['approvals', id] as const,
   activity: (appUid: string) => ['activity', appUid] as const,
+  allActivity: ['activity', '*all'] as const,
   faces: ['faces'] as const
 };
 
@@ -67,6 +68,18 @@ export function useMarkRead() {
 export function useActivity(appUid: string) {
   const { client } = useSession();
   return useQuery({ queryKey: KEYS.activity(appUid), queryFn: () => readActivity(client, appUid), enabled: Boolean(appUid) });
+}
+
+/** Every application's activity (M-040), completed sessions a page at a time. */
+export function useAllActivity() {
+  const { client } = useSession();
+  return useInfiniteQuery({
+    queryKey: KEYS.allActivity,
+    queryFn: ({ pageParam }) => readActivity(client, undefined, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: page => page.nextOffset ?? undefined,
+    select: data => mergePages(data.pages)
+  });
 }
 
 /** The applications' faces: decoration, so a failure shows the default eyes rather than an error. */

@@ -5,7 +5,6 @@
 
 /** Loading, problem and list building blocks every read-only screen uses (M-013). */
 
-import type { UseQueryResult } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { isProblem, Problem } from '../api/problems';
@@ -53,12 +52,18 @@ export function ProblemView({ error, onRetry }: { error: unknown; onRetry?: () =
   );
 }
 
-/** Loading, problem, or the content of a query. */
-export function QueryView<T>({ query, children }: { query: UseQueryResult<T>; children: (data: T) => ReactNode }) {
+/** Loading, problem, or the content of a query; any TanStack result, infinite ones included. */
+export function QueryView<T>({
+  query,
+  children
+}: {
+  query: { isPending: boolean; isError: boolean; error: unknown; data: T | undefined; refetch: () => unknown };
+  children: (data: T) => ReactNode;
+}) {
   if (query.isPending) {
     return <Loading />;
   }
-  if (query.isError) {
+  if (query.isError || query.data === undefined) {
     return <ProblemView error={query.error} onRetry={() => void query.refetch()} />;
   }
   return <>{children(query.data)}</>;
