@@ -4,12 +4,24 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
+import Constants from 'expo-constants';
 import type { ReactNode } from 'react';
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { createClient, type Client } from '../api/client';
 import { isProblem } from '../api/problems';
 import { environment } from '../config/environment';
+import { browserSignIn } from './browserSignIn';
 import { logIn, whoIs, type Person } from './iam';
+import {
+  OAuthFailure,
+  discover,
+  exchangeCode,
+  needsRefresh,
+  refreshCredential,
+  revoke,
+  type Credential,
+  type OAuthConfig
+} from './oauth';
 import { tokenStore as defaultTokenStore, type TokenStore } from './tokenStore';
 
 export type SessionState =
@@ -21,6 +33,8 @@ export type Session = SessionState & {
   client: Client;
   /** The current token, read when a connection opens; never rendered or logged. */
   accessToken: () => string | undefined;
+  /** Authorization Code + PKCE in the system browser; `false` when the person cancelled. */
+  signInWithDatalayer: () => Promise<boolean>;
   signInWithPassword: (handle: string, password: string) => Promise<void>;
   signInWithToken: (token: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -28,16 +42,34 @@ export type Session = SessionState & {
 
 const SessionContext = createContext<Session | undefined>(undefined);
 
-type TokenHolder = { get: () => string | undefined; set: (value: string | undefined) => void };
+type CredentialHolder = { get: () => Credential | undefined; set: (value: Credential | undefined) => void };
 
-function newTokenHolder(): TokenHolder {
-  let value: string | undefined;
+function newCredentialHolder(): CredentialHolder {
+  let value: Credential | undefined;
   return {
     get: () => value,
     set: next => {
       value = next;
     }
   };
+}
+
+type Refresher = { run: () => Promise<string | undefined>; set: (run: () => Promise<string | undefined>) => void };
+
+function newRefresher(): Refresher {
+  let current: () => Promise<string | undefined> = async () => undefined;
+  return {
+    run: () => current(),
+    set: next => {
+      current = next;
+    }
+  };
+}
+
+/** The id the build is installed under, which names its OAuth redirect scheme. */
+function applicationId(): string {
+  const id = Constants.expoConfig?.extra?.applicationId;
+  return typeof id === 'string' && id ? id : 'ai.datalayer.mobile';
 }
 
 export function SessionProvider({
@@ -50,30 +82,85 @@ export function SessionProvider({
   fetcher?: typeof fetch;
 }) {
   const queryClient = useQueryClient();
-  // The client reads the token lazily per request; it is never rendered, so it is not state.
-  const [token] = useState(newTokenHolder);
+  // Read lazily per request; never rendered, so not state.
+  const [credential] = useState(newCredentialHolder);
   const [state, setState] = useState<SessionState>({ status: 'restoring' });
+  const [expiresAt, setExpiresAt] = useState<number | undefined>();
+  const oauthConfig = useRef<Promise<OAuthConfig> | undefined>(undefined);
+  const refreshing = useRef<Promise<string | undefined> | undefined>(undefined);
+  // The client is made once; it reaches the latest refresh through this.
+  const [refresher] = useState(newRefresher);
+
+  const config = useCallback((): Promise<OAuthConfig> => {
+    oauthConfig.current ??= discover(environment().runUrl, applicationId(), fetcher).catch(error => {
+      oauthConfig.current = undefined;
+      throw error;
+    });
+    return oauthConfig.current;
+  }, [fetcher]);
 
   const client = useMemo(
-    () => createClient({ baseUrl: environment().runUrl, getAccessToken: token.get, fetch: fetcher }),
-    [fetcher, token]
+    () =>
+      createClient({
+        baseUrl: environment().runUrl,
+        getAccessToken: () => credential.get()?.accessToken,
+        refreshAccessToken: refresher.run,
+        fetch: fetcher
+      }),
+    [fetcher, credential, refresher]
+  );
+
+  const keep = useCallback(
+    async (next: Credential) => {
+      await tokenStore.write(next);
+      credential.set(next);
+      setExpiresAt(next.expiresAt);
+    },
+    [credential, tokenStore]
   );
 
   const forget = useCallback(async () => {
-    token.set(undefined);
+    credential.set(undefined);
+    setExpiresAt(undefined);
     queryClient.clear();
     await tokenStore.forget();
     setState({ status: 'signed-out' });
-  }, [queryClient, token, tokenStore]);
+  }, [credential, queryClient, tokenStore]);
+
+  /** One refresh at a time: the refresh token rotates, and a second use would revoke the session. */
+  const refresh = useCallback((): Promise<string | undefined> => {
+    refreshing.current ??= (async () => {
+      const current = credential.get();
+      if (!current?.refreshToken) {
+        return undefined;
+      }
+      try {
+        const next = await refreshCredential(await config(), current.refreshToken, fetcher);
+        await keep(next);
+        return next.accessToken;
+      } catch (error) {
+        if (error instanceof OAuthFailure && error.signsOut) {
+          await forget();
+        }
+        return undefined;
+      }
+    })().finally(() => {
+      refreshing.current = undefined;
+    });
+    return refreshing.current;
+  }, [config, credential, fetcher, forget, keep]);
+
+  useEffect(() => {
+    refresher.set(refresh);
+  }, [refresher, refresh]);
 
   const adopt = useCallback(
-    async (candidate: string) => {
-      const person = await whoIs(client, candidate);
-      await tokenStore.write(candidate);
-      token.set(candidate);
+    async (candidate: Credential) => {
+      const person = await whoIs(client, candidate.accessToken);
+      await keep(candidate);
       setState({ status: 'signed-in', person });
     },
-    [client, token, tokenStore]
+    [client, keep]
   );
 
   useEffect(() => {
@@ -84,15 +171,24 @@ export function SessionProvider({
         if (!cancelled) setState({ status: 'signed-out' });
         return;
       }
+      credential.set(kept);
+      setExpiresAt(kept.expiresAt);
       try {
-        const person = await whoIs(client, kept);
-        if (cancelled) return;
-        token.set(kept);
-        setState({ status: 'signed-in', person });
+        if (needsRefresh(kept, Date.now())) {
+          await refresh();
+        }
+        const current = credential.get();
+        if (!current) {
+          if (!cancelled) setState({ status: 'signed-out' });
+          return;
+        }
+        const person = await whoIs(client, current.accessToken);
+        if (!cancelled) setState({ status: 'signed-in', person });
       } catch (error) {
         if (cancelled) return;
         // An expired token is forgotten; an unreachable server keeps it for the next start.
         if (isProblem(error) && error.kind === 'unauthenticated') {
+          credential.set(undefined);
           await tokenStore.forget();
         }
         setState({ status: 'signed-out' });
@@ -101,14 +197,33 @@ export function SessionProvider({
     return () => {
       cancelled = true;
     };
-  }, [client, token, tokenStore]);
+  }, [client, credential, refresh, tokenStore]);
+
+  // Refreshed a minute before it expires, so a request rarely meets a 401.
+  useEffect(() => {
+    if (expiresAt === undefined || state.status !== 'signed-in') {
+      return;
+    }
+    const timer = setTimeout(() => void refresh(), Math.max(0, expiresAt - 60_000 - Date.now()));
+    return () => clearTimeout(timer);
+  }, [expiresAt, refresh, state.status]);
+
+  const signInWithDatalayer = useCallback(async () => {
+    const oauth = await config();
+    const granted = await browserSignIn(oauth);
+    if (!granted) {
+      return false;
+    }
+    await adopt(await exchangeCode(oauth, granted.code, granted.codeVerifier, fetcher));
+    return true;
+  }, [adopt, config, fetcher]);
 
   const signInWithPassword = useCallback(
     async (handle: string, password: string) => {
       if (!environment().allowsInterimSignIn) {
         throw new Error('This build signs in with Datalayer only.');
       }
-      await adopt(await logIn(client, handle.trim(), password));
+      await adopt({ accessToken: await logIn(client, handle.trim(), password) });
     },
     [adopt, client]
   );
@@ -118,23 +233,39 @@ export function SessionProvider({
       if (!environment().allowsInterimSignIn) {
         throw new Error('This build signs in with Datalayer only.');
       }
-      await adopt(candidate.trim());
+      await adopt({ accessToken: candidate.trim() });
     },
     [adopt]
   );
 
   const signOut = useCallback(async () => {
-    const current = token.get();
+    const current = credential.get();
     await forget();
-    if (current) {
-      // Best effort: the local session is gone whether or not IAM hears it (MOBILE.md §6.1).
-      client('/api/iam/v1/logout', { token: current }).catch(() => undefined);
+    if (!current) {
+      return;
     }
-  }, [client, forget, token]);
+    // Best effort: the local session is gone whether or not IAM hears it (MOBILE.md §6.1).
+    if (current.refreshToken) {
+      const refreshToken = current.refreshToken;
+      config()
+        .then(oauth => revoke(oauth, refreshToken, fetcher))
+        .catch(() => undefined);
+    } else {
+      client('/api/iam/v1/logout', { token: current.accessToken }).catch(() => undefined);
+    }
+  }, [client, config, credential, fetcher, forget]);
 
   const session = useMemo<Session>(
-    () => ({ ...state, client, accessToken: token.get, signInWithPassword, signInWithToken, signOut }),
-    [state, client, token, signInWithPassword, signInWithToken, signOut]
+    () => ({
+      ...state,
+      client,
+      accessToken: () => credential.get()?.accessToken,
+      signInWithDatalayer,
+      signInWithPassword,
+      signInWithToken,
+      signOut
+    }),
+    [state, client, credential, signInWithDatalayer, signInWithPassword, signInWithToken, signOut]
   );
 
   return <SessionContext.Provider value={session}>{children}</SessionContext.Provider>;

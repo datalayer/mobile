@@ -4,13 +4,34 @@
  */
 
 import { deviceStore } from '../storage/deviceStore';
+import type { Credential } from './oauth';
 
 const TOKEN_KEY = 'datalayer.session.token';
 
-/** The session's token, in the platform keychain/keystore only (MOBILE.md §2.9). */
+/** A kept value: the credential as JSON, or a bare token from before refresh existed. */
+export function credentialFromKept(kept: string | null): Credential | null {
+  if (!kept) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(kept) as Partial<Credential>;
+    if (parsed && typeof parsed.accessToken === 'string' && parsed.accessToken) {
+      return {
+        accessToken: parsed.accessToken,
+        refreshToken: typeof parsed.refreshToken === 'string' ? parsed.refreshToken : undefined,
+        expiresAt: typeof parsed.expiresAt === 'number' ? parsed.expiresAt : undefined
+      };
+    }
+  } catch {
+    // A bare token.
+  }
+  return { accessToken: kept };
+}
+
+/** The session's credential, in the platform keychain/keystore only (MOBILE.md §2.9). */
 export const tokenStore = {
-  read: (): Promise<string | null> => deviceStore.get(TOKEN_KEY),
-  write: (token: string): Promise<void> => deviceStore.set(TOKEN_KEY, token),
+  read: async (): Promise<Credential | null> => credentialFromKept(await deviceStore.get(TOKEN_KEY)),
+  write: (credential: Credential): Promise<void> => deviceStore.set(TOKEN_KEY, JSON.stringify(credential)),
   forget: (): Promise<void> => deviceStore.remove(TOKEN_KEY)
 };
 

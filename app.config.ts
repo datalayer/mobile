@@ -29,7 +29,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     slug: 'datalayer-mobile',
     owner: process.env.EXPO_OWNER ?? 'datalayer',
     version: '0.0.1',
-    scheme: variant.scheme,
+    // The second is the OAuth redirect's private scheme, named by the build's id (RFC 8252 §7.1).
+    scheme: [variant.scheme, variant.id],
     icon: variant.icon,
     orientation: 'portrait',
     userInterfaceStyle: 'automatic',
@@ -80,6 +81,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     web: { bundler: 'metro', output: 'single' },
     extra: {
       variant: VARIANT,
+      applicationId: variant.id,
       eas: { projectId: process.env.EAS_PROJECT_ID }
     }
   };

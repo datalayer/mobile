@@ -8,6 +8,8 @@ import { Problem, detailOf, kindOfStatus } from './problems';
 export type ClientOptions = {
   baseUrl: string;
   getAccessToken: () => string | undefined;
+  /** A fresh access token after a 401, or `undefined` when there is none to be had. */
+  refreshAccessToken?: () => Promise<string | undefined>;
   fetch?: typeof fetch;
   timeoutMs?: number;
 };
@@ -24,13 +26,20 @@ export type Client = <T = Record<string, unknown>>(path: string, options?: Reque
 
 /**
  * A JSON client of the Datalayer services, with the session's token and the
- * errors of M-013. It keeps no state of its own; retries belong to the caller.
+ * errors of M-013. A `401` is refreshed once and the request sent again — the
+ * server acted on nothing it could not authenticate; other retries belong to
+ * the caller.
  */
-export function createClient({ baseUrl, getAccessToken, fetch: fetcher = fetch, timeoutMs = 20000 }: ClientOptions): Client {
-  return async <T,>(path: string, options: RequestOptions = {}): Promise<T> => {
+export function createClient({
+  baseUrl,
+  getAccessToken,
+  refreshAccessToken,
+  fetch: fetcher = fetch,
+  timeoutMs = 20000
+}: ClientOptions): Client {
+  const send = async <T,>(path: string, options: RequestOptions, token: string | undefined, retried: boolean): Promise<T> => {
     const method = options.method ?? 'GET';
     const url = `${baseUrl}${path}`;
-    const token = options.token ?? getAccessToken();
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (token) {
       headers.Authorization = `Bearer ${token}`;
@@ -61,10 +70,17 @@ export function createClient({ baseUrl, getAccessToken, fetch: fetcher = fetch, 
     }
 
     const body = await response.json().catch(() => undefined);
+    if (response.status === 401 && !retried && !options.token && refreshAccessToken) {
+      const fresh = await refreshAccessToken().catch(() => undefined);
+      if (fresh && fresh !== token) {
+        return send<T>(path, options, fresh, true);
+      }
+    }
     if (!response.ok || (body && typeof body === 'object' && (body as Record<string, unknown>).success === false)) {
       const status = response.ok ? 400 : response.status;
       throw new Problem(kindOfStatus(status), detailOf(method, url, status, body), status);
     }
     return (body ?? {}) as T;
   };
+  return <T,>(path: string, options: RequestOptions = {}) => send<T>(path, options, options.token ?? getAccessToken(), false);
 }

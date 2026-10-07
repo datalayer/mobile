@@ -26,6 +26,18 @@ export default function SignIn() {
 
   const { allowsInterimSignIn } = environment();
 
+  const withDatalayer = async () => {
+    setBusy(true);
+    setProblem('');
+    try {
+      await session.signInWithDatalayer();
+    } catch (error) {
+      setProblem(error instanceof Error ? error.message : 'Something went wrong.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const submit = async () => {
     setBusy(true);
     setProblem('');
@@ -57,10 +69,16 @@ export default function SignIn() {
     return (
       <Screen>
         <LoopWordmark />
-        <Text size="title" weight="semibold" style={styles.title}>
-          Datalayer
+        <Text accessibilityRole="header" size="title" weight="semibold" style={styles.title}>
+          Sign in to Datalayer
         </Text>
-        <Text tone="muted">Sign-in with Datalayer arrives with the native sign-in (M-004).</Text>
+        <Text tone="muted">Datalayer opens in your browser, and brings you back here.</Text>
+        {problem ? (
+          <Text accessibilityLiveRegion="polite" tone="danger">
+            {problem}
+          </Text>
+        ) : null}
+        <Button label="Sign in with Datalayer" busy={busy} onPress={withDatalayer} />
       </Screen>
     );
   }
@@ -72,6 +90,7 @@ export default function SignIn() {
         Sign in to Datalayer
       </Text>
       <Text tone="muted">Development sign-in · {environment().runUrl}</Text>
+      <Button tone="secondary" label="Sign in with Datalayer" busy={busy} onPress={withDatalayer} />
       {way === 'password' ? (
         <View style={styles.fields}>
           <TextInput
