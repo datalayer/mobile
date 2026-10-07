@@ -1,0 +1,78 @@
+{
+  "name": "@datalayer/mobile",
+  "version": "0.0.1",
+  "description": "Datalayer Mobile - the running agents and LOOP applications in your pocket",
+  "author": "Datalayer",
+  "license": "BSD-3-Clause",
+  "private": true,
+  "main": "expo-router/entry",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/datalayer/mobile.git"
+  },
+  "engines": {
+    "node": "^20.19.4 || ^22.13.0 || ^24.3.0"
+  },
+  "scripts": {
+    "start": "expo start --dev-client",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint app src scripts --max-warnings 0",
+    "test": "jest",
+    "check:imports": "node scripts/check-forbidden-imports.js",
+    "doctor": "expo-doctor",
+    "check": "npm run typecheck && npm run lint && npm run check:imports && npm test -- --ci"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~57.0.16",
+    "@tanstack/react-query": "^5.104.1",
+    "expo": "~57.0.27",
+    "expo-application": "~57.0.3",
+    "expo-auth-session": "~57.0.14",
+    "expo-constants": "~57.0.21",
+    "expo-crypto": "~57.0.3",
+    "expo-dev-client": "~57.0.19",
+    "expo-device": "~57.0.2",
+    "expo-font": "~57.0.4",
+    "expo-linking": "~57.0.12",
+    "expo-localization": "~57.0.2",
+    "expo-notifications": "~57.0.22",
+    "expo-router": "~57.0.25",
+    "expo-secure-store": "~57.0.4",
+    "expo-splash-screen": "~57.0.9",
+    "expo-status-bar": "~57.0.1",
+    "expo-system-ui": "~57.0.4",
+    "expo-web-browser": "~57.0.3",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0"
+  },
+  "devDependencies": {
+    "@react-native/jest-preset": "0.86.3",
+    "@testing-library/react-native": "^14.0.1",
+    "@types/jest": "^29.5.14",
+    "@types/react": "~19.2.0",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~57.0.2",
+    "expo-doctor": "^1.20.4",
+    "jest": "^29.7.0",
+    "jest-expo": "~57.0.5",
+    "typescript": "~5.9.3"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/scripts/fixtures/"
+    ]
+  },
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "listUnknownPackages": false
+      }
+    }
+  }
+}

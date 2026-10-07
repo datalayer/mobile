@@ -1,0 +1,63 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "base": {
+      "node": "22.17.0"
+    },
+    "development": {
+      "extends": "base",
+      "developmentClient": true,
+      "distribution": "internal",
+      "environment": "development",
+      "env": { "APP_VARIANT": "development", "EXPO_PUBLIC_BUILD_PROFILE": "development" }
+    },
+    "development-simulator": {
+      "extends": "development",
+      "ios": { "simulator": true },
+      "env": { "APP_VARIANT": "development", "EXPO_PUBLIC_BUILD_PROFILE": "development-simulator" }
+    },
+    "e2e": {
+      "extends": "base",
+      "distribution": "internal",
+      "environment": "development",
+      "ios": { "simulator": true },
+      "android": { "buildType": "apk" },
+      "env": { "APP_VARIANT": "preview", "EXPO_PUBLIC_BUILD_PROFILE": "e2e" }
+    },
+    "preview": {
+      "extends": "base",
+      "distribution": "internal",
+      "channel": "preview",
+      "environment": "preview",
+      "android": { "buildType": "apk" },
+      "env": { "APP_VARIANT": "preview", "EXPO_PUBLIC_BUILD_PROFILE": "preview" }
+    },
+    "staging": {
+      "extends": "base",
+      "distribution": "store",
+      "channel": "staging",
+      "environment": "preview",
+      "autoIncrement": true,
+      "env": { "APP_VARIANT": "production", "EXPO_PUBLIC_BUILD_PROFILE": "staging" }
+    },
+    "production": {
+      "extends": "base",
+      "distribution": "store",
+      "channel": "production",
+      "environment": "production",
+      "autoIncrement": true,
+      "env": { "APP_VARIANT": "production", "EXPO_PUBLIC_BUILD_PROFILE": "production" }
+    }
+  },
+  "submit": {
+    "staging": {
+      "android": { "track": "internal" }
+    },
+    "production": {
+      "android": { "track": "internal", "releaseStatus": "draft" }
+    }
+  }
+}
