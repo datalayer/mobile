@@ -4,18 +4,18 @@
  */
 
 import { useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 import { isProblem } from '../src/api/problems';
 import { useSession } from '../src/auth/SessionProvider';
-import { Button, Screen } from '../src/components/primitives';
+import { Button, Screen, Text } from '../src/components/primitives';
 import { environment } from '../src/config/environment';
-import { SPACE, useColors } from '../src/theme/tokens';
+import { SPACE, useNativeTheme } from '../src/theme/tokens';
 
 type Way = 'password' | 'token';
 
 export default function SignIn() {
   const session = useSession();
-  const colors = useColors();
+  const { colors, radius } = useNativeTheme();
   const [way, setWay] = useState<Way>('password');
   const [handle, setHandle] = useState('');
   const [password, setPassword] = useState('');
@@ -47,23 +47,28 @@ export default function SignIn() {
     }
   };
 
-  const input = [styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface }];
+  const input = [
+    styles.input,
+    { color: colors.text, borderColor: colors.border, backgroundColor: colors.inset, borderRadius: Math.min(radius.control, 24) }
+  ];
 
   if (!allowsInterimSignIn) {
     return (
       <Screen>
-        <Text style={[styles.title, { color: colors.text }]}>Datalayer</Text>
-        <Text style={{ color: colors.muted }}>Sign-in with Datalayer arrives with the native sign-in (M-004).</Text>
+        <Text size="title" weight="semibold" style={styles.title}>
+          Datalayer
+        </Text>
+        <Text tone="muted">Sign-in with Datalayer arrives with the native sign-in (M-004).</Text>
       </Screen>
     );
   }
 
   return (
     <Screen>
-      <Text accessibilityRole="header" style={[styles.title, { color: colors.text }]}>
+      <Text accessibilityRole="header" size="title" weight="semibold" style={styles.title}>
         Sign in to Datalayer
       </Text>
-      <Text style={{ color: colors.muted }}>Development sign-in · {environment().runUrl}</Text>
+      <Text tone="muted">Development sign-in · {environment().runUrl}</Text>
       {way === 'password' ? (
         <View style={styles.fields}>
           <TextInput
@@ -104,7 +109,7 @@ export default function SignIn() {
         />
       )}
       {problem ? (
-        <Text accessibilityLiveRegion="polite" style={{ color: colors.danger }}>
+        <Text accessibilityLiveRegion="polite" tone="danger">
           {problem}
         </Text>
       ) : null}
@@ -124,7 +129,7 @@ export default function SignIn() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 28, fontWeight: '700', marginTop: SPACE.xl },
+  title: { marginTop: SPACE.xl },
   fields: { gap: SPACE.sm },
-  input: { minHeight: 48, borderWidth: 1, borderRadius: 10, paddingHorizontal: SPACE.md, fontSize: 17 }
+  input: { minHeight: 48, borderWidth: 1, paddingHorizontal: SPACE.md, fontSize: 17 }
 });

@@ -14,18 +14,32 @@
     "node": "^20.19.4 || ^22.13.0 || ^24.3.0"
   },
   "scripts": {
-    "start": "expo start --dev-client",
-    "android": "expo run:android",
-    "ios": "expo run:ios",
+    "start": "APP_VARIANT=development expo start --dev-client",
+    "start:clear": "APP_VARIANT=development expo start --dev-client --clear",
+    "start:tunnel": "APP_VARIANT=development expo start --dev-client --tunnel",
+    "dev:android": "APP_VARIANT=development expo run:android",
+    "dev:ios": "APP_VARIANT=development expo run:ios",
+    "dev:ios:device": "APP_VARIANT=development expo run:ios --device",
+    "android": "npm run dev:android",
+    "ios": "npm run dev:ios",
+    "prebuild": "APP_VARIANT=development expo prebuild --clean",
+    "build:dev:android": "eas build --platform android --profile development",
+    "build:dev:ios": "eas build --platform ios --profile development",
+    "build:dev:simulator": "eas build --platform ios --profile development-simulator",
+    "export": "expo export --platform ios --output-dir dist/ios && expo export --platform android --output-dir dist/android",
     "typecheck": "tsc --noEmit",
     "lint": "eslint app src scripts --max-warnings 0",
     "test": "jest",
+    "test:watch": "jest --watch",
     "check:imports": "node scripts/check-forbidden-imports.js",
     "doctor": "expo-doctor",
     "check": "npm run typecheck && npm run lint && npm run check:imports && npm test -- --ci"
   },
   "dependencies": {
+    "@datalayer/primer-addons": "^1.0.37",
+    "@expo-google-fonts/inter": "^0.4.2",
     "@expo/metro-runtime": "~57.0.16",
+    "@expo/ui": "~57.0.22",
     "@tanstack/react-query": "^5.104.1",
     "expo": "~57.0.27",
     "expo-application": "~57.0.3",
@@ -46,26 +60,35 @@
     "expo-web-browser": "~57.0.3",
     "react": "19.2.3",
     "react-native": "0.86.3",
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-reanimated": "~4.5.1",
     "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "~4.26.0"
+    "react-native-screens": "~4.26.0",
+    "react-native-worklets": "0.10.1"
   },
   "devDependencies": {
     "@react-native/jest-preset": "0.86.3",
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "^29.5.14",
+    "@types/node": "^22.13.0",
     "@types/react": "~19.2.0",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~57.0.2",
     "expo-doctor": "^1.20.4",
     "jest": "^29.7.0",
     "jest-expo": "~57.0.5",
-    "typescript": "~5.9.3"
+    "typescript": "~6.0.3"
   },
   "jest": {
     "preset": "jest-expo",
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/scripts/fixtures/"
+    ],
+    "transformIgnorePatterns": [
+      "/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|standard-navigation|@datalayer))",
+      "/node_modules/react-native-reanimated/plugin/",
+      "/node_modules/@react-native/babel-preset/"
     ]
   },
   "expo": {

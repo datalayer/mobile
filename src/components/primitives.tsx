@@ -3,11 +3,55 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import type { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { MIN_TOUCH, SPACE, useColors } from '../theme/tokens';
+/** What the app draws itself: screens, text and empty places. Native controls are in `./native`. */
 
-export function Screen({ children }: { children: ReactNode }) {
+import type { ReactNode } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, Text as RNText, type TextProps, type TextStyle, View } from 'react-native';
+import { SPACE, useColors, useNativeTheme } from '../theme/tokens';
+
+export { Button } from './native';
+
+const SIZES = { body: 16, small: 13, title: 20, heading: 17 } as const;
+
+/** Text in the theme's face and colours. `tone` picks the colour, `size` the step. */
+export function Text({
+  tone = 'default',
+  size = 'body',
+  weight = 'regular',
+  style,
+  ...rest
+}: TextProps & {
+  tone?: 'default' | 'muted' | 'danger' | 'accent' | 'onEmphasis';
+  size?: keyof typeof SIZES;
+  weight?: 'regular' | 'semibold';
+}) {
+  const theme = useNativeTheme();
+  const color = {
+    default: theme.colors.text,
+    muted: theme.colors.muted,
+    danger: theme.colors.danger,
+    accent: theme.colors.accent,
+    onEmphasis: theme.colors.onEmphasis
+  }[tone];
+  const typed: TextStyle = {
+    color,
+    fontSize: SIZES[size],
+    lineHeight: Math.round(SIZES[size] * 1.4),
+    fontWeight: weight === 'semibold' ? '600' : '400',
+    fontFamily: theme.fontFamily ? `${theme.fontFamily}_${weight === 'semibold' ? '600SemiBold' : '400Regular'}` : undefined
+  };
+  return <RNText allowFontScaling maxFontSizeMultiplier={2} {...rest} style={[typed, style]} />;
+}
+
+export function Screen({
+  children,
+  refreshing,
+  onRefresh
+}: {
+  children: ReactNode;
+  refreshing?: boolean;
+  onRefresh?: () => void;
+}) {
   const colors = useColors();
   return (
     <ScrollView
@@ -15,6 +59,11 @@ export function Screen({ children }: { children: ReactNode }) {
       contentContainerStyle={styles.screen}
       contentInsetAdjustmentBehavior="automatic"
       keyboardShouldPersistTaps="handled"
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl refreshing={Boolean(refreshing)} onRefresh={onRefresh} tintColor={colors.accentEmphasis} />
+        ) : undefined
+      }
     >
       {children}
     </ScrollView>
@@ -23,68 +72,22 @@ export function Screen({ children }: { children: ReactNode }) {
 
 /** An empty place, with the one next step it offers (LOOP §4). */
 export function EmptyState({ title, detail }: { title: string; detail: string }) {
-  const colors = useColors();
   return (
     <View style={styles.empty} accessible accessibilityRole="summary">
-      <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
-      <Text style={[styles.detail, { color: colors.muted }]}>{detail}</Text>
+      <Text size="title" weight="semibold" style={styles.centered}>
+        {title}
+      </Text>
+      {detail ? (
+        <Text tone="muted" style={styles.centered}>
+          {detail}
+        </Text>
+      ) : null}
     </View>
-  );
-}
-
-export function Button({
-  label,
-  onPress,
-  busy = false,
-  disabled = false,
-  tone = 'primary'
-}: {
-  label: string;
-  onPress: () => void;
-  busy?: boolean;
-  disabled?: boolean;
-  tone?: 'primary' | 'secondary';
-}) {
-  const colors = useColors();
-  const primary = tone === 'primary';
-  const inactive = disabled || busy;
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ disabled: inactive, busy }}
-      disabled={inactive}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.button,
-        {
-          backgroundColor: primary ? colors.accent : 'transparent',
-          borderColor: primary ? colors.accent : colors.border,
-          opacity: inactive ? 0.5 : pressed ? 0.8 : 1
-        }
-      ]}
-    >
-      {busy ? (
-        <ActivityIndicator color={primary ? colors.onAccent : colors.text} />
-      ) : (
-        <Text style={[styles.buttonLabel, { color: primary ? colors.onAccent : colors.text }]}>{label}</Text>
-      )}
-    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { padding: SPACE.md, gap: SPACE.md, flexGrow: 1 },
   empty: { paddingVertical: SPACE.xl, gap: SPACE.sm, alignItems: 'center' },
-  title: { fontSize: 20, fontWeight: '600', textAlign: 'center' },
-  detail: { fontSize: 16, lineHeight: 22, textAlign: 'center' },
-  button: {
-    minHeight: MIN_TOUCH,
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingHorizontal: SPACE.md,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  buttonLabel: { fontSize: 17, fontWeight: '600' }
+  centered: { textAlign: 'center' }
 });

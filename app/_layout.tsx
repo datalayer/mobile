@@ -3,18 +3,21 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { Inter_400Regular, Inter_600SemiBold, useFonts } from '@expo-google-fonts/inter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { SessionProvider, useSession } from '../src/auth/SessionProvider';
+import { ThemeProvider, useTheme } from '../src/theme/ThemeProvider';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
-function Routes() {
+function Routes({ fontsReady }: { fontsReady: boolean }) {
   const session = useSession();
-  const restoring = session.status === 'restoring';
+  const { theme } = useTheme();
+  const restoring = session.status === 'restoring' || !fontsReady;
 
   useEffect(() => {
     if (!restoring) {
@@ -27,14 +30,25 @@ function Routes() {
   }
   const signedIn = session.status === 'signed-in';
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={signedIn}>
-        <Stack.Screen name="(app)" />
-      </Stack.Protected>
-      <Stack.Protected guard={!signedIn}>
-        <Stack.Screen name="sign-in" />
-      </Stack.Protected>
-    </Stack>
+    <>
+      <StatusBar style={theme.mode === 'dark' ? 'light' : 'dark'} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          headerTintColor: theme.colors.accent,
+          headerStyle: { backgroundColor: theme.colors.background },
+          headerTitleStyle: { color: theme.colors.text, fontFamily: theme.fontFamily ? 'Inter_600SemiBold' : undefined },
+          contentStyle: { backgroundColor: theme.colors.background }
+        }}
+      >
+        <Stack.Protected guard={signedIn}>
+          <Stack.Screen name="(app)" />
+        </Stack.Protected>
+        <Stack.Protected guard={!signedIn}>
+          <Stack.Screen name="sign-in" />
+        </Stack.Protected>
+      </Stack>
+    </>
   );
 }
 
@@ -43,12 +57,15 @@ export default function RootLayout() {
   const [queryClient] = useState(
     () => new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 15_000 }, mutations: { retry: false } } })
   );
+  // A font that fails to load is not fatal: the system face takes over.
+  const [fontsLoaded, fontError] = useFonts({ Inter_400Regular, Inter_600SemiBold });
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionProvider>
-        <StatusBar style="auto" />
-        <Routes />
-      </SessionProvider>
+      <ThemeProvider>
+        <SessionProvider>
+          <Routes fontsReady={fontsLoaded || Boolean(fontError)} />
+        </SessionProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

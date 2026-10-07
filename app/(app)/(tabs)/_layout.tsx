@@ -4,26 +4,34 @@
  */
 
 import { Link, Tabs } from 'expo-router';
-import { Pressable, Text } from 'react-native';
-import { MIN_TOUCH, useColors } from '../../../src/theme/tokens';
+import { Pressable } from 'react-native';
+import { Text } from '../../../src/components/primitives';
+import { MIN_TOUCH, useNativeTheme } from '../../../src/theme/tokens';
 
 function SettingsLink() {
-  const colors = useColors();
   return (
     <Link href="/settings" asChild>
       <Pressable accessibilityRole="button" accessibilityLabel="Settings" style={{ minWidth: MIN_TOUCH, minHeight: MIN_TOUCH, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: colors.accent, fontSize: 17 }}>Settings</Text>
+        <Text tone="accent" size="heading">
+          Settings
+        </Text>
       </Pressable>
     </Link>
   );
 }
 
 export default function TabsLayout() {
-  const colors = useColors();
+  const { colors, fontFamily } = useNativeTheme();
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.muted,
+        tabBarStyle: { backgroundColor: colors.background, borderTopColor: colors.border },
+        headerStyle: { backgroundColor: colors.background },
+        headerTitleStyle: { color: colors.text, fontFamily: fontFamily ? 'Inter_600SemiBold' : undefined },
+        headerShadowVisible: false,
+        sceneStyle: { backgroundColor: colors.background },
         headerRight: () => <SettingsLink />
       }}
     >

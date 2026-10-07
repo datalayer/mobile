@@ -19,6 +19,11 @@ const FORBIDDEN = [
   { pattern: /^@datalayer\/core$/, why: 'the Core barrel: use an approved client/native subpath' },
   { pattern: /^@datalayer\/agent-runtimes$/, why: 'the Agent Runtimes barrel: use an approved client/native subpath' },
   { pattern: /^@primer\/react(\/|$)/, why: 'Primer web' },
+  {
+    pattern: /^@datalayer\/primer-addons(?!\/lib\/theme\/portable$)(\/|$)/,
+    why: 'Primer Addons beyond lib/theme/portable: the rest renders Primer web'
+  },
+  { pattern: /^styled-components(\/|$)/, why: 'styled-components' },
   { pattern: /^react-dom(\/|$)/, why: 'React DOM' },
   { pattern: /\.css$/, why: 'CSS' }
 ];

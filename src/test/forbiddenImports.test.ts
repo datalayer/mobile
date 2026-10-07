@@ -21,6 +21,9 @@ describe('the forbidden-import gate (M-006)', () => {
         '@datalayer/core',
         '@datalayer/agent-runtimes',
         '@primer/react',
+        '@datalayer/primer-addons',
+        '@datalayer/primer-addons/lib/theme',
+        'styled-components',
         'react-dom/client',
         './styles.css',
         '@lumino/signaling',
@@ -36,6 +39,8 @@ describe('the forbidden-import gate (M-006)', () => {
       "import { View } from 'react-native';",
       "import { personOf } from '@datalayer/core/native';",
       "import { sessionClient } from '@datalayer/agent-runtimes/client';",
+      "import { exportPortableTheme } from '@datalayer/primer-addons/lib/theme/portable';",
+      "import { Button } from '@expo/ui';",
       '// Not an import: @jupyterlab/services is named in prose.'
     ].join('\n');
     expect(violationsIn('ok.ts', text)).toEqual([]);

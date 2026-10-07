@@ -5,7 +5,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { createClient, type Client } from '../api/client';
 import { isProblem } from '../api/problems';
 import { environment } from '../config/environment';
@@ -19,12 +19,26 @@ export type SessionState =
 
 export type Session = SessionState & {
   client: Client;
+  /** The current token, read when a connection opens; never rendered or logged. */
+  accessToken: () => string | undefined;
   signInWithPassword: (handle: string, password: string) => Promise<void>;
   signInWithToken: (token: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
 const SessionContext = createContext<Session | undefined>(undefined);
+
+type TokenHolder = { get: () => string | undefined; set: (value: string | undefined) => void };
+
+function newTokenHolder(): TokenHolder {
+  let value: string | undefined;
+  return {
+    get: () => value,
+    set: next => {
+      value = next;
+    }
+  };
+}
 
 export function SessionProvider({
   children,
@@ -36,29 +50,30 @@ export function SessionProvider({
   fetcher?: typeof fetch;
 }) {
   const queryClient = useQueryClient();
-  const token = useRef<string | undefined>(undefined);
+  // The client reads the token lazily per request; it is never rendered, so it is not state.
+  const [token] = useState(newTokenHolder);
   const [state, setState] = useState<SessionState>({ status: 'restoring' });
 
   const client = useMemo(
-    () => createClient({ baseUrl: environment().runUrl, getAccessToken: () => token.current, fetch: fetcher }),
-    [fetcher]
+    () => createClient({ baseUrl: environment().runUrl, getAccessToken: token.get, fetch: fetcher }),
+    [fetcher, token]
   );
 
   const forget = useCallback(async () => {
-    token.current = undefined;
+    token.set(undefined);
     queryClient.clear();
     await tokenStore.forget();
     setState({ status: 'signed-out' });
-  }, [queryClient, tokenStore]);
+  }, [queryClient, token, tokenStore]);
 
   const adopt = useCallback(
     async (candidate: string) => {
       const person = await whoIs(client, candidate);
       await tokenStore.write(candidate);
-      token.current = candidate;
+      token.set(candidate);
       setState({ status: 'signed-in', person });
     },
-    [client, tokenStore]
+    [client, token, tokenStore]
   );
 
   useEffect(() => {
@@ -72,7 +87,7 @@ export function SessionProvider({
       try {
         const person = await whoIs(client, kept);
         if (cancelled) return;
-        token.current = kept;
+        token.set(kept);
         setState({ status: 'signed-in', person });
       } catch (error) {
         if (cancelled) return;
@@ -86,7 +101,7 @@ export function SessionProvider({
     return () => {
       cancelled = true;
     };
-  }, [client, tokenStore]);
+  }, [client, token, tokenStore]);
 
   const signInWithPassword = useCallback(
     async (handle: string, password: string) => {
@@ -109,17 +124,17 @@ export function SessionProvider({
   );
 
   const signOut = useCallback(async () => {
-    const current = token.current;
+    const current = token.get();
     await forget();
     if (current) {
       // Best effort: the local session is gone whether or not IAM hears it (MOBILE.md §6.1).
       client('/api/iam/v1/logout', { token: current }).catch(() => undefined);
     }
-  }, [client, forget]);
+  }, [client, forget, token]);
 
   const session = useMemo<Session>(
-    () => ({ ...state, client, signInWithPassword, signInWithToken, signOut }),
-    [state, client, signInWithPassword, signInWithToken, signOut]
+    () => ({ ...state, client, accessToken: token.get, signInWithPassword, signInWithToken, signOut }),
+    [state, client, token, signInWithPassword, signInWithToken, signOut]
   );
 
   return <SessionContext.Provider value={session}>{children}</SessionContext.Provider>;

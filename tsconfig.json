@@ -4,6 +4,7 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
+    "types": ["jest", "node"],
     "paths": {
       "@/*": ["./src/*"]
     }
