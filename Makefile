@@ -52,9 +52,20 @@ clean: ## remove bundles, Metro cache and the generated native folders
 
 dev-android: ## boot the first Android emulator (or AVD=<name>), build the dev app on it, start Metro
 	@command -v adb >/dev/null || { echo "adb not found: run 'make setup' first."; exit 1; }
+	@if [[ "$$(uname -s)" == "Linux" && ! -w /dev/kvm ]]; then \
+	  if [[ ! -e /dev/kvm ]]; then \
+	    echo "No /dev/kvm: the x86_64 emulator needs hardware virtualization."; \
+	    journalctl -k -b --no-pager 2>/dev/null | grep -qi "disabled (by BIOS)" && \
+	      echo "The kernel says it is disabled in the BIOS: enable SVM (AMD) or VT-x (Intel) in the firmware setup, reboot."; \
+	    echo "Or use a phone: make dev-device-android"; \
+	  else \
+	    echo "/dev/kvm is not writable: sudo usermod -aG kvm $$USER, then log out and in."; \
+	  fi; \
+	  exit 1; \
+	fi
 	@if ! adb devices | grep -q "emulator-.*device"; then \
-	  [[ -n "$(AVD)" ]] || { echo "No Android emulator: create one in Android Studio or set AVD=<name>"; exit 1; }; \
-	  echo "Booting $(AVD)"; nohup emulator -avd "$(AVD)" >/dev/null 2>&1 & \
+	  [[ -n "$(AVD)" ]] || { echo "No Android emulator: run 'make setup' or set AVD=<name>"; exit 1; }; \
+	  echo "Booting $(AVD)"; nohup emulator -avd "$(AVD)" -no-metrics >/dev/null 2>&1 & \
 	  adb wait-for-device; \
 	  until [[ "$$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" == "1" ]]; do sleep 2; done; \
 	fi
@@ -69,8 +80,22 @@ dev-ios: ## boot the iOS Simulator (SIMULATOR="iPhone 16"), build the dev app on
 
 dev-device-android: ## build the dev app on the plugged Android phone (USB debugging on), start Metro
 	@command -v adb >/dev/null || { echo "adb not found: run 'make setup' first."; exit 1; }
-	@adb devices
-	npm run dev:android -- --device
+	@adb start-server >/dev/null 2>&1; \
+	phones="$$(adb devices | awk 'NR>1 && $$1 !~ /^emulator-/ && $$2 == "device" {print $$1}')"; \
+	if [[ -z "$$phones" ]]; then \
+	  if adb devices | awk 'NR>1' | grep -q unauthorized; then \
+	    echo "The phone is connected but not authorized: unlock it and accept 'Allow USB debugging'."; \
+	  elif adb devices | awk 'NR>1' | grep -q 'no permissions'; then \
+	    echo "No permission on the USB device: install udev rules (sudo apt-get install -y android-sdk-platform-tools-common), replug."; \
+	  else \
+	    echo "No Android phone found. On the phone: Settings > About phone > tap Build number 7 times;"; \
+	    echo "then Settings > System > Developer options > USB debugging on. Plug it with a data cable, accept the prompt."; \
+	  fi; \
+	  exit 1; \
+	fi; \
+	serial="$$(echo "$$phones" | head -1)"; \
+	echo "Using $$serial ($$(adb -s $$serial shell getprop ro.product.model | tr -d '\r'))"; \
+	npm run dev:android -- --device "$$serial"
 
 dev-device-ios: ## build the dev app on the plugged iPhone (Developer Mode on), start Metro (macOS)
 	npm run dev:ios:device

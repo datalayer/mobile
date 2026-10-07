@@ -88,6 +88,26 @@ else
   say "Virtual device $AVD_NAME present"
 fi
 
+# ── Linux: emulator acceleration and phone access ───────────────────────────
+
+if [[ "$os" == "Linux" ]]; then
+  if have apt-get && ! dpkg -s android-sdk-platform-tools-common >/dev/null 2>&1; then
+    say "Installing the udev rules that let adb reach a plugged phone"
+    sudo apt-get install -y android-sdk-platform-tools-common
+  fi
+  if getent group kvm >/dev/null && ! id -nG "$USER" | tr ' ' '\n' | grep -qx kvm; then
+    say "Adding $USER to the kvm group (log out and in for it to apply)"
+    sudo usermod -aG kvm "$USER"
+  fi
+  if [[ ! -e /dev/kvm ]]; then
+    printf '\033[33m%s\033[0m\n' "No /dev/kvm: the emulator cannot run until hardware virtualization works."
+    if journalctl -k -b --no-pager 2>/dev/null | grep -qi "disabled (by BIOS)"; then
+      printf '\033[33m%s\033[0m\n' "It is disabled in the BIOS: enable SVM Mode (AMD) or Intel VT-x in the firmware setup, then reboot."
+    fi
+    printf '\033[33m%s\033[0m\n' "A plugged phone works without it: make dev-device-android"
+  fi
+fi
+
 # ── macOS: Xcode tools and CocoaPods ─────────────────────────────────────────
 
 if [[ "$os" == "Darwin" ]]; then
