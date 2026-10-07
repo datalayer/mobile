@@ -3,13 +3,12 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-/**
- * What an approval asks, in words. `messageOfApproval` mirrors the web
- * `views/studio/apps/appApprovals.ts` implementation and shares its fixtures
- * (see `src/test/approvalFormat.test.ts`).
- */
+/** What an approval asks, in words. The message and its reason come from Agent Runtimes' portable entry, as the web's do. */
 
+import { messageOfApproval, whyAsked, type MessageAsked } from '@datalayer/agent-runtimes/lib/portable';
 import type { Approval } from '../../api/approvals';
+
+export { messageOfApproval, whyAsked, type MessageAsked };
 
 export const APPROVAL_WORDS = {
   to: 'To',
@@ -25,48 +24,10 @@ export const APPROVAL_WORDS = {
 
 type ApprovalLike = Pick<Approval, 'toolArgs'>;
 
-export type MessageAsked = {
-  to: string;
-  cc: string;
-  bcc: string;
-  subject: string;
-  body: string;
-  forwards: boolean;
-  replies: boolean;
-};
-
 const said = (approval: ApprovalLike, key: string): string => {
   const value = approval.toolArgs[key];
   return typeof value === 'string' ? value : '';
 };
-
-const addressed = (value: unknown): string =>
-  Array.isArray(value)
-    ? value.filter(item => typeof item === 'string').join(', ')
-    : typeof value === 'string'
-      ? value
-      : '';
-
-/** The whole message a send asks for; `null` for anything that is not a mail. */
-export function messageOfApproval(approval: ApprovalLike): MessageAsked | null {
-  const args = approval.toolArgs;
-  const to = addressed(args.to);
-  if (!to || typeof args.body !== 'string') {
-    return null;
-  }
-  return {
-    to,
-    cc: addressed(args.cc),
-    bcc: addressed(args.bcc),
-    subject: said(approval, 'subject'),
-    body: args.body,
-    forwards: Boolean(said(approval, 'forward_message_id')),
-    replies: Boolean(said(approval, 'thread_id') || said(approval, 'in_reply_to'))
-  };
-}
-
-/** The rule (`_rule`) or check (`_check`) that asked. */
-export const whyAsked = (approval: ApprovalLike): string => said(approval, '_rule') || said(approval, '_check');
 
 /** The application it is of, when the runtime marked it. */
 export const applicationOf = (approval: Pick<Approval, 'toolArgs' | 'agentId'>): string =>

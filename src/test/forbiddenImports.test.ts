@@ -20,6 +20,8 @@ describe('the forbidden-import gate (M-006)', () => {
         '@datalayer/jupyter-react',
         '@datalayer/core',
         '@datalayer/agent-runtimes',
+        '@datalayer/core/lib/client',
+        '@datalayer/agent-runtimes/lib/hooks/useToolApprovals',
         '@primer/react',
         '@datalayer/primer-addons',
         '@datalayer/primer-addons/lib/theme',
@@ -34,11 +36,11 @@ describe('the forbidden-import gate (M-006)', () => {
     );
   });
 
-  it('allows approved subpaths, React Native and a mention in a comment', () => {
+  it('allows the portable entries, React Native and a mention in a comment', () => {
     const text = [
       "import { View } from 'react-native';",
-      "import { personOf } from '@datalayer/core/native';",
-      "import { sessionClient } from '@datalayer/agent-runtimes/client';",
+      "import { personOf } from '@datalayer/core/lib/portable';",
+      "import { messageOfApproval } from '@datalayer/agent-runtimes/lib/portable';",
       "import { exportPortableTheme } from '@datalayer/primer-addons/lib/theme/portable';",
       "import { Button } from '@expo/ui';",
       '// Not an import: @jupyterlab/services is named in prose.'

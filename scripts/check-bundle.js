@@ -27,10 +27,15 @@ const FORBIDDEN = [
   { pattern: /\/node_modules\/styled-components\//, why: 'styled-components' },
   { pattern: /\/node_modules\/react-dom\//, why: 'React DOM' },
   { pattern: /\.css$/, why: 'CSS' },
-  { pattern: /\/node_modules\/@datalayer\/core\/|\/tech\/datalayer\/core\//, why: 'Core, before its native subpath (M-002)' },
+  {
+    pattern: /\/node_modules\/@datalayer\/core\/|\/tech\/datalayer\/core\//,
+    allowed: /\/(tech\/datalayer\/core|@datalayer\/core)\/lib\/portable\/[A-Za-z]+\.js$/,
+    why: 'Core beyond its portable entry (M-002)'
+  },
   {
     pattern: /\/node_modules\/@datalayer\/agent-runtimes\/|\/ai\/agent-runtimes\//,
-    why: 'Agent Runtimes, before its client subpath (M-002)'
+    allowed: /\/(ai\/agent-runtimes|@datalayer\/agent-runtimes)\/lib\/portable\/[A-Za-z]+\.js$/,
+    why: 'Agent Runtimes beyond its portable entry (M-002)'
   },
   {
     pattern: /\/node_modules\/@datalayer\/primer-addons\/|\/primer\/addons\//,

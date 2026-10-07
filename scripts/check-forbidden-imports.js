@@ -16,8 +16,11 @@ const FORBIDDEN = [
   { pattern: /^@jupyterlab\//, why: 'JupyterLab' },
   { pattern: /^@lumino\//, why: 'Lumino' },
   { pattern: /^@datalayer\/jupyter-/, why: 'Datalayer Jupyter' },
-  { pattern: /^@datalayer\/core$/, why: 'the Core barrel: use an approved client/native subpath' },
-  { pattern: /^@datalayer\/agent-runtimes$/, why: 'the Agent Runtimes barrel: use an approved client/native subpath' },
+  { pattern: /^@datalayer\/core(?!\/lib\/portable$)(\/|$)/, why: 'Core beyond lib/portable (M-002)' },
+  {
+    pattern: /^@datalayer\/agent-runtimes(?!\/lib\/portable$)(\/|$)/,
+    why: 'Agent Runtimes beyond lib/portable (M-002)'
+  },
   { pattern: /^@primer\/react(\/|$)/, why: 'Primer web' },
   {
     pattern: /^@datalayer\/primer-addons(?!\/lib\/theme\/portable$)(\/|$)/,

@@ -22,6 +22,8 @@ describe('the resolved-bundle gate (M-006)', () => {
       '/node_modules/@primer/primitives/dist/css/base.css',
       '/tech/datalayer/core/lib/index.js',
       '/ai/agent-runtimes/lib/index.js',
+      '/node_modules/@datalayer/core/lib/client/index.js',
+      '/ai/agent-runtimes/lib/hooks/useToolApprovals.js',
       '/tech/primer/addons/lib/theme/themes/loopTheme.js',
       '/tech/primer/addons/lib/theme/themeRegistry.js',
       '/tech/primer/addons/lib/components/Box.js',
@@ -32,8 +34,12 @@ describe('the resolved-bundle gate (M-006)', () => {
     expect(found.map(v => v.source)).toEqual(forbidden);
   });
 
-  it('lets the portable theme, React Native and the app through, from the workspace or from npm', () => {
+  it('lets the portable entries, React Native and the app through, from the workspace or from npm', () => {
     const allowed = [
+      '/tech/datalayer/core/lib/portable/index.js',
+      '/node_modules/@datalayer/core/lib/portable/person.js',
+      '/ai/agent-runtimes/lib/portable/approvals.js',
+      '/node_modules/@datalayer/agent-runtimes/lib/portable/index.js',
       '/tech/primer/addons/lib/theme/portable.js',
       '/node_modules/@datalayer/primer-addons/lib/theme/portable.js',
       '/node_modules/@datalayer/primer-addons/lib/theme/colors/loopColors.js',
