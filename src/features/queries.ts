@@ -9,6 +9,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { readActivity } from '../api/activity';
 import { type Approval, type Decision, decide, getApproval, listPending, markRead } from '../api/approvals';
 import { applicationsOf, listDeployments } from '../api/deployments';
+import { EMPTY_FACES, listFaces } from '../api/faces';
 import { isProblem, Problem } from '../api/problems';
 import { isAgentRuntime, listRuntimes } from '../api/runtimes';
 import { useSession } from '../auth/SessionProvider';
@@ -18,7 +19,8 @@ export const KEYS = {
   runtimes: ['runtimes'] as const,
   approvals: ['approvals'] as const,
   approval: (id: string) => ['approvals', id] as const,
-  activity: (appUid: string) => ['activity', appUid] as const
+  activity: (appUid: string) => ['activity', appUid] as const,
+  faces: ['faces'] as const
 };
 
 /** Every key a reconnect refetches: approvals, deployments and visible activity. */
@@ -65,6 +67,13 @@ export function useMarkRead() {
 export function useActivity(appUid: string) {
   const { client } = useSession();
   return useQuery({ queryKey: KEYS.activity(appUid), queryFn: () => readActivity(client, appUid), enabled: Boolean(appUid) });
+}
+
+/** The applications' faces: decoration, so a failure shows the default eyes rather than an error. */
+export function useFaces() {
+  const { client } = useSession();
+  const faces = useQuery({ queryKey: KEYS.faces, queryFn: () => listFaces(client), staleTime: 5 * 60_000 });
+  return faces.data ?? EMPTY_FACES;
 }
 
 /**

@@ -8,6 +8,7 @@ import { StyleSheet, TextInput, View } from 'react-native';
 import { isProblem } from '../src/api/problems';
 import { useSession } from '../src/auth/SessionProvider';
 import { Button, Screen, Text } from '../src/components/primitives';
+import { LoopWordmark } from '../src/identity/LoopWordmark';
 import { environment } from '../src/config/environment';
 import { SPACE, useNativeTheme } from '../src/theme/tokens';
 
@@ -55,6 +56,7 @@ export default function SignIn() {
   if (!allowsInterimSignIn) {
     return (
       <Screen>
+        <LoopWordmark />
         <Text size="title" weight="semibold" style={styles.title}>
           Datalayer
         </Text>
@@ -65,6 +67,7 @@ export default function SignIn() {
 
   return (
     <Screen>
+      <LoopWordmark />
       <Text accessibilityRole="header" size="title" weight="semibold" style={styles.title}>
         Sign in to Datalayer
       </Text>

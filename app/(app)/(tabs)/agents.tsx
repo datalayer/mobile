@@ -6,12 +6,14 @@
 import { useRouter } from 'expo-router';
 import { EmptyState, Screen } from '../../../src/components/primitives';
 import { QueryView, Row, SectionTitle } from '../../../src/components/states';
-import { useAgentRuntimes, useApplications } from '../../../src/features/queries';
+import { useAgentRuntimes, useApplications, useFaces } from '../../../src/features/queries';
+import { AppFace } from '../../../src/identity/AppFace';
 import { relativeTime } from '../../../src/i18n/time';
 
 export default function Agents() {
   const router = useRouter();
   const applications = useApplications();
+  const faces = useFaces();
   const runtimes = useAgentRuntimes();
   const refresh = () => {
     void applications.refetch();
@@ -28,6 +30,7 @@ export default function Agents() {
             apps.map(app => (
               <Row
                 key={app.appUid}
+                leading={<AppFace face={faces.byUid.get(app.appUid)} />}
                 title={app.name || 'Application'}
                 badge={app.state === 'paused' ? 'Paused' : 'Live'}
                 meta={app.deployments.map(d => d.target).join(', ')}

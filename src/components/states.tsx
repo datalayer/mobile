@@ -77,6 +77,7 @@ export function Row({
   detail,
   meta,
   badge,
+  leading,
   onPress,
   accessibilityHint
 }: {
@@ -84,6 +85,8 @@ export function Row({
   detail?: string;
   meta?: string;
   badge?: string;
+  /** Drawn before the text, outside its accessible label: a face. */
+  leading?: ReactNode;
   onPress?: () => void;
   accessibilityHint?: string;
 }) {
@@ -107,6 +110,7 @@ export function Row({
       ]}
     >
       <View style={styles.rowHead}>
+        {leading}
         <Text size="heading" weight="semibold" numberOfLines={1} style={styles.rowTitle}>
           {title}
         </Text>

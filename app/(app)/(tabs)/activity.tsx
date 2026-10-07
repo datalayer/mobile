@@ -6,7 +6,8 @@
 import { useRouter } from 'expo-router';
 import { EmptyState, Screen } from '../../../src/components/primitives';
 import { QueryView, Row } from '../../../src/components/states';
-import { useApplications } from '../../../src/features/queries';
+import { useApplications, useFaces } from '../../../src/features/queries';
+import { AppFace } from '../../../src/identity/AppFace';
 
 /**
  * Until the cross-application activity contract exists (M-040), the tab
@@ -16,6 +17,7 @@ import { useApplications } from '../../../src/features/queries';
 export default function Activity() {
   const router = useRouter();
   const applications = useApplications();
+  const faces = useFaces();
   return (
     <Screen refreshing={applications.isRefetching} onRefresh={() => void applications.refetch()}>
       <QueryView query={applications}>
@@ -26,6 +28,7 @@ export default function Activity() {
             apps.map(app => (
               <Row
                 key={app.appUid}
+                leading={<AppFace face={faces.byUid.get(app.appUid)} />}
                 title={app.name || 'Application'}
                 detail="In progress, scheduled and completed work"
                 onPress={() => router.push({ pathname: '/apps/[appUid]', params: { appUid: app.appUid } })}

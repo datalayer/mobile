@@ -47,7 +47,7 @@ What each way of running the app needs:
 The first time, and after every native change, build and install the development build; then only Metro runs. `make help` lists every target; the `npm run` scripts underneath are shown here.
 
 ```bash
-cp .env.example .env            # EXPO_PUBLIC_DATALAYER_RUN_URL, EXPO_PUBLIC_BUILD_PROFILE=development
+cp .env.example .env            # done by every dev and start target when .env is missing
 
 make dev-android                # boot the first emulator (or AVD=<name>), build the dev app on it, start Metro
 make dev-ios                    # boot the Simulator (SIMULATOR="iPhone 16"), build the dev app on it, start Metro (macOS)

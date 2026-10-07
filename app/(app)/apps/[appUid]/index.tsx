@@ -9,13 +9,15 @@ import { Field, ProblemView, QueryView, Row, SectionTitle } from '../../../../sr
 import { ACTIVITY_WORDS, scheduledSays } from '../../../../src/api/activity';
 import { Problem } from '../../../../src/api/problems';
 import { actionOf } from '../../../../src/features/approvals/format';
-import { useActivity, useApplications, usePendingApprovals } from '../../../../src/features/queries';
+import { useActivity, useApplications, useFaces, usePendingApprovals } from '../../../../src/features/queries';
+import { AppFace } from '../../../../src/identity/AppFace';
 import { absoluteTime, relativeTime } from '../../../../src/i18n/time';
 
 export default function ApplicationDetail() {
   const { appUid = '' } = useLocalSearchParams<{ appUid: string }>();
   const router = useRouter();
   const applications = useApplications();
+  const faces = useFaces();
   const approvals = usePendingApprovals();
   const activity = useActivity(appUid);
   const refresh = () => {
@@ -35,6 +37,7 @@ export default function ApplicationDetail() {
           return (
             <>
               <Stack.Screen options={{ title: app.name || 'Application' }} />
+              <AppFace face={faces.byUid.get(appUid)} size={64} />
               <Field label="State" value={app.state === 'paused' ? 'Paused' : 'Live'} />
               <Field label="Deployments" value={app.deployments.map(d => `${d.target} · version ${d.version}`).join('\n')} />
               <SectionTitle>{`Waiting for you (${waiting.length})`}</SectionTitle>

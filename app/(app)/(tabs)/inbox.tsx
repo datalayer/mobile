@@ -7,12 +7,15 @@ import { useRouter } from 'expo-router';
 import { EmptyState, Screen } from '../../../src/components/primitives';
 import { QueryView, Row } from '../../../src/components/states';
 import { actionOf, applicationOf, rowSummary } from '../../../src/features/approvals/format';
-import { usePendingApprovals } from '../../../src/features/queries';
+import { faceFor } from '../../../src/api/faces';
+import { usePendingApprovals, useFaces } from '../../../src/features/queries';
+import { AppFace } from '../../../src/identity/AppFace';
 import { relativeTime } from '../../../src/i18n/time';
 
 export default function Inbox() {
   const router = useRouter();
   const approvals = usePendingApprovals();
+  const faces = useFaces();
   return (
     <Screen refreshing={approvals.isRefetching} onRefresh={() => void approvals.refetch()}>
       <QueryView query={approvals}>
@@ -23,6 +26,7 @@ export default function Inbox() {
             list.map(approval => (
               <Row
                 key={approval.id}
+                leading={<AppFace face={faceFor(faces, { appUid: approval.toolArgs._app_uid, agentId: approval.agentId })} />}
                 title={actionOf(approval.toolName)}
                 badge={approval.read ? undefined : 'New'}
                 detail={rowSummary(approval)}

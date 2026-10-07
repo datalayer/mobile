@@ -53,7 +53,12 @@ clean: ## remove bundles, Metro cache and the generated native folders
 
 ##@ Dev, with an emulator or simulator
 
-dev-android: ## boot the first Android emulator (or AVD=<name>), build the dev app on it, start Metro
+# Without it the build profile is `production`, which offers no interim sign-in; an existing .env is never overwritten.
+.env:
+	cp .env.example .env
+	@echo "Created .env from .env.example (development profile, prod1.datalayer.run). Edit it to point elsewhere."
+
+dev-android: .env ## boot the first Android emulator (or AVD=<name>), build the dev app on it, start Metro
 	@command -v adb >/dev/null || { echo "adb not found: run 'make setup' first."; exit 1; }
 	@if [[ "$$(uname -s)" == "Linux" && ! -w /dev/kvm ]]; then \
 	  if [[ ! -e /dev/kvm ]]; then \
@@ -74,7 +79,7 @@ dev-android: ## boot the first Android emulator (or AVD=<name>), build the dev a
 	fi
 	npm run dev:android
 
-dev-ios: ## boot the iOS Simulator (SIMULATOR="iPhone 16"), build the dev app on it, start Metro (macOS)
+dev-ios: .env ## boot the iOS Simulator (SIMULATOR="iPhone 16"), build the dev app on it, start Metro (macOS)
 	@$(MACOS_ONLY)
 	xcrun simctl boot "$(SIMULATOR)" 2>/dev/null || true
 	open -a Simulator
@@ -82,11 +87,11 @@ dev-ios: ## boot the iOS Simulator (SIMULATOR="iPhone 16"), build the dev app on
 
 ##@ Dev, without an emulator
 
-dev-web: ## the app in a browser at http://localhost:8081: screens and logic only, no push, no live updates, token kept for the tab
+dev-web: .env ## the app in a browser at http://localhost:8081: screens and logic only, no push, no live updates, token kept for the tab
 	@node -e "require.resolve('react-native-web/package.json')" 2>/dev/null || { echo "react-native-web is not installed: run 'npm install' at the monorepo root, then make dev-web."; exit 1; }
 	npm run dev:web
 
-dev-device-android: ## build the dev app on the plugged Android phone (USB debugging on), start Metro
+dev-device-android: .env ## build the dev app on the plugged Android phone (USB debugging on), start Metro
 	@command -v adb >/dev/null || { echo "adb not found: run 'make setup' first."; exit 1; }
 	@adb start-server >/dev/null 2>&1; \
 	phones="$$(adb devices | awk 'NR>1 && $$1 !~ /^emulator-/ && $$2 == "device" {print $$1}')"; \
@@ -105,14 +110,14 @@ dev-device-android: ## build the dev app on the plugged Android phone (USB debug
 	echo "Using $$serial ($$(adb -s $$serial shell getprop ro.product.model | tr -d '\r'))"; \
 	npm run dev:android -- --device "$$serial"
 
-dev-device-ios: ## build the dev app on the plugged iPhone (Developer Mode on), start Metro (macOS)
+dev-device-ios: .env ## build the dev app on the plugged iPhone (Developer Mode on), start Metro (macOS)
 	@$(MACOS_ONLY)
 	npm run dev:ios:device
 
-start: ## Metro only, for a development build already installed on a device or simulator
+start: .env ## Metro only, for a development build already installed on a device or simulator
 	npm start
 
-start-tunnel: ## Metro over a tunnel, for a phone that cannot reach this machine
+start-tunnel: .env ## Metro over a tunnel, for a phone that cannot reach this machine
 	npm run start:tunnel
 
 build-dev-android: ## EAS development build for Android, installed from the link
