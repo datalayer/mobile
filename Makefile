@@ -5,12 +5,34 @@ SHELL=/bin/bash
 
 .DEFAULT_GOAL := help
 
+# Where `make setup` puts the Android SDK; exported so the targets below find adb and the emulator without a shell profile change.
+export ANDROID_HOME ?= $(HOME)/Android/Sdk
+export PATH := $(ANDROID_HOME)/platform-tools:$(ANDROID_HOME)/emulator:$(ANDROID_HOME)/cmdline-tools/latest/bin:$(PATH)
+
 # The simulator/emulator to launch; override with `make dev-ios SIMULATOR="iPhone 16 Pro"`.
 SIMULATOR ?= iPhone 16
 AVD ?= $(shell command -v emulator >/dev/null 2>&1 && emulator -list-avds 2>/dev/null | head -1)
 
 help: ## display this help
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+
+##@ Setup
+
+setup: ## install JDK 17, Android command-line tools, platform-tools, SDK 36, emulator + one virtual device, EAS CLI (and Xcode tools, CocoaPods on macOS)
+	bash scripts/setup.sh
+
+tools: ## show which tools are found and their versions
+	@v() { command -v "$$1" >/dev/null 2>&1 && "$$@" 2>&1 | head -1 || echo missing; }; \
+	printf 'node         %s\n' "$$(v node --version)"; \
+	printf 'java         %s\n' "$$(v java -version)"; \
+	printf 'adb          %s\n' "$$(v adb --version)"; \
+	printf 'emulator     %s\n' "$$(v emulator -version)"; \
+	printf 'avds         %s\n' "$$(command -v emulator >/dev/null 2>&1 && emulator -list-avds 2>/dev/null | tr '\n' ' ' || echo none)"; \
+	printf 'sdkmanager   %s\n' "$$(v sdkmanager --version)"; \
+	printf 'eas          %s\n' "$$(v eas --version)"; \
+	printf 'xcodebuild   %s\n' "$$(v xcodebuild -version)"; \
+	printf 'pod          %s\n' "$$(v pod --version)"; \
+	printf 'ANDROID_HOME %s\n' "$(ANDROID_HOME)"
 
 ##@ Checks
 
@@ -29,6 +51,7 @@ clean: ## remove bundles, Metro cache and the generated native folders
 ##@ Dev, with an emulator or simulator
 
 dev-android: ## boot the first Android emulator (or AVD=<name>), build the dev app on it, start Metro
+	@command -v adb >/dev/null || { echo "adb not found: run 'make setup' first."; exit 1; }
 	@if ! adb devices | grep -q "emulator-.*device"; then \
 	  [[ -n "$(AVD)" ]] || { echo "No Android emulator: create one in Android Studio or set AVD=<name>"; exit 1; }; \
 	  echo "Booting $(AVD)"; nohup emulator -avd "$(AVD)" >/dev/null 2>&1 & \
@@ -45,6 +68,7 @@ dev-ios: ## boot the iOS Simulator (SIMULATOR="iPhone 16"), build the dev app on
 ##@ Dev, without an emulator
 
 dev-device-android: ## build the dev app on the plugged Android phone (USB debugging on), start Metro
+	@command -v adb >/dev/null || { echo "adb not found: run 'make setup' first."; exit 1; }
 	@adb devices
 	npm run dev:android -- --device
 
@@ -95,6 +119,6 @@ publish-android: publish-check check ## production .aab with EAS, submitted as a
 
 publish: publish-ios publish-android ## both stores
 
-.PHONY: help check doctor export clean dev-android dev-ios dev-device-android dev-device-ios start start-tunnel \
+.PHONY: help setup tools check doctor export clean dev-android dev-ios dev-device-android dev-device-ios start start-tunnel \
 	build-dev-android build-dev-ios build-dev-simulator build-preview build-staging submit-staging \
 	publish-check publish-ios publish-android publish

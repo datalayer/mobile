@@ -14,10 +14,12 @@ Expo Go is not supported: sign-in storage, notifications, links and the native c
 
 ### Prerequisites
 
+`make setup` installs what is missing and keeps what is there: a JDK 17, the Android command-line tools under `ANDROID_HOME` (`~/Android/Sdk` by default), `platform-tools` (adb), SDK platform 36 with build-tools 36.0.0 and the NDK React Native 0.86 wants, the emulator with one Pixel 8 API 36 virtual device, EAS CLI, and on macOS the Xcode Command Line Tools and CocoaPods. It ends by printing the two `export` lines to add to your shell profile; the Makefile exports them for its own targets, so `make dev-android` works before that. `make tools` shows what is found.
+
 - Node 20.19, 22.13 or 24.3 and later (`engines` in `package.json`); npm 10.
-- Android: Android Studio with SDK Platform 36, build tools, an emulator image (or a device with USB debugging), `ANDROID_HOME` set and `platform-tools` on the path. JDK 17.
-- iOS (macOS only): Xcode 16 or later with its Command Line Tools and an iOS Simulator runtime; CocoaPods. A physical iPhone needs Developer Mode on and, for EAS development builds, its UDID registered (`eas device:create`).
-- EAS: an Expo account in the Datalayer organization and `npx eas-cli login`. The project id in `app.config.ts` is set once by `eas init`.
+- Android: what `make setup` installs, or Android Studio with the same SDK components. A device needs USB debugging on.
+- iOS (macOS only): Xcode 16 or later installed from the App Store and opened once (`make setup` cannot do that), with an iOS Simulator runtime. A physical iPhone needs Developer Mode on and, for EAS development builds, its UDID registered (`eas device:create`).
+- EAS: an Expo account in the Datalayer organization and `eas login`. The project id in `app.config.ts` is set once by `eas init`.
 - A physical iPhone and an Android phone for anything about push, links, background behaviour or the keychain; simulators do not establish them.
 
 ### Dev mode
