@@ -15,10 +15,10 @@ const VARIANT: Variant =
 
 const BASE_ID = 'ai.datalayer.mobile';
 
-const VARIANTS: Record<Variant, { name: string; id: string; scheme: string }> = {
-  development: { name: 'Datalayer Dev', id: `${BASE_ID}.dev`, scheme: 'datalayer-dev' },
-  preview: { name: 'Datalayer Preview', id: `${BASE_ID}.preview`, scheme: 'datalayer-preview' },
-  production: { name: 'Datalayer', id: BASE_ID, scheme: 'datalayer' }
+const VARIANTS: Record<Variant, { name: string; id: string; scheme: string; icon: string }> = {
+  development: { name: 'Datalayer Dev', id: `${BASE_ID}.dev`, scheme: 'datalayer-dev', icon: './assets/icon-development.png' },
+  preview: { name: 'Datalayer Preview', id: `${BASE_ID}.preview`, scheme: 'datalayer-preview', icon: './assets/icon-preview.png' },
+  production: { name: 'Datalayer', id: BASE_ID, scheme: 'datalayer', icon: './assets/icon.png' }
 };
 
 export default ({ config }: ConfigContext): ExpoConfig => {
@@ -30,6 +30,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     owner: process.env.EXPO_OWNER ?? 'datalayer',
     version: '0.0.1',
     scheme: variant.scheme,
+    icon: variant.icon,
     orientation: 'portrait',
     userInterfaceStyle: 'automatic',
     runtimeVersion: { policy: 'appVersion' },
@@ -41,6 +42,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: variant.id,
+      adaptiveIcon: {
+        foregroundImage: './assets/adaptive-icon.png',
+        monochromeImage: './assets/adaptive-icon-monochrome.png',
+        backgroundColor: VARIANT === 'development' ? '#7ADBB8' : VARIANT === 'preview' ? '#8CCBF9' : '#FFFFFF'
+      },
       intentFilters:
         VARIANT === 'production'
           ? [
@@ -57,6 +63,16 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       'expo-router',
       'expo-secure-store',
       'expo-localization',
+      [
+        'expo-splash-screen',
+        {
+          image: './assets/splash-icon.png',
+          imageWidth: 160,
+          resizeMode: 'contain',
+          backgroundColor: '#FFFFFF',
+          dark: { image: './assets/splash-icon-dark.png', backgroundColor: '#131314' }
+        }
+      ],
       ['expo-notifications', { defaultChannel: 'needs-attention' }]
     ],
     experiments: { typedRoutes: true },
