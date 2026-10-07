@@ -14,7 +14,7 @@ Expo Go is not supported: sign-in storage, notifications, links and the native c
 
 ### Prerequisites
 
-`make setup` installs what is missing and keeps what is there: a JDK 17 (`openjdk-17-jdk` with apt on Ubuntu, Homebrew on macOS; your default Java stays as it is, the build uses `JAVA_HOME`), the Android command-line tools under `ANDROID_HOME` (`~/Android/Sdk` by default), `platform-tools` (adb), SDK platform 36 with build-tools 36.0.0 and the NDK React Native 0.86 wants, the emulator with one Pixel 8 API 36 virtual device, EAS CLI, and on macOS the Xcode Command Line Tools and CocoaPods. It ends by printing the `export` lines (`JAVA_HOME`, `ANDROID_HOME`, `PATH`) to add to your shell profile; the Makefile sets them for its own targets, so `make dev-android` works before that. `make tools` shows what is found.
+`make setup` installs what is missing and keeps what is there: a JDK 17 as the system Java (`openjdk-17-jdk` with apt on Ubuntu, replacing an older one; Homebrew on macOS), the Android command-line tools under `ANDROID_HOME` (`~/Android/Sdk` by default), `platform-tools` (adb), SDK platform 36 with build-tools 36.0.0 and the NDK React Native 0.86 wants, the emulator with one Pixel 8 API 36 virtual device, EAS CLI, and on macOS the Xcode Command Line Tools and CocoaPods. It ends by printing the `export` lines (`ANDROID_HOME`, `PATH`) to add to your shell profile; the Makefile sets them for its own targets, so `make dev-android` works before that. `make tools` shows what is found.
 
 - Node 20.19, 22.13 or 24.3 and later (`engines` in `package.json`); npm 10.
 - Android: what `make setup` installs, or Android Studio with the same SDK components. A device needs USB debugging on.
