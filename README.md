@@ -109,6 +109,7 @@ Development, `e2e` and `preview` builds sign in with a handle and password or a 
 npm run check            # typecheck, lint, forbidden imports, tests
 npm run test:watch       # tests while editing
 npm run check:imports    # no Jupyter, JupyterLab, Lumino, React DOM, Primer web or browser global
+npm run check:bundle     # the same, on what Metro resolved into the iOS and Android bundles (source maps)
 npm run doctor           # expo-doctor
 npm run export           # both bundles into dist/, to prove the Metro graph resolves
 ```

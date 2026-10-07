@@ -33,6 +33,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "check:imports": "node scripts/check-forbidden-imports.js",
+    "check:bundle": "rm -rf dist/bundle && expo export --platform ios --source-maps --output-dir dist/bundle/ios && expo export --platform android --source-maps --output-dir dist/bundle/android && node scripts/check-bundle.js dist/bundle",
     "doctor": "expo-doctor",
     "check": "npm run typecheck && npm run lint && npm run check:imports && npm test -- --ci"
   },
@@ -84,6 +85,10 @@
   },
   "jest": {
     "preset": "jest-expo",
+    "moduleNameMapper": {
+      "^react$": "<rootDir>/node_modules/react",
+      "^react/(.*)$": "<rootDir>/node_modules/react/$1"
+    },
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/scripts/fixtures/"
