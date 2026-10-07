@@ -16,17 +16,19 @@ import { AppState, Platform } from 'react-native';
 import { useSession } from '../auth/SessionProvider';
 import { environment } from '../config/environment';
 import { KEYS, RECONCILED } from '../features/queries';
+import { attachSocket, settleAnswer } from './channel';
 
 /** `https://host` -> `wss://host/api/ai-agents/v1/ws`. */
 export const wsUrlOf = (runUrl: string): string => `${runUrl.replace(/^http/, 'ws')}/api/ai-agents/v1/ws`;
 
-/** The queries one server event makes stale. */
+/** The queries one server broadcast (`{channel, event, data}`) makes stale. */
 export function keysOfEvent(raw: unknown): readonly QueryKey[] {
-  const type = raw && typeof raw === 'object' ? String((raw as Record<string, unknown>).type ?? '') : '';
-  if (type.startsWith('tool_approval') || type.startsWith('tool-approval')) {
+  const frame = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  const name = String(frame.event ?? frame.type ?? '');
+  if (name.startsWith('tool_approval') || name.startsWith('tool-approval') || name === 'notification_created') {
     return [KEYS.approvals];
   }
-  if (type.startsWith('deployment') || type.startsWith('app_')) {
+  if (name.startsWith('deployment') || name.startsWith('app_')) {
     return [KEYS.deployments, ['activity']];
   }
   return [];
@@ -67,6 +69,7 @@ export function useRealtime() {
       retry = null;
       const open = socket;
       socket = null;
+      attachSocket(null);
       open?.close();
     };
 
@@ -82,11 +85,15 @@ export function useRealtime() {
       socket = opened;
       opened.onopen = () => {
         attempts = 0;
+        attachSocket(opened);
         invalidate(RECONCILED);
       };
       opened.onmessage = event => {
         try {
-          invalidate(keysOfEvent(JSON.parse(String(event.data))));
+          const frame: unknown = JSON.parse(String(event.data));
+          if (!settleAnswer(frame)) {
+            invalidate(keysOfEvent(frame));
+          }
         } catch {
           // Unknown frames are ignored; REST stays the truth.
         }
@@ -94,6 +101,7 @@ export function useRealtime() {
       opened.onclose = () => {
         if (socket !== opened) return;
         socket = null;
+        attachSocket(null);
         if (active) {
           attempts += 1;
           retry = setTimeout(connect, Math.min(MAX_BACKOFF_MS, 1000 * 2 ** attempts));

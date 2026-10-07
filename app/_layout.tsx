@@ -10,9 +10,11 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { SessionProvider, useSession } from '../src/auth/SessionProvider';
+import { configureForegroundNotifications } from '../src/push/push';
 import { ThemeProvider, useTheme } from '../src/theme/ThemeProvider';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
+configureForegroundNotifications();
 
 function Routes({ fontsReady }: { fontsReady: boolean }) {
   const session = useSession();

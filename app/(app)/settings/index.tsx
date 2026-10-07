@@ -5,13 +5,15 @@
 
 import * as Application from 'expo-application';
 import Constants from 'expo-constants';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSession } from '../../../src/auth/SessionProvider';
 import { Picker } from '../../../src/components/native';
 import { Button, Screen, Text } from '../../../src/components/primitives';
-import { SectionTitle } from '../../../src/components/states';
+import { Row as LinkRow, SectionTitle } from '../../../src/components/states';
 import { environment } from '../../../src/config/environment';
+import { pushSupported, unregisterPush } from '../../../src/push/push';
 import { type ColorMode, useTheme } from '../../../src/theme/ThemeProvider';
 import { portableThemeOf, themeVariants } from '../../../src/theme/primer';
 import { SPACE } from '../../../src/theme/tokens';
@@ -39,6 +41,7 @@ const MODE_OPTIONS: { value: ColorMode; label: string }[] = [
 /** The account and the build, for support; never a token (M-011). */
 export default function Settings() {
   const session = useSession();
+  const router = useRouter();
   const { preference, setPreference } = useTheme();
   const [busy, setBusy] = useState(false);
   const env = environment();
@@ -47,6 +50,8 @@ export default function Settings() {
   const signOut = async () => {
     setBusy(true);
     try {
+      // Best effort: the server also drops a token Expo says is gone.
+      await unregisterPush().catch(() => undefined);
       await session.signOut();
     } finally {
       setBusy(false);
@@ -55,6 +60,13 @@ export default function Settings() {
 
   return (
     <Screen>
+      {pushSupported ? (
+        <LinkRow
+          title="Notifications"
+          detail="What this phone tells you while the app is closed"
+          onPress={() => router.push('/settings/notifications')}
+        />
+      ) : null}
       <SectionTitle>Appearance</SectionTitle>
       <View style={styles.row} accessible accessibilityLabel="Theme">
         <Text tone="muted" size="small" style={styles.label}>
