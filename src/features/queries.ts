@@ -16,6 +16,7 @@ import { EMPTY_FACES, listFaces } from '../api/faces';
 import { isProblem, Problem } from '../api/problems';
 import { disconnectProtocolConnection, listProtocolConnections } from '../api/protocolConnections';
 import { isAgentRuntime, listRuntimes } from '../api/runtimes';
+import { readProtocolActivity } from '../api/protocolActivity';
 import { useSession } from '../auth/SessionProvider';
 
 export const KEYS = {
@@ -27,7 +28,8 @@ export const KEYS = {
   deploymentEvents: (uid: string) => ['deployments', uid, 'events'] as const,
   allActivity: ['activity', '*all'] as const,
   faces: ['faces'] as const,
-  protocolConnections: ['protocol-connections'] as const
+  protocolConnections: ['protocol-connections'] as const,
+  protocolActivity: ['activity', 'protocols'] as const
 };
 
 /** Every key a reconnect refetches: approvals, deployments and visible activity. */
@@ -137,6 +139,11 @@ export function useFaces() {
 export function useProtocolConnections() {
   const { client } = useSession();
   return useQuery({ queryKey: KEYS.protocolConnections, queryFn: () => listProtocolConnections(client) });
+}
+
+export function useProtocolActivity() {
+  const { client } = useSession();
+  return useQuery({ queryKey: KEYS.protocolActivity, queryFn: () => readProtocolActivity(client), staleTime: 30_000 });
 }
 
 export function useDisconnectProtocolConnection() {

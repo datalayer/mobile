@@ -6,7 +6,8 @@
 import { Button, Screen } from '../../../src/components/primitives';
 import { QueryView } from '../../../src/components/states';
 import { ActivitySections, type Owners } from '../../../src/features/activity/ActivitySections';
-import { useAllActivity, useApplications, useFaces } from '../../../src/features/queries';
+import { ProtocolActivity } from '../../../src/features/activity/ProtocolActivity';
+import { useAllActivity, useApplications, useFaces, useProtocolActivity } from '../../../src/features/queries';
 import { AppFace } from '../../../src/identity/AppFace';
 
 /** Every application's activity in one list (M-040), completed sessions a page at a time. */
@@ -14,6 +15,7 @@ export default function Activity() {
   const activity = useAllActivity();
   const applications = useApplications();
   const faces = useFaces();
+  const protocols = useProtocolActivity();
   const names = new Map((applications.data ?? []).map(app => [app.appUid, app.name]));
   const owners: Owners = {
     nameOf: appUid => names.get(appUid) || 'An application',
@@ -35,6 +37,9 @@ export default function Activity() {
             ) : null}
           </>
         )}
+      </QueryView>
+      <QueryView query={protocols}>
+        {rows => <ProtocolActivity rows={rows} nameOf={owners.nameOf} />}
       </QueryView>
     </Screen>
   );

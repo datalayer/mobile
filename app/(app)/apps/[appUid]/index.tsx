@@ -10,9 +10,10 @@ import { Button, Screen, Text } from '../../../../src/components/primitives';
 import { Field, ProblemView, QueryView, Row, SectionTitle } from '../../../../src/components/states';
 import { Problem } from '../../../../src/api/problems';
 import { ActivitySections } from '../../../../src/features/activity/ActivitySections';
+import { ProtocolActivity } from '../../../../src/features/activity/ProtocolActivity';
 import { actionOf } from '../../../../src/features/approvals/format';
 import {
-  useActivity, useApplications, useChangeDeploymentState, useFaces, usePendingApprovals, useResetDeployment
+  useActivity, useApplications, useChangeDeploymentState, useFaces, usePendingApprovals, useProtocolActivity, useResetDeployment
 } from '../../../../src/features/queries';
 import { AppFace } from '../../../../src/identity/AppFace';
 import { relativeTime } from '../../../../src/i18n/time';
@@ -28,6 +29,7 @@ export default function ApplicationDetail() {
   const faces = useFaces();
   const approvals = usePendingApprovals();
   const activity = useActivity(appUid);
+  const protocolActivity = useProtocolActivity();
   const changingState = useChangeDeploymentState();
   const resetting = useResetDeployment();
   const [lifecycleSays, setLifecycleSays] = useState('');
@@ -152,6 +154,7 @@ export default function ApplicationDetail() {
         }}
       </QueryView>
       <QueryView query={activity}>{work => <ActivitySections work={work} />}</QueryView>
+      <QueryView query={protocolActivity}>{rows => <ProtocolActivity rows={rows} appUid={appUid} />}</QueryView>
     </Screen>
   );
 }
