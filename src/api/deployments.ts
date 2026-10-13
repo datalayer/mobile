@@ -24,6 +24,11 @@ export type Deployment = {
   speaks: DeploymentProtocols | null;
 };
 
+export type StoppedWork = {
+  stopped: { what: string; runtime: string }[];
+  notStopped: { what: string; runtime: string; why: string }[];
+};
+
 /** The same reading as the web `deploymentOf`, limited to what mobile shows. */
 export function deploymentOf(raw: Raw): Deployment {
   const version = count(raw.version);
@@ -89,4 +94,38 @@ export async function listDeployments(client: Client): Promise<Deployment[]> {
 export async function getDeployment(client: Client, uid: string): Promise<Deployment> {
   const body = await client(`${BASE}/${segment(uid)}`);
   return deploymentOf(record(body.deployment ?? body));
+}
+
+const workItems = (value: unknown): Raw[] => records(value);
+
+export function stoppedWorkOf(value: unknown): StoppedWork {
+  const raw = record(value);
+  return {
+    stopped: workItems(raw.stopped).map(item => ({ what: text(item.what), runtime: text(item.runtime) })),
+    notStopped: workItems(raw.not_stopped).map(item => ({
+      what: text(item.what), runtime: text(item.runtime), why: text(item.why)
+    }))
+  };
+}
+
+export function stoppedWorkWords(work: StoppedWork): string {
+  const stopped = work.stopped.length;
+  const first = stopped === 0 ? 'Paused: nothing was running.' : `Paused: ${stopped} ${stopped === 1 ? 'session' : 'sessions'} in progress stopped.`;
+  const missed = work.notStopped.map(item => `${item.what}${item.runtime ? ` (${item.runtime})` : ''}: ${item.why}`).join(' ');
+  return missed ? `${first} Not stopped — ${missed}` : first;
+}
+
+/** Owner-only on the server: pause/resume one exact deployment version. */
+export async function changeDeploymentState(
+  client: Client,
+  deployment: Pick<Deployment, 'uid' | 'version'>,
+  state: DeploymentState
+): Promise<{ deployment: Deployment; work: StoppedWork | null }> {
+  const body = await client(`${BASE}/${segment(deployment.uid)}`, {
+    method: 'PATCH', body: { version: deployment.version, state }
+  });
+  return {
+    deployment: deploymentOf(record(body.deployment)),
+    work: body.work ? stoppedWorkOf(body.work) : null
+  };
 }

@@ -8,7 +8,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { mergePages, readActivity } from '../api/activity';
 import { type Approval, type Decision, decide, getApproval, listPending, markRead } from '../api/approvals';
-import { applicationsOf, listDeployments } from '../api/deployments';
+import { applicationsOf, changeDeploymentState, listDeployments, type Deployment, type DeploymentState } from '../api/deployments';
 import { EMPTY_FACES, listFaces } from '../api/faces';
 import { isProblem, Problem } from '../api/problems';
 import { disconnectProtocolConnection, listProtocolConnections } from '../api/protocolConnections';
@@ -32,6 +32,21 @@ export const RECONCILED = [KEYS.approvals, KEYS.deployments, KEYS.runtimes, KEYS
 export function useApplications() {
   const { client } = useSession();
   return useQuery({ queryKey: KEYS.deployments, queryFn: () => listDeployments(client), select: applicationsOf });
+}
+
+export function useChangeDeploymentState() {
+  const { client } = useSession();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ deployment, state }: { deployment: Deployment; state: DeploymentState }) =>
+      changeDeploymentState(client, deployment, state),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: KEYS.deployments });
+      void queryClient.invalidateQueries({ queryKey: ['activity'] });
+      void queryClient.invalidateQueries({ queryKey: KEYS.approvals });
+      void queryClient.invalidateQueries({ queryKey: KEYS.protocolConnections });
+    }
+  });
 }
 
 export function useAgentRuntimes() {
