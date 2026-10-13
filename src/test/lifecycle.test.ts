@@ -4,7 +4,9 @@
  */
 
 import { createClient } from '../api/client';
-import { changeDeploymentState, deploymentOf, stoppedWorkOf, stoppedWorkWords } from '../api/deployments';
+import {
+  changeDeploymentState, deploymentOf, getResetCounts, resetDeployment, resetWords, stoppedWorkOf, stoppedWorkWords
+} from '../api/deployments';
 
 describe('owner deployment lifecycle', () => {
   it('pauses the exact version and says everything that did and did not stop', async () => {
@@ -30,5 +32,30 @@ describe('owner deployment lifecycle', () => {
     const work = stoppedWorkOf({});
     expect(work).toEqual({ stopped: [], notStopped: [] });
     expect(stoppedWorkWords(work)).toBe('Paused: nothing was running.');
+  });
+
+  it('reads reset counts, then posts those exact confirmed counts', async () => {
+    const answers = [
+      { paused: true, reset: { conversations: 3, entries: 27, schedules: 2, memories_note: 'Its memories stay.' } },
+      { deleted: { conversations: 3, schedules: 2 }, not_deleted: [{ what: 'memories', why: 'Its memories stay.' }] }
+    ];
+    const fetcher = jest.fn(async () => new Response(JSON.stringify(answers.shift()), { status: 200 })) as unknown as typeof fetch;
+    const client = createClient({ baseUrl: 'https://run.test', getAccessToken: () => 'owner', fetch: fetcher });
+    const read = await getResetCounts(client, 'd1');
+    expect(read).toEqual({
+      paused: true,
+      counts: { conversations: 3, entries: 27, schedules: 2, memoriesNote: 'Its memories stay.' }
+    });
+    expect(resetWords(read.counts)).toEqual({
+      deletes: '3 conversations and 2 schedules',
+      stays: 'The deployment, its address and version stay. Its memories stay.'
+    });
+    await expect(resetDeployment(client, 'd1', read.counts)).resolves.toEqual({
+      notDeleted: [{ what: 'memories', why: 'Its memories stay.' }]
+    });
+    expect(fetcher).toHaveBeenLastCalledWith(
+      'https://run.test/api/ai-agents/v1/apps/deployments/d1/reset',
+      expect.objectContaining({ method: 'POST', body: JSON.stringify({ conversations: 3, schedules: 2 }) })
+    );
   });
 });

@@ -8,7 +8,10 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { mergePages, readActivity } from '../api/activity';
 import { type Approval, type Decision, decide, getApproval, listPending, markRead } from '../api/approvals';
-import { applicationsOf, changeDeploymentState, listDeployments, type Deployment, type DeploymentState } from '../api/deployments';
+import {
+  applicationsOf, changeDeploymentState, getResetCounts, listDeployments, resetDeployment,
+  type Deployment, type DeploymentState, type ResetCounts
+} from '../api/deployments';
 import { EMPTY_FACES, listFaces } from '../api/faces';
 import { isProblem, Problem } from '../api/problems';
 import { disconnectProtocolConnection, listProtocolConnections } from '../api/protocolConnections';
@@ -45,6 +48,23 @@ export function useChangeDeploymentState() {
       void queryClient.invalidateQueries({ queryKey: ['activity'] });
       void queryClient.invalidateQueries({ queryKey: KEYS.approvals });
       void queryClient.invalidateQueries({ queryKey: KEYS.protocolConnections });
+    }
+  });
+}
+
+export function useResetDeployment() {
+  const { client } = useSession();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ deployment, confirmed }: { deployment: Deployment; confirmed?: ResetCounts }) => {
+      if (!confirmed) return { phase: 'confirm' as const, ...(await getResetCounts(client, deployment.uid)) };
+      return { phase: 'done' as const, ...(await resetDeployment(client, deployment.uid, confirmed)) };
+    },
+    onSuccess: result => {
+      if (result.phase !== 'done') return;
+      void queryClient.invalidateQueries({ queryKey: ['activity'] });
+      void queryClient.invalidateQueries({ queryKey: KEYS.approvals });
+      queryClient.removeQueries({ queryKey: ['sessions'] });
     }
   });
 }

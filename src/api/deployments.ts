@@ -29,6 +29,13 @@ export type StoppedWork = {
   notStopped: { what: string; runtime: string; why: string }[];
 };
 
+export type ResetCounts = {
+  conversations: number;
+  entries: number;
+  schedules: number;
+  memoriesNote: string;
+};
+
 /** The same reading as the web `deploymentOf`, limited to what mobile shows. */
 export function deploymentOf(raw: Raw): Deployment {
   const version = count(raw.version);
@@ -127,5 +134,43 @@ export async function changeDeploymentState(
   return {
     deployment: deploymentOf(record(body.deployment)),
     work: body.work ? stoppedWorkOf(body.work) : null
+  };
+}
+
+export function resetCountsOf(value: unknown): ResetCounts {
+  const raw = record(value);
+  const safeCount = (item: unknown) => Math.max(0, Math.trunc(count(item)));
+  return {
+    conversations: safeCount(raw.conversations),
+    entries: safeCount(raw.entries),
+    schedules: safeCount(raw.schedules),
+    memoriesNote: text(raw.memories_note)
+  };
+}
+
+export async function getResetCounts(client: Client, uid: string): Promise<{ paused: boolean; counts: ResetCounts }> {
+  const body = await client(`${BASE}/${segment(uid)}/reset`);
+  return { paused: body.paused === true, counts: resetCountsOf(body.reset) };
+}
+
+export async function resetDeployment(
+  client: Client,
+  uid: string,
+  confirmed: Pick<ResetCounts, 'conversations' | 'schedules'>
+): Promise<{ notDeleted: { what: string; why: string }[] }> {
+  const body = await client(`${BASE}/${segment(uid)}/reset`, {
+    method: 'POST',
+    body: { conversations: confirmed.conversations, schedules: confirmed.schedules }
+  });
+  return {
+    notDeleted: records(body.not_deleted).map(item => ({ what: text(item.what), why: text(item.why) }))
+  };
+}
+
+export function resetWords(counts: ResetCounts): { deletes: string; stays: string } {
+  const plural = (value: number, word: string) => `${value} ${word}${value === 1 ? '' : 's'}`;
+  return {
+    deletes: `${plural(counts.conversations, 'conversation')} and ${plural(counts.schedules, 'schedule')}`,
+    stays: `The deployment, its address and version stay.${counts.memoriesNote ? ` ${counts.memoriesNote}` : ''}`
   };
 }

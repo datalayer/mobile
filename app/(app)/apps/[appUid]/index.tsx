@@ -11,11 +11,13 @@ import { Field, ProblemView, QueryView, Row, SectionTitle } from '../../../../sr
 import { Problem } from '../../../../src/api/problems';
 import { ActivitySections } from '../../../../src/features/activity/ActivitySections';
 import { actionOf } from '../../../../src/features/approvals/format';
-import { useActivity, useApplications, useChangeDeploymentState, useFaces, usePendingApprovals } from '../../../../src/features/queries';
+import {
+  useActivity, useApplications, useChangeDeploymentState, useFaces, usePendingApprovals, useResetDeployment
+} from '../../../../src/features/queries';
 import { AppFace } from '../../../../src/identity/AppFace';
 import { relativeTime } from '../../../../src/i18n/time';
 import { protocolLinesOf } from '../../../../src/protocols/deployments';
-import { stoppedWorkWords, type Deployment } from '../../../../src/api/deployments';
+import { resetWords, stoppedWorkWords, type Deployment, type ResetCounts } from '../../../../src/api/deployments';
 import { SPACE } from '../../../../src/theme/tokens';
 
 export default function ApplicationDetail() {
@@ -26,6 +28,7 @@ export default function ApplicationDetail() {
   const approvals = usePendingApprovals();
   const activity = useActivity(appUid);
   const changingState = useChangeDeploymentState();
+  const resetting = useResetDeployment();
   const [lifecycleSays, setLifecycleSays] = useState('');
   const refresh = () => {
     void applications.refetch();
@@ -53,6 +56,39 @@ export default function ApplicationDetail() {
       ]
     );
   };
+  const confirmReset = (deployment: Deployment, counts: ResetCounts) => {
+    const words = resetWords(counts);
+    Alert.alert(
+      `Reset this ${deployment.target} deployment?`,
+      `Deleted for good: ${words.deletes}. ${words.stays}`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset', style: 'destructive',
+          onPress: () => resetting.mutate({ deployment, confirmed: counts }, {
+            onSuccess: result => {
+              if (result.phase === 'done') {
+                const notes = result.notDeleted.map(item => item.why).filter(Boolean).join(' ');
+                setLifecycleSays(`Reset: ${words.deletes} deleted.${notes ? ` ${notes}` : ''}`);
+              }
+            },
+            onError: () => setLifecycleSays('')
+          })
+        }
+      ]
+    );
+  };
+  const askReset = (deployment: Deployment) => resetting.mutate({ deployment }, {
+    onSuccess: result => {
+      if (result.phase !== 'confirm') return;
+      if (!result.paused) {
+        setLifecycleSays('Pause it first: a deployment is reset only while paused.');
+        return;
+      }
+      confirmReset(deployment, result.counts);
+    },
+    onError: () => setLifecycleSays('')
+  });
   return (
     <Screen refreshing={activity.isRefetching} onRefresh={refresh}>
       <QueryView query={applications}>
@@ -69,18 +105,29 @@ export default function ApplicationDetail() {
               <Field label="State" value={app.state === 'paused' ? 'Paused' : 'Live'} />
               <Field label="Deployments" value={app.deployments.map(d => `${d.target} · version ${d.version}`).join('\n')} />
               {changingState.isError ? <ProblemView error={changingState.error} /> : null}
+              {resetting.isError ? <ProblemView error={resetting.error} /> : null}
               {lifecycleSays ? <Text accessibilityRole="alert">{lifecycleSays}</Text> : null}
               <SectionTitle>Owner controls</SectionTitle>
               <View style={{ gap: SPACE.sm }}>
                 {app.deployments.map(deployment => (
-                  <Button
-                    key={`${deployment.uid}-state`}
-                    label={`${deployment.state === 'live' ? 'Pause' : 'Resume'} ${deployment.target}`}
-                    tone="secondary"
-                    busy={changingState.isPending && changingState.variables?.deployment.uid === deployment.uid}
-                    disabled={changingState.isPending}
-                    onPress={() => changeState(deployment)}
-                  />
+                  <View key={`${deployment.uid}-controls`} style={{ gap: SPACE.sm }}>
+                    <Button
+                      label={`${deployment.state === 'live' ? 'Pause' : 'Resume'} ${deployment.target}`}
+                      tone="secondary"
+                      busy={changingState.isPending && changingState.variables?.deployment.uid === deployment.uid}
+                      disabled={changingState.isPending || resetting.isPending}
+                      onPress={() => changeState(deployment)}
+                    />
+                    {deployment.state === 'paused' ? (
+                      <Button
+                        label={`Reset ${deployment.target}…`}
+                        tone="plain"
+                        busy={resetting.isPending && resetting.variables?.deployment.uid === deployment.uid}
+                        disabled={changingState.isPending || resetting.isPending}
+                        onPress={() => askReset(deployment)}
+                      />
+                    ) : null}
+                  </View>
                 ))}
               </View>
               <Row
