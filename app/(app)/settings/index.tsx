@@ -5,7 +5,7 @@
 
 import * as Application from 'expo-application';
 import Constants from 'expo-constants';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSession } from '../../../src/auth/SessionProvider';
@@ -60,6 +60,11 @@ export default function Settings() {
 
   return (
     <Screen>
+      <LinkRow
+        title="In your name"
+        detail="Companies and businesses your applications may reach for you"
+        onPress={() => router.push('/settings/in-your-name' as Href)}
+      />
       {pushSupported ? (
         <LinkRow
           title="Notifications"

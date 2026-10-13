@@ -11,6 +11,7 @@ import { type Approval, type Decision, decide, getApproval, listPending, markRea
 import { applicationsOf, listDeployments } from '../api/deployments';
 import { EMPTY_FACES, listFaces } from '../api/faces';
 import { isProblem, Problem } from '../api/problems';
+import { disconnectProtocolConnection, listProtocolConnections } from '../api/protocolConnections';
 import { isAgentRuntime, listRuntimes } from '../api/runtimes';
 import { useSession } from '../auth/SessionProvider';
 
@@ -21,11 +22,12 @@ export const KEYS = {
   approval: (id: string) => ['approvals', id] as const,
   activity: (appUid: string) => ['activity', appUid] as const,
   allActivity: ['activity', '*all'] as const,
-  faces: ['faces'] as const
+  faces: ['faces'] as const,
+  protocolConnections: ['protocol-connections'] as const
 };
 
 /** Every key a reconnect refetches: approvals, deployments and visible activity. */
-export const RECONCILED = [KEYS.approvals, KEYS.deployments, KEYS.runtimes, ['activity']] as const;
+export const RECONCILED = [KEYS.approvals, KEYS.deployments, KEYS.runtimes, KEYS.protocolConnections, ['activity']] as const;
 
 export function useApplications() {
   const { client } = useSession();
@@ -87,6 +89,27 @@ export function useFaces() {
   const { client } = useSession();
   const faces = useQuery({ queryKey: KEYS.faces, queryFn: () => listFaces(client), staleTime: 5 * 60_000 });
   return faces.data ?? EMPTY_FACES;
+}
+
+export function useProtocolConnections() {
+  const { client } = useSession();
+  return useQuery({ queryKey: KEYS.protocolConnections, queryFn: () => listProtocolConnections(client) });
+}
+
+export function useDisconnectProtocolConnection() {
+  const { client } = useSession();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (reference: string) => disconnectProtocolConnection(client, reference),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: KEYS.protocolConnections });
+      void queryClient.invalidateQueries({ queryKey: ['activity'] });
+      void queryClient.invalidateQueries({ queryKey: KEYS.deployments });
+      void queryClient.invalidateQueries({ queryKey: KEYS.approvals });
+      queryClient.removeQueries({ queryKey: ['sessions'] });
+      queryClient.removeQueries({ queryKey: ['protocols'] });
+    }
+  });
 }
 
 /**

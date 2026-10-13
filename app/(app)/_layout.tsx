@@ -30,6 +30,7 @@ export default function AppLayout() {
       <Stack.Screen name="agents/[runtimeName]/index" options={{ title: 'Agent' }} />
       <Stack.Screen name="approvals/[approvalId]" options={{ title: 'Approval' }} />
       <Stack.Screen name="settings/index" options={{ title: 'Settings' }} />
+      <Stack.Screen name="settings/in-your-name" options={{ title: 'In your name' }} />
       <Stack.Screen name="settings/notifications" options={{ title: 'Notifications' }} />
     </Stack>
   );
