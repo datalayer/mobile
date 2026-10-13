@@ -7,6 +7,7 @@
 
 import type { Client } from './client';
 import { count, type Raw, record, records, segment, text } from './fields';
+import { deploymentProtocolsOf, type DeploymentProtocols } from '../protocols/deployments';
 
 export type DeploymentTarget = 'hosted' | 'embedded' | 'preview';
 export type DeploymentState = 'live' | 'paused';
@@ -20,6 +21,7 @@ export type Deployment = {
   state: DeploymentState;
   slug: string;
   updatedAt: string;
+  speaks: DeploymentProtocols | null;
 };
 
 /** The same reading as the web `deploymentOf`, limited to what mobile shows. */
@@ -33,7 +35,8 @@ export function deploymentOf(raw: Raw): Deployment {
     target: raw.target === 'embedded' || raw.target === 'preview' ? raw.target : 'hosted',
     state: raw.state === 'paused' ? 'paused' : 'live',
     slug: text(raw.slug),
-    updatedAt: text(raw.updated_at)
+    updatedAt: text(raw.updated_at),
+    speaks: deploymentProtocolsOf(raw.speaks)
   };
 }
 

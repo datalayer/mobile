@@ -17,6 +17,7 @@ export type Approval = {
   status: string;
   read: boolean;
   note: string;
+  expiresAt: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -31,6 +32,7 @@ export function approvalOf(raw: Raw): Approval {
     status: text(raw.status) || 'pending',
     read: Boolean(raw.read),
     note: text(raw.note),
+    expiresAt: text(raw.expires_at),
     createdAt: text(raw.created_at),
     updatedAt: text(raw.updated_at)
   };

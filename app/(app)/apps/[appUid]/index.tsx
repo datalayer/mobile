@@ -12,6 +12,7 @@ import { actionOf } from '../../../../src/features/approvals/format';
 import { useActivity, useApplications, useFaces, usePendingApprovals } from '../../../../src/features/queries';
 import { AppFace } from '../../../../src/identity/AppFace';
 import { relativeTime } from '../../../../src/i18n/time';
+import { protocolLinesOf } from '../../../../src/protocols/deployments';
 
 export default function ApplicationDetail() {
   const { appUid = '' } = useLocalSearchParams<{ appUid: string }>();
@@ -40,6 +41,14 @@ export default function ApplicationDetail() {
               <AppFace face={faces.byUid.get(appUid)} size={64} />
               <Field label="State" value={app.state === 'paused' ? 'Paused' : 'Live'} />
               <Field label="Deployments" value={app.deployments.map(d => `${d.target} · version ${d.version}`).join('\n')} />
+              <SectionTitle>Protocols</SectionTitle>
+              {app.deployments.map(deployment => (
+                <Field
+                  key={`${deployment.uid}-protocols`}
+                  label={`${deployment.target} · version ${deployment.version}`}
+                  value={protocolLinesOf(deployment.speaks).join('\n')}
+                />
+              ))}
               <SectionTitle>{`Waiting for you (${waiting.length})`}</SectionTitle>
               {waiting.map(approval => (
                 <Row

@@ -22,6 +22,8 @@ import {
 } from '../../../src/features/approvals/format';
 import { useApproval, useDecide, useMarkRead } from '../../../src/features/queries';
 import { absoluteTime, relativeTime } from '../../../src/i18n/time';
+import { ProtocolApprovalDetails } from '../../../src/protocols/ProtocolApprovalDetails';
+import { isKnownProtocolApproval, protocolApprovalOf } from '../../../src/protocols/approvals';
 import { SPACE, useNativeTheme } from '../../../src/theme/tokens';
 
 /** Fetched on every open, marked read on the server; decided through the audited routes (M-020). */
@@ -54,8 +56,14 @@ export default function ApprovalDetail() {
       <QueryView query={approval}>
         {item => {
           const message = messageOfApproval(item);
+          const protocolProposal = protocolApprovalOf(item);
           const box = { borderColor: colors.border, backgroundColor: colors.inset, borderRadius: Math.min(radius.card, 16) };
-          const action = actionOf(item.toolName);
+          const action =
+            protocolProposal?.kind === 'pap-operation'
+              ? `Operation at ${protocolProposal.company}`
+              : protocolProposal?.kind === 'protocol-purchase'
+                ? `Purchase from ${protocolProposal.merchant}`
+                : actionOf(item.toolName);
           const pending = item.status === 'pending' && outcome !== 'gone';
           return (
             <>
@@ -68,8 +76,12 @@ export default function ApprovalDetail() {
               <Field label="Application" value={applicationOf(item)} />
               <Field label={APPROVAL_WORDS.why} value={whyAsked(item)} />
               <Field label="Asked" value={`${absoluteTime(item.createdAt)} (${relativeTime(item.createdAt)})`} />
-              <SectionTitle>{APPROVAL_WORDS.arguments}</SectionTitle>
-              {message ? (
+              {protocolProposal ? <ProtocolApprovalDetails proposal={protocolProposal} /> : null}
+              {!protocolProposal ? <SectionTitle>{APPROVAL_WORDS.arguments}</SectionTitle> : null}
+              {!protocolProposal && isKnownProtocolApproval(item) ? (
+                <Text tone="danger">The typed protocol proposal could not be verified. Review every raw argument before deciding.</Text>
+              ) : null}
+              {!protocolProposal && message ? (
                 <>
                   <Field label={APPROVAL_WORDS.to} value={message.to} />
                   <Field label={APPROVAL_WORDS.cc} value={message.cc} />
@@ -81,11 +93,11 @@ export default function ApprovalDetail() {
                     {message.body}
                   </Text>
                 </>
-              ) : (
+              ) : !protocolProposal ? (
                 <Text selectable size="small" style={[styles.raw, box]}>
                   {argumentsShown(item)}
                 </Text>
-              )}
+              ) : null}
               {pending ? (
                 <View style={styles.controls}>
                   <Button label={DECISION_WORDS.approve} busy={deciding.isPending} onPress={() => setConfirming('approve')} testID="approve" />
