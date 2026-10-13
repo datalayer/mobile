@@ -27,6 +27,13 @@ export type ProtocolActivityRow = {
   currency: string;
 };
 
+export type ProtocolCounterpartHealth = {
+  protocol: Protocol;
+  counterpart: string;
+  lastAt: string;
+  outcome: string;
+};
+
 const WORDS: Record<string, { kind: ProtocolActivityKind; title: string }> = {
   'pap.sign_in.started': { kind: 'consent', title: 'Sign-in requested' },
   'pap.sign_in.completed': { kind: 'consent', title: 'Consent granted' },
@@ -135,3 +142,26 @@ export const protocolActivityDetail = (row: ProtocolActivityRow): string => {
   ].filter(Boolean);
   return [row.counterpart, ...exact].join(' · ');
 };
+
+const latestCounterparts = (
+  rows: readonly ProtocolActivityRow[],
+  accepts: (row: ProtocolActivityRow) => boolean
+): ProtocolCounterpartHealth[] => {
+  const latest = new Map<string, ProtocolCounterpartHealth>();
+  for (const row of rows) {
+    if (!accepts(row)) continue;
+    const key = `${row.protocol}:${row.counterpart}`;
+    if (!latest.has(key) || row.at > latest.get(key)!.lastAt) {
+      latest.set(key, { protocol: row.protocol, counterpart: row.counterpart, lastAt: row.at, outcome: row.outcome });
+    }
+  }
+  return [...latest.values()];
+};
+
+/** Test merchants the application actually contacted, most recent event per merchant and protocol. */
+export const testMerchantsOf = (rows: readonly ProtocolActivityRow[], appUid: string): ProtocolCounterpartHealth[] =>
+  latestCounterparts(rows, row => row.appUid === appUid && (row.protocol === 'ucp' || row.protocol === 'acp'));
+
+/** Last safe signed-request result per counterpart and protocol; no key, path, body, code or trace. */
+export const signedRequestHealthOf = (rows: readonly ProtocolActivityRow[], appUid: string): ProtocolCounterpartHealth[] =>
+  latestCounterparts(rows, row => row.appUid === appUid && row.kind === 'signed_request');

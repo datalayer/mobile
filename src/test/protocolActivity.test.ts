@@ -4,7 +4,9 @@
  */
 
 import { createClient } from '../api/client';
-import { protocolActivityDetail, protocolActivityRowOf, readProtocolActivity } from '../api/protocolActivity';
+import {
+  protocolActivityDetail, protocolActivityRowOf, readProtocolActivity, signedRequestHealthOf, testMerchantsOf
+} from '../api/protocolActivity';
 
 const operation = {
   uid: 'event-1',
@@ -97,5 +99,29 @@ describe('protocol Activity', () => {
       'https://run.test/api/mcp/v1/audit?method=ucp.*&limit=50',
       'https://run.test/api/mcp/v1/audit?method=acp.*&limit=50'
     ]));
+  });
+
+  it('projects only the latest safe merchant and signed-request diagnostics for one application', () => {
+    const base = protocolActivityRowOf(operation)!;
+    const merchant = protocolActivityRowOf({
+      ...operation,
+      uid: 'merchant-1', method: 'acp.checkout.completed', at: '2026-10-13T10:00:00Z',
+      client_info: { role: 'personal_agent', domain: 'shop.example', amount: 500, currency: 'EUR' }
+    })!;
+    const signed = protocolActivityRowOf({
+      ...operation,
+      uid: 'signed-1', method: 'pact.request.signed', at: '2026-10-13T11:00:00Z', decision: 'allowed', outcome: 'ok',
+      client_info: { role: 'personal_agent', domain: 'air.example', key_id: 'never-returned', status: 200 }
+    })!;
+    const olderSigned = { ...signed, uid: 'signed-older', at: '2026-10-12T11:00:00Z', outcome: 'Refused' };
+    const otherApp = { ...merchant, uid: 'other', appUid: 'app-2', counterpart: 'other.example' };
+    const rows = [signed, olderSigned, merchant, base, otherApp];
+    expect(testMerchantsOf(rows, 'app-1')).toEqual([
+      { protocol: 'acp', counterpart: 'shop.example', lastAt: merchant.at, outcome: merchant.outcome }
+    ]);
+    expect(signedRequestHealthOf(rows, 'app-1')).toEqual([
+      { protocol: 'pact', counterpart: 'air.example', lastAt: signed.at, outcome: 'Allowed · Succeeded' }
+    ]);
+    expect(JSON.stringify(signedRequestHealthOf(rows, 'app-1'))).not.toContain('never-returned');
   });
 });
