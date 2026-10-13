@@ -12,7 +12,12 @@
 /** The payload version this build reads; a newer one opens the inbox. */
 export const PAYLOAD_VERSION = 1;
 
-const ROUTES = [/^\/$/, /^\/approvals\/[A-Za-z0-9_-]{1,128}$/, /^\/apps\/[A-Za-z0-9_-]{1,128}$/];
+const ROUTES = [
+  /^\/$/,
+  /^\/approvals\/[A-Za-z0-9_-]{1,128}$/,
+  /^\/apps\/[A-Za-z0-9_-]{1,128}$/,
+  /^\/apps\/[A-Za-z0-9_-]{1,128}\/protocols$/
+];
 
 /** The route to open for a tapped notification's data, or `null` to stay where it is. */
 export function routeOfNotification(data: unknown): string | null {

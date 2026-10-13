@@ -27,6 +27,7 @@ export default function AppLayout() {
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="apps/[appUid]/index" options={{ title: 'Application' }} />
+      <Stack.Screen name="apps/[appUid]/protocols" options={{ title: 'Protocols' }} />
       <Stack.Screen name="agents/[runtimeName]/index" options={{ title: 'Agent' }} />
       <Stack.Screen name="approvals/[approvalId]" options={{ title: 'Approval' }} />
       <Stack.Screen name="settings/index" options={{ title: 'Settings' }} />

@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { Screen } from '../../../../src/components/primitives';
 import { Field, ProblemView, QueryView, Row, SectionTitle } from '../../../../src/components/states';
 import { Problem } from '../../../../src/api/problems';
@@ -41,14 +41,12 @@ export default function ApplicationDetail() {
               <AppFace face={faces.byUid.get(appUid)} size={64} />
               <Field label="State" value={app.state === 'paused' ? 'Paused' : 'Live'} />
               <Field label="Deployments" value={app.deployments.map(d => `${d.target} · version ${d.version}`).join('\n')} />
-              <SectionTitle>Protocols</SectionTitle>
-              {app.deployments.map(deployment => (
-                <Field
-                  key={`${deployment.uid}-protocols`}
-                  label={`${deployment.target} · version ${deployment.version}`}
-                  value={protocolLinesOf(deployment.speaks).join('\n')}
-                />
-              ))}
+              <Row
+                title="Protocols"
+                detail={app.deployments.flatMap(deployment => protocolLinesOf(deployment.speaks)).join(' · ')}
+                onPress={() => router.push({ pathname: '/apps/[appUid]/protocols', params: { appUid } } as unknown as Href)}
+                accessibilityHint="Shows what each running version speaks and its connections"
+              />
               <SectionTitle>{`Waiting for you (${waiting.length})`}</SectionTitle>
               {waiting.map(approval => (
                 <Row

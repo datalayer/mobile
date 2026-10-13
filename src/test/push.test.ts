@@ -42,6 +42,7 @@ describe('a tapped notification (M-025)', () => {
   it('opens only a route a push may name', () => {
     expect(routeOfNotification({ v: 1, route: '/approvals/a-1' })).toBe('/approvals/a-1');
     expect(routeOfNotification({ v: 1, route: '/apps/app_2' })).toBe('/apps/app_2');
+    expect(routeOfNotification({ v: 1, route: '/apps/app_2/protocols' })).toBe('/apps/app_2/protocols');
     expect(routeOfNotification({ v: 1, route: '/settings' })).toBe('/');
     expect(routeOfNotification({ v: 1, route: 'https://evil.example/approvals/a' })).toBe('/');
     expect(routeOfNotification({ v: 1, route: '/approvals/../settings' })).toBe('/');
