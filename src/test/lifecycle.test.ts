@@ -5,7 +5,8 @@
 
 import { createClient } from '../api/client';
 import {
-  changeDeploymentState, deploymentOf, getResetCounts, resetDeployment, resetWords, stoppedWorkOf, stoppedWorkWords
+  changeDeploymentState, deploymentEventOf, deploymentEventWords, deploymentOf, getResetCounts,
+  listDeploymentEvents, resetDeployment, resetWords, stoppedWorkOf, stoppedWorkWords
 } from '../api/deployments';
 
 describe('owner deployment lifecycle', () => {
@@ -57,5 +58,23 @@ describe('owner deployment lifecycle', () => {
       'https://run.test/api/ai-agents/v1/apps/deployments/d1/reset',
       expect.objectContaining({ method: 'POST', body: JSON.stringify({ conversations: 3, schedules: 2 }) })
     );
+  });
+
+  it('lists who changed a deployment and when, including organization pauses and reset counts', async () => {
+    const events = [
+      { uid: 'e1', kind: 'paused', actor_handle: 'ana', at: '2026-10-13T10:00:00Z', details: { by: 'organization_owner' } },
+      { uid: 'e2', kind: 'reset', actor_uid: 'u1', at: '2026-10-13T11:00:00Z', details: { deleted: { conversations: 2, schedules: 1 } } }
+    ];
+    const fetcher = jest.fn(async () => new Response(JSON.stringify({ events }), { status: 200 })) as unknown as typeof fetch;
+    const client = createClient({ baseUrl: 'https://run.test', getAccessToken: () => 'owner', fetch: fetcher });
+    const listed = await listDeploymentEvents(client, 'd1');
+    expect(listed).toHaveLength(2);
+    expect(deploymentEventWords(listed[0]!)).toContain('Paused by ana, an owner of your organization');
+    expect(deploymentEventWords(listed[1]!)).toContain('2 conversations and 1 schedule deleted');
+    expect(fetcher).toHaveBeenCalledWith(
+      'https://run.test/api/ai-agents/v1/apps/deployments/d1/events?limit=20',
+      expect.objectContaining({ method: 'GET' })
+    );
+    expect(() => deploymentEventOf({ kind: 'invented' })).toThrow('Unknown deployment event');
   });
 });

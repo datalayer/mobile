@@ -19,6 +19,7 @@ import { relativeTime } from '../../../../src/i18n/time';
 import { protocolLinesOf } from '../../../../src/protocols/deployments';
 import { resetWords, stoppedWorkWords, type Deployment, type ResetCounts } from '../../../../src/api/deployments';
 import { SPACE } from '../../../../src/theme/tokens';
+import { LifecycleHistory } from '../../../../src/features/deployments/LifecycleHistory';
 
 export default function ApplicationDetail() {
   const { appUid = '' } = useLocalSearchParams<{ appUid: string }>();
@@ -127,6 +128,7 @@ export default function ApplicationDetail() {
                         onPress={() => askReset(deployment)}
                       />
                     ) : null}
+                    <LifecycleHistory deploymentUid={deployment.uid} />
                   </View>
                 ))}
               </View>

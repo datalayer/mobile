@@ -9,7 +9,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import { mergePages, readActivity } from '../api/activity';
 import { type Approval, type Decision, decide, getApproval, listPending, markRead } from '../api/approvals';
 import {
-  applicationsOf, changeDeploymentState, getResetCounts, listDeployments, resetDeployment,
+  applicationsOf, changeDeploymentState, getResetCounts, listDeploymentEvents, listDeployments, resetDeployment,
   type Deployment, type DeploymentState, type ResetCounts
 } from '../api/deployments';
 import { EMPTY_FACES, listFaces } from '../api/faces';
@@ -24,6 +24,7 @@ export const KEYS = {
   approvals: ['approvals'] as const,
   approval: (id: string) => ['approvals', id] as const,
   activity: (appUid: string) => ['activity', appUid] as const,
+  deploymentEvents: (uid: string) => ['deployments', uid, 'events'] as const,
   allActivity: ['activity', '*all'] as const,
   faces: ['faces'] as const,
   protocolConnections: ['protocol-connections'] as const
@@ -48,6 +49,7 @@ export function useChangeDeploymentState() {
       void queryClient.invalidateQueries({ queryKey: ['activity'] });
       void queryClient.invalidateQueries({ queryKey: KEYS.approvals });
       void queryClient.invalidateQueries({ queryKey: KEYS.protocolConnections });
+      void queryClient.invalidateQueries({ queryKey: ['deployments'] });
     }
   });
 }
@@ -64,9 +66,15 @@ export function useResetDeployment() {
       if (result.phase !== 'done') return;
       void queryClient.invalidateQueries({ queryKey: ['activity'] });
       void queryClient.invalidateQueries({ queryKey: KEYS.approvals });
+      void queryClient.invalidateQueries({ queryKey: ['deployments'] });
       queryClient.removeQueries({ queryKey: ['sessions'] });
     }
   });
+}
+
+export function useDeploymentEvents(uid: string) {
+  const { client } = useSession();
+  return useQuery({ queryKey: KEYS.deploymentEvents(uid), queryFn: () => listDeploymentEvents(client, uid), enabled: Boolean(uid) });
 }
 
 export function useAgentRuntimes() {

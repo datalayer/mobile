@@ -36,6 +36,14 @@ export type ResetCounts = {
   memoriesNote: string;
 };
 
+export type DeploymentEvent = {
+  uid: string;
+  kind: 'promoted' | 'rolled_back' | 'paused' | 'resumed' | 'reset';
+  actor: string;
+  at: string;
+  details: Raw;
+};
+
 /** The same reading as the web `deploymentOf`, limited to what mobile shows. */
 export function deploymentOf(raw: Raw): Deployment {
   const version = count(raw.version);
@@ -173,4 +181,38 @@ export function resetWords(counts: ResetCounts): { deletes: string; stays: strin
     deletes: `${plural(counts.conversations, 'conversation')} and ${plural(counts.schedules, 'schedule')}`,
     stays: `The deployment, its address and version stay.${counts.memoriesNote ? ` ${counts.memoriesNote}` : ''}`
   };
+}
+
+const EVENT_KINDS = new Set<DeploymentEvent['kind']>(['promoted', 'rolled_back', 'paused', 'resumed', 'reset']);
+
+export function deploymentEventOf(value: unknown): DeploymentEvent {
+  const raw = record(value);
+  if (!EVENT_KINDS.has(raw.kind as DeploymentEvent['kind'])) throw new Error(`Unknown deployment event: ${String(raw.kind)}`);
+  return {
+    uid: text(raw.uid), kind: raw.kind as DeploymentEvent['kind'],
+    actor: text(raw.actor_handle) || text(raw.actor_uid), at: text(raw.at), details: record(raw.details)
+  };
+}
+
+export async function listDeploymentEvents(client: Client, uid: string): Promise<DeploymentEvent[]> {
+  const body = await client(`${BASE}/${segment(uid)}/events?limit=20`);
+  return records(body.events).map(deploymentEventOf);
+}
+
+export function deploymentEventWords(event: DeploymentEvent): string {
+  const from = Math.trunc(count(event.details.from));
+  const to = Math.trunc(count(event.details.to));
+  const moved = from > 0 && to > 0 ? ` from version ${from} to version ${to}` : '';
+  const verb = {
+    promoted: `Promoted${moved}`, rolled_back: `Rolled back${moved}`, paused: 'Paused', resumed: 'Resumed', reset: 'Reset'
+  }[event.kind];
+  const organization = event.kind === 'paused' && event.details.by === 'organization_owner' ? ', an owner of your organization' : '';
+  const deleted = record(event.details.deleted);
+  const deletedConversations = Math.trunc(count(deleted.conversations));
+  const deletedSchedules = Math.trunc(count(deleted.schedules));
+  const plural = (value: number, word: string) => `${value} ${word}${value === 1 ? '' : 's'}`;
+  const what = event.kind === 'reset' && Object.keys(deleted).length
+    ? ` — ${plural(deletedConversations, 'conversation')} and ${plural(deletedSchedules, 'schedule')} deleted`
+    : '';
+  return `${verb}${event.actor ? ` by ${event.actor}${organization}` : ''}${event.at ? `, ${new Date(event.at).toLocaleString()}` : ''}${what}`;
 }
