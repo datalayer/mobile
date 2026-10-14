@@ -21,6 +21,7 @@ import { protocolLinesOf } from '../../../../src/protocols/deployments';
 import { resetWords, stoppedWorkWords, type Deployment, type ResetCounts } from '../../../../src/api/deployments';
 import { SPACE } from '../../../../src/theme/tokens';
 import { LifecycleHistory } from '../../../../src/features/deployments/LifecycleHistory';
+import { RunningPermissions } from '../../../../src/features/apps/RunningPermissions';
 
 export default function ApplicationDetail() {
   const { appUid = '' } = useLocalSearchParams<{ appUid: string }>();
@@ -140,6 +141,7 @@ export default function ApplicationDetail() {
                 onPress={() => router.push({ pathname: '/apps/[appUid]/protocols', params: { appUid } } as unknown as Href)}
                 accessibilityHint="Shows what each running version speaks and its connections"
               />
+              {app.deployments.map(deployment => <RunningPermissions key={`${deployment.uid}-permissions`} deployment={deployment} />)}
               <SectionTitle>{`Waiting for you (${waiting.length})`}</SectionTitle>
               {waiting.map(approval => (
                 <Row

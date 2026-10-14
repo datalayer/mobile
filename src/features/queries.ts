@@ -17,6 +17,7 @@ import { isProblem, Problem } from '../api/problems';
 import { disconnectProtocolConnection, listProtocolConnections } from '../api/protocolConnections';
 import { isAgentRuntime, listRuntimes } from '../api/runtimes';
 import { readProtocolActivity } from '../api/protocolActivity';
+import { readRunningPermissions } from '../api/appPermissions';
 import { useSession } from '../auth/SessionProvider';
 
 export const KEYS = {
@@ -29,7 +30,8 @@ export const KEYS = {
   allActivity: ['activity', '*all'] as const,
   faces: ['faces'] as const,
   protocolConnections: ['protocol-connections'] as const,
-  protocolActivity: ['activity', 'protocols'] as const
+  protocolActivity: ['activity', 'protocols'] as const,
+  runningPermissions: (appUid: string, version: number) => ['apps', appUid, 'versions', version, 'permissions'] as const
 };
 
 /** Every key a reconnect refetches: approvals, deployments and visible activity. */
@@ -144,6 +146,16 @@ export function useProtocolConnections() {
 export function useProtocolActivity() {
   const { client } = useSession();
   return useQuery({ queryKey: KEYS.protocolActivity, queryFn: () => readProtocolActivity(client), staleTime: 30_000 });
+}
+
+export function useRunningPermissions(appUid: string, version: number) {
+  const { client } = useSession();
+  return useQuery({
+    queryKey: KEYS.runningPermissions(appUid, version),
+    queryFn: () => readRunningPermissions(client, appUid, version),
+    enabled: Boolean(appUid && version > 0),
+    staleTime: 5 * 60_000
+  });
 }
 
 export function useDisconnectProtocolConnection() {
