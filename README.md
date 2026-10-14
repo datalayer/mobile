@@ -6,7 +6,7 @@
 
 The running agents and LOOP applications of Datalayer, in your pocket: what needs you, the approvals to read in full before deciding, and the conversations to continue. Expo (SDK 57) and React Native, iOS and Android. The plan is `landings/datalayer/ui/plans/MOBILE.md`.
 
-The notification payload allowlist, event matrix and security-review/device gates are in [`docs/push-data-classification.md`](docs/push-data-classification.md). Privacy/store declarations and the push-credential incident procedure are in [`docs/privacy-and-store.md`](docs/privacy-and-store.md). The public, person-facing guide is [datalayer.ai/docs/mobile-app](https://datalayer.ai/docs/mobile-app).
+The notification payload allowlist, event matrix and security-review/device gates are in [`docs/push-data-classification.md`](docs/push-data-classification.md). Privacy/store declarations and the push-credential incident procedure are in [`docs/privacy-and-store.md`](docs/privacy-and-store.md). Account ownership, identifiers and credential custody are in [`docs/release-prerequisites.md`](docs/release-prerequisites.md). The public, person-facing guide is [datalayer.ai/docs/mobile-app](https://datalayer.ai/docs/mobile-app).
 
 ## Develop
 
@@ -132,6 +132,25 @@ git tag v0.1.0 && git push origin v0.1.0
 
 `.github/workflows/release.yaml` checks that the tag names that version, runs `npm run check` and `npm run check:bundle`, has EAS build the `.ipa` and `.aab` and submit them (TestFlight, Google Play internal track as a draft), and creates the GitHub release with the build ids. It needs the repository secret `EXPO_TOKEN` (an Expo robot token) and the signing and submit credentials kept in EAS (`eas credentials`: the App Store Connect API key, the Google Play service account). `.github/workflows/check.yaml` runs the checks on every pull request and push to `main`.
 
+### Environments and credentials
+
+The names below are the interface between Git, EAS and the stores. Values and
+credential files never belong in the repository.
+
+| Profile | EAS environment | Non-secret configuration | Credential source |
+|---|---|---|---|
+| `development`, `development-simulator`, `e2e` | `development` | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EAS_PROJECT_ID`; profile and variant come from `eas.json` | EAS development signing credentials |
+| `preview` | `preview` | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EAS_PROJECT_ID` | EAS internal-distribution credentials |
+| `staging` | `preview` | staging `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EAS_PROJECT_ID` | The production app's EAS/store signing credentials |
+| `production` | `production` | production `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EAS_PROJECT_ID` | The production app's EAS/store signing credentials |
+| GitHub release workflow | repository Actions secrets | none | `EXPO_TOKEN`, scoped to the Datalayer Expo project |
+
+EAS owns the iOS distribution/provisioning material and Android keystore.
+EAS Submit owns the App Store Connect API key and Google Play service-account
+JSON. APNs and FCM credentials are configured in the same Datalayer-owned
+project. Named primary and recovery owners are recorded outside Git according
+to [`docs/release-prerequisites.md`](docs/release-prerequisites.md).
+
 ```text
 commit → npm run check → preview build → staging (TestFlight, Play internal)
        → release candidate approved → production build → EAS Submit → store review → staged release
@@ -159,3 +178,45 @@ Google (`make publish-android`):
 3. Promote the tested artifact to production with a staged rollout; monitor each ring and halt on auth, approval, push or crash regression.
 
 `staging` is a store track of the production application, with the same signing and entitlements, pointed at staging services; it is not a differently signed approximation. The release owner does the final console review, chooses the rollout and records the store version URLs and review result. Manual upload with Transporter or the Play Console is the documented recovery path, with the same artifact.
+
+### Release-owner checklist
+
+Before tagging:
+
+- confirm the release commit is reviewed, clean, pushed and green in CI;
+- run `npm run doctor`, `npm run check` and `npm run check:bundle` with the committed lockfile;
+- bump `version`, verify the remote iOS build number and Android version code will increase, and check `runtimeVersion` equals the app version;
+- verify staging against the same backend contract and run the sign-in, approval race/stale state, notification tap, stream/stop and pause/reset smoke journeys;
+- verify store copy, screenshots, privacy/data-safety answers, support/privacy/deletion links and the non-customer review account;
+- nominate the release owner, incident owner and explicit go/no-go approver.
+
+After the workflow submits:
+
+- compare EAS build ids and checksums with the GitHub release and select only those artifacts in the consoles;
+- pass TestFlight/internal and required external/closed testing before review;
+- start the phased/staged rollout, watch auth, push, approval, crash and stream health, and record the checkpoints;
+- close the release record only after the store URLs, review results and rollback evidence are attached.
+
+### Halt, rollback and recovery
+
+Halt a rollout for wrong-account data, incomplete or stale approval context,
+an authorization bypass, credential leakage, unusable sign-in, elevated crash
+rate or material push/stream failure. Stop the phased/staged rollout in both
+store consoles, disable the affected server capability and set the server's
+minimum-supported-version policy when an installed binary is unsafe.
+
+An OTA rollback is allowed only to a previously staged update on the same
+`runtimeVersion`; native/config/permission faults require a new incremented
+binary. Never point an old JavaScript update at a different native runtime.
+If EAS Submit fails after a successful build, download that exact artifact
+from EAS and upload the `.ipa` with Transporter or the `.aab` in Play Console;
+do not rebuild it. If signing or submission credentials fail, stop, rotate or
+recover them with their recovery owner, then retry the same recorded commit.
+
+Every release record contains: version and tag; commit and lockfile checksum;
+release/go-no-go/incident owners; EAS project, build and submit ids; iOS build
+number and Android version code; artifact checksums; backend environment and
+contract versions; test evidence; store review ids/results/URLs; rollout
+percentages and timestamps; metrics and incidents; halt/rollback decisions;
+and final completion time. A second person must be able to perform a staging
+release from this section alone before M-059 is considered fully verified.

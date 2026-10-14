@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Copyright (c) 2026 Datalayer, Inc.
+# Distributed under the terms of the Modified BSD License.
+
+# Doctor-only bridge; see ../run-expo-doctor.cjs. Command substitution strips
+# trailing newlines, then printf restores one so spawn-async receives the full
+# JavaScript child's stdout through a shell process.
+set -o pipefail
+
+output="$("${DATALAYER_DOCTOR_REAL_NODE:?}" "$@")"
+status=$?
+
+if [[ -n "${output}" ]]; then
+  printf '%s\n' "${output}"
+fi
+
+exit "${status}"
