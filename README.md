@@ -6,6 +6,8 @@
 
 The running agents and LOOP applications of Datalayer, in your pocket: what needs you, the approvals to read in full before deciding, and the conversations to continue. Expo (SDK 57) and React Native, iOS and Android. The plan is `landings/datalayer/ui/plans/MOBILE.md`.
 
+The notification payload allowlist, event matrix and security-review/device gates are in [`docs/push-data-classification.md`](docs/push-data-classification.md). The public, person-facing guide is [datalayer.ai/docs/mobile-app](https://datalayer.ai/docs/mobile-app).
+
 ## Develop
 
 The package is a workspace of the monorepo: install from the monorepo root (`npm install` in `src/`), never here. It pins `react` and the native modules (`react-native-reanimated`, `react-native-worklets`, `react-native-gesture-handler`) to the versions Expo SDK 57 links, which npm keeps under this package's `node_modules` when the workspace holds newer ones; `metro.config.js` resolves them from there. `expo-doctor` reports those as duplicates: that is the monorepo, not a defect, as long as the versions under this package are the ones `expo install --check` expects.
