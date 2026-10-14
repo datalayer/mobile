@@ -6,6 +6,7 @@
 import * as Application from 'expo-application';
 import Constants from 'expo-constants';
 import { useRouter, type Href } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSession } from '../../../src/auth/SessionProvider';
@@ -13,6 +14,7 @@ import { Picker } from '../../../src/components/native';
 import { Button, Screen, Text } from '../../../src/components/primitives';
 import { Row as LinkRow, SectionTitle } from '../../../src/components/states';
 import { environment } from '../../../src/config/environment';
+import { STORE_LINKS } from '../../../src/config/resources';
 import { pushSupported, unregisterPush } from '../../../src/push/push';
 import { type ColorMode, useTheme } from '../../../src/theme/ThemeProvider';
 import { portableThemeOf, themeVariants } from '../../../src/theme/primer';
@@ -31,7 +33,10 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-const THEME_OPTIONS = themeVariants.map(variant => ({ value: variant, label: portableThemeOf(variant).label }));
+const THEME_OPTIONS = themeVariants.map((variant) => ({
+  value: variant,
+  label: portableThemeOf(variant).label
+}));
 const MODE_OPTIONS: { value: ColorMode; label: string }[] = [
   { value: 'auto', label: 'System' },
   { value: 'light', label: 'Light' },
@@ -77,24 +82,40 @@ export default function Settings() {
         <Text tone="muted" size="small" style={styles.label}>
           Theme
         </Text>
-        <Picker selectedValue={preference.variant} onValueChange={variant => setPreference({ variant })} options={THEME_OPTIONS} />
+        <Picker selectedValue={preference.variant} onValueChange={(variant) => setPreference({ variant })} options={THEME_OPTIONS} />
       </View>
       <View style={styles.row} accessible accessibilityLabel="Colour mode">
         <Text tone="muted" size="small" style={styles.label}>
           Colour mode
         </Text>
-        <Picker selectedValue={preference.colorMode} onValueChange={colorMode => setPreference({ colorMode })} options={MODE_OPTIONS} />
+        <Picker selectedValue={preference.colorMode} onValueChange={(colorMode) => setPreference({ colorMode })} options={MODE_OPTIONS} />
       </View>
       <SectionTitle>Account and build</SectionTitle>
       {person ? <Row label="Signed in as" value={`${person.displayName} (@${person.handle})`} /> : null}
       <Row label="Services" value={env.runUrl} />
       <Row label="Build profile" value={env.profile} />
       <Row label="Variant" value={String(Constants.expoConfig?.extra?.variant ?? 'unknown')} />
-      <Row
-        label="Version"
-        value={`${Application.nativeApplicationVersion ?? '?'} (${Application.nativeBuildVersion ?? '?'})`}
-      />
+      <Row label="Version" value={`${Application.nativeApplicationVersion ?? '?'} (${Application.nativeBuildVersion ?? '?'})`} />
       <Row label="Runtime" value={String(Constants.expoConfig?.runtimeVersion ?? 'unknown')} />
+      <SectionTitle>Help and privacy</SectionTitle>
+      <LinkRow
+        title="Privacy policy"
+        detail="What Datalayer collects and why"
+        onPress={() => void WebBrowser.openBrowserAsync(STORE_LINKS.privacy)}
+        accessibilityHint="Opens in your browser"
+      />
+      <LinkRow
+        title="Support"
+        detail="Ask for help with this app"
+        onPress={() => void WebBrowser.openBrowserAsync(STORE_LINKS.support)}
+        accessibilityHint="Opens in your browser"
+      />
+      <LinkRow
+        title="Request account deletion"
+        detail="Ask Datalayer to delete your account and associated data"
+        onPress={() => void WebBrowser.openBrowserAsync(STORE_LINKS.accountDeletion)}
+        accessibilityHint="Opens the signed-in support path in your browser"
+      />
       <Button tone="secondary" label="Sign out" busy={busy} onPress={signOut} />
     </Screen>
   );

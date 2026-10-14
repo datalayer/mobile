@@ -9,16 +9,29 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
 type Variant = 'development' | 'preview' | 'production';
 
 const VARIANT: Variant =
-  process.env.APP_VARIANT === 'development' || process.env.APP_VARIANT === 'preview'
-    ? process.env.APP_VARIANT
-    : 'production';
+  process.env.APP_VARIANT === 'development' || process.env.APP_VARIANT === 'preview' ? process.env.APP_VARIANT : 'production';
 
 const BASE_ID = 'ai.datalayer.mobile';
 
 const VARIANTS: Record<Variant, { name: string; id: string; scheme: string; icon: string }> = {
-  development: { name: 'Datalayer Dev', id: `${BASE_ID}.dev`, scheme: 'datalayer-dev', icon: './assets/icon-development.png' },
-  preview: { name: 'Datalayer Preview', id: `${BASE_ID}.preview`, scheme: 'datalayer-preview', icon: './assets/icon-preview.png' },
-  production: { name: 'Datalayer', id: BASE_ID, scheme: 'datalayer', icon: './assets/icon.png' }
+  development: {
+    name: 'Datalayer Dev',
+    id: `${BASE_ID}.dev`,
+    scheme: 'datalayer-dev',
+    icon: './assets/icon-development.png'
+  },
+  preview: {
+    name: 'Datalayer Preview',
+    id: `${BASE_ID}.preview`,
+    scheme: 'datalayer-preview',
+    icon: './assets/icon-preview.png'
+  },
+  production: {
+    name: 'Datalayer',
+    id: BASE_ID,
+    scheme: 'datalayer',
+    icon: './assets/icon.png'
+  }
 };
 
 export default ({ config }: ConfigContext): ExpoConfig => {
@@ -39,7 +52,37 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       bundleIdentifier: variant.id,
       supportsTablet: true,
       associatedDomains: VARIANT === 'production' ? ['applinks:datalayer.ai'] : [],
-      config: { usesNonExemptEncryption: false }
+      config: { usesNonExemptEncryption: false },
+      privacyManifests: {
+        NSPrivacyTracking: false,
+        NSPrivacyTrackingDomains: [],
+        NSPrivacyCollectedDataTypes: [
+          {
+            NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypeUserID',
+            NSPrivacyCollectedDataTypeLinked: true,
+            NSPrivacyCollectedDataTypeTracking: false,
+            NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAppFunctionality']
+          },
+          {
+            NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypeDeviceID',
+            NSPrivacyCollectedDataTypeLinked: true,
+            NSPrivacyCollectedDataTypeTracking: false,
+            NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAppFunctionality']
+          },
+          {
+            NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypeProductInteraction',
+            NSPrivacyCollectedDataTypeLinked: true,
+            NSPrivacyCollectedDataTypeTracking: false,
+            NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAppFunctionality']
+          },
+          {
+            NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypeOtherUserContent',
+            NSPrivacyCollectedDataTypeLinked: true,
+            NSPrivacyCollectedDataTypeTracking: false,
+            NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAppFunctionality']
+          }
+        ]
+      }
     },
     android: {
       package: variant.id,
@@ -54,7 +97,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
               {
                 action: 'VIEW',
                 autoVerify: true,
-                data: [{ scheme: 'https', host: 'datalayer.ai', pathPrefix: '/mobile' }],
+                data: [
+                  {
+                    scheme: 'https',
+                    host: 'datalayer.ai',
+                    pathPrefix: '/mobile'
+                  }
+                ],
                 category: ['BROWSABLE', 'DEFAULT']
               }
             ]
@@ -71,7 +120,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           imageWidth: 160,
           resizeMode: 'contain',
           backgroundColor: '#FFFFFF',
-          dark: { image: './assets/splash-icon-dark.png', backgroundColor: '#131314' }
+          dark: {
+            image: './assets/splash-icon-dark.png',
+            backgroundColor: '#131314'
+          }
         }
       ],
       ['expo-notifications', { defaultChannel: 'needs-attention' }]
