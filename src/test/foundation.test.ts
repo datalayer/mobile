@@ -61,11 +61,53 @@ describe('the client', () => {
 
   it('turns a refusal into a Problem whose detail carries no query value', async () => {
     const client = createClient({ baseUrl: 'https://run', getAccessToken: () => undefined, fetch: respond(404, { detail: 'gone' }) });
-    const failure = client('/api/x?token=leak').catch(error => error);
+    const failure = client('/api/x?token=leak').catch((error) => error);
     const problem = (await failure) as Problem;
     expect(problem.kind).toBe('not-found');
     expect(problem.detail).toBe('GET https://run/api/x → 404: gone');
     expect(problem.detail).not.toContain('leak');
+  });
+
+  it.each([
+    [401, 'unauthenticated'],
+    [403, 'forbidden'],
+    [404, 'not-found'],
+    [409, 'conflict'],
+    [429, 'rate-limited'],
+    [503, 'unavailable']
+  ] as const)('normalizes HTTP %s as %s', async (status, kind) => {
+    const client = createClient({ baseUrl: 'https://run', getAccessToken: () => undefined, fetch: respond(status, { detail: 'safe' }) });
+    await expect(client('/api/item')).rejects.toMatchObject({ kind, status, message: PROBLEM_WORDS[kind] });
+  });
+
+  it('refreshes once after a 401 and does not expose either token', async () => {
+    const fetcher = jest
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ detail: 'expired' }), { status: 401 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    const refreshAccessToken = jest.fn(async () => 'fresh-secret');
+    const client = createClient({
+      baseUrl: 'https://run',
+      getAccessToken: () => 'old-secret',
+      refreshAccessToken,
+      fetch: fetcher as typeof fetch
+    });
+    await expect(client('/api/item')).resolves.toEqual({ ok: true });
+    expect(refreshAccessToken).toHaveBeenCalledTimes(1);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(fetcher.mock.calls.map(([, init]) => init.headers.Authorization)).toEqual(['Bearer old-secret', 'Bearer fresh-secret']);
+    expect(JSON.stringify(fetcher.mock.calls)).not.toContain('token=');
+  });
+
+  it('says timeout when its own deadline aborts the request', async () => {
+    const fetcher = jest.fn(
+      (_url: string, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) =>
+          init?.signal?.addEventListener('abort', () => reject(new Error('aborted')), { once: true })
+        )
+    ) as unknown as typeof fetch;
+    const client = createClient({ baseUrl: 'https://run', getAccessToken: () => undefined, fetch: fetcher, timeoutMs: 1 });
+    await expect(client('/slow')).rejects.toMatchObject({ kind: 'timeout', message: PROBLEM_WORDS.timeout });
   });
 
   it('says offline when the request never reached a server', async () => {
@@ -77,7 +119,11 @@ describe('the client', () => {
   });
 
   it('treats a body that says success: false as a failure', async () => {
-    const client = createClient({ baseUrl: 'https://run', getAccessToken: () => undefined, fetch: respond(200, { success: false, message: 'no' }) });
+    const client = createClient({
+      baseUrl: 'https://run',
+      getAccessToken: () => undefined,
+      fetch: respond(200, { success: false, message: 'no' })
+    });
     await expect(client('/x')).rejects.toMatchObject({ kind: 'unexpected' });
   });
 });
