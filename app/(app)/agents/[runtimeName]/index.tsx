@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { Screen } from '../../../../src/components/primitives';
 import { Field, ProblemView, QueryView, Row, SectionTitle } from '../../../../src/components/states';
 import { Problem } from '../../../../src/api/problems';
@@ -34,6 +34,13 @@ export default function AgentDetail() {
               <Field label="Environment" value={runtime.environment} />
               <Field label="Started" value={runtime.startedAt ? `${absoluteTime(runtime.startedAt)} (${relativeTime(runtime.startedAt)})` : ''} />
               <Field label="Ends" value={absoluteTime(runtime.expiredAt)} />
+              <Row
+                title="Talk to this agent"
+                detail="A conversation with it while it runs. It keeps no record and asks no questions an application would."
+                onPress={() =>
+                  router.push({ pathname: '/agents/[runtimeName]/conversation', params: { runtimeName } } as unknown as Href)
+                }
+              />
               <SectionTitle>{`Waiting for you (${waiting.length})`}</SectionTitle>
               {waiting.map(approval => (
                 <Row

@@ -27,7 +27,8 @@ describe('a standalone agent stays narrower than an application (M-014a)', () =>
       type: 'agent',
       state: 'running',
       startedAt: '',
-      expiredAt: ''
+      expiredAt: '',
+      ingress: ''
     });
   });
 });

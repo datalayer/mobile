@@ -24,4 +24,12 @@ describe('the source-level accessibility baseline (M-050a)', () => {
     expect(approval).toContain('announceForAccessibility');
     expect(approval).toContain('accessibilityLiveRegion="assertive"');
   });
+
+  it('announces a complete answer once, never token by token, and labels the conversation controls', () => {
+    const view = source('features/conversations/ConversationView.tsx');
+    expect(view).toContain("announceForAccessibility('The answer is complete.')");
+    expect(view).toContain('accessibilityState={{ expanded: open');
+    expect(view).toContain('accessibilityLabel="Message"');
+    expect(view).not.toContain('maxFontSizeMultiplier');
+  });
 });

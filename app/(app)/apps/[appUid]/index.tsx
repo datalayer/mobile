@@ -22,6 +22,8 @@ import { resetWords, stoppedWorkWords, type Deployment, type ResetCounts } from 
 import { SPACE } from '../../../../src/theme/tokens';
 import { LifecycleHistory } from '../../../../src/features/deployments/LifecycleHistory';
 import { RunningPermissions } from '../../../../src/features/apps/RunningPermissions';
+import { OPENS_ON_THE_WEB, reachOf, threadTitle } from '../../../../src/api/conversations';
+import { useThreads } from '../../../../src/features/conversations/useConversation';
 
 export default function ApplicationDetail() {
   const { appUid = '' } = useLocalSearchParams<{ appUid: string }>();
@@ -30,6 +32,7 @@ export default function ApplicationDetail() {
   const faces = useFaces();
   const approvals = usePendingApprovals();
   const activity = useActivity(appUid);
+  const threads = useThreads(appUid);
   const protocolActivity = useProtocolActivity();
   const changingState = useChangeDeploymentState();
   const resetting = useResetDeployment();
@@ -38,7 +41,13 @@ export default function ApplicationDetail() {
     void applications.refetch();
     void approvals.refetch();
     void activity.refetch();
+    void threads.refetch();
   };
+  const openConversation = (deploymentUid: string, sessionUid: string) =>
+    router.push({
+      pathname: '/apps/[appUid]/sessions/[sessionUid]',
+      params: { appUid, sessionUid, deployment: deploymentUid }
+    } as unknown as Href);
   const changeState = (deployment: Deployment) => {
     const next = deployment.state === 'live' ? 'paused' : 'live';
     const verb = next === 'paused' ? 'Pause' : 'Resume';
@@ -108,6 +117,38 @@ export default function ApplicationDetail() {
               <AppFace face={faces.byUid.get(appUid)} size={64} />
               <Field label="State" value={app.state === 'paused' ? 'Paused' : 'Live'} />
               <Field label="Deployments" value={app.deployments.map(d => `${d.target} · version ${d.version}`).join('\n')} />
+              <SectionTitle>Conversations</SectionTitle>
+              {(() => {
+                // Hosted first: the conversation a person has at its address.
+                const reachable = [...app.deployments]
+                  .sort((a, b) => Number(b.target === 'hosted') - Number(a.target === 'hosted'))
+                  .find(deployment => reachOf(deployment).kind === 'reachable');
+                return reachable ? (
+                  <Button label="New conversation" onPress={() => openConversation(reachable.uid, 'new')} testID="conversation-new" />
+                ) : (
+                  <Text tone="muted">{app.state === 'paused' ? 'This application is paused: nothing can be sent to it until its owner resumes it.' : OPENS_ON_THE_WEB}</Text>
+                );
+              })()}
+              <QueryView query={threads}>
+                {list =>
+                  list.length ? (
+                    <View style={{ gap: SPACE.sm }}>
+                      {list.map(thread => (
+                        <Row
+                          key={thread.sessionUid}
+                          title={threadTitle(thread)}
+                          detail={thread.title && thread.firstAsked ? thread.firstAsked : undefined}
+                          meta={`${relativeTime(thread.startedAt)} · ${thread.turns} ${thread.turns === 1 ? 'turn' : 'turns'}`}
+                          onPress={() => openConversation(thread.deploymentUid, thread.sessionUid)}
+                          accessibilityHint="Opens this conversation where it was left"
+                        />
+                      ))}
+                    </View>
+                  ) : (
+                    <Text tone="muted">You have no conversations with it yet.</Text>
+                  )
+                }
+              </QueryView>
               {changingState.isError ? <ProblemView error={changingState.error} /> : null}
               {resetting.isError ? <ProblemView error={resetting.error} /> : null}
               {lifecycleSays ? <Text accessibilityRole="alert">{lifecycleSays}</Text> : null}

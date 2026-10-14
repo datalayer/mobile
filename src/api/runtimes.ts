@@ -19,6 +19,8 @@ export type AgentRuntime = {
   state: string;
   startedAt: string;
   expiredAt: string;
+  /** Its Jupyter address, from which its agents' is read (`agentRuntimesUrlOf`). */
+  ingress: string;
 };
 
 export function runtimeOf(raw: Raw): AgentRuntime {
@@ -32,7 +34,8 @@ export function runtimeOf(raw: Raw): AgentRuntime {
     type: text(raw.type),
     state: text(raw.state) || text(raw.status) || 'running',
     startedAt: text(raw.started_at),
-    expiredAt: text(raw.expired_at)
+    expiredAt: text(raw.expired_at),
+    ingress: text(raw.ingress)
   };
 }
 

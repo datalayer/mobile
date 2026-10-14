@@ -23,6 +23,7 @@ import {
   type OAuthConfig
 } from './oauth';
 import { tokenStore as defaultTokenStore, type TokenStore } from './tokenStore';
+import { forgetConversations } from '../features/conversations/registry';
 
 export type SessionState =
   | { status: 'restoring' }
@@ -123,6 +124,8 @@ export function SessionProvider({
     credential.set(undefined);
     setExpiresAt(undefined);
     queryClient.clear();
+    // Conversations are held in memory only, and never cross an account.
+    forgetConversations();
     await tokenStore.forget();
     setState({ status: 'signed-out' });
   }, [credential, queryClient, tokenStore]);
