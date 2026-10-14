@@ -6,19 +6,21 @@
 /** Server truth through TanStack Query. Keys are shared so the realtime socket can invalidate them (M-017). */
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { mergePages, readActivity } from '../api/activity';
-import { type Approval, type Decision, decide, getApproval, listPending, markRead, pendingCount } from '../api/approvals';
+import { type Approval, getApproval, listPending, markRead, pendingCount } from '../api/approvals';
 import {
   applicationsOf, changeDeploymentState, getResetCounts, listDeploymentEvents, listDeployments, resetDeployment,
   type Deployment, type DeploymentState, type ResetCounts
 } from '../api/deployments';
 import { EMPTY_FACES, listFaces } from '../api/faces';
-import { isProblem, Problem } from '../api/problems';
+import { isProblem } from '../api/problems';
 import { disconnectProtocolConnection, listProtocolConnections } from '../api/protocolConnections';
 import { isAgentRuntime, listRuntimes } from '../api/runtimes';
 import { readProtocolActivity } from '../api/protocolActivity';
 import { readRunningPermissions } from '../api/appPermissions';
 import { useSession } from '../auth/SessionProvider';
+import { decideShown, oneDecisionAtATime } from './approvals/decision';
 
 export const KEYS = {
   deployments: ['deployments'] as const,
@@ -189,17 +191,10 @@ export function useDisconnectProtocolConnection() {
 export function useDecide(id: string) {
   const { client } = useSession();
   const queryClient = useQueryClient();
+  const run = useMemo(() => oneDecisionAtATime(input => decideShown(client, id, input)), [client, id]);
   return useMutation({
-    mutationFn: async ({ decision, note, shown }: { decision: Decision; note?: string; shown: Approval }) => {
-      const current = await getApproval(client, id);
-      if (current.status !== 'pending') {
-        throw new Problem('conflict', `approval ${id} is ${current.status}`, 409);
-      }
-      if (JSON.stringify(current.toolArgs) !== JSON.stringify(shown.toolArgs)) {
-        throw new Problem('conflict', `approval ${id} changed since it was shown`, 409);
-      }
-      return decide(client, id, decision, note);
-    },
+    mutationFn: run,
+    retry: false,
     onSuccess: approval => {
       queryClient.setQueryData(KEYS.approval(id), approval);
       queryClient.setQueryData<Approval[]>(KEYS.approvals, list => list?.filter(item => item.id !== approval.id));
