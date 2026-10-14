@@ -31,6 +31,14 @@ export function routeOfNotification(data: unknown): string | null {
   return typeof route === 'string' && ROUTES.some(pattern => pattern.test(route)) ? route : '/';
 }
 
+/** Consume one tap, including the safe Inbox fallback for an invalid/new payload. */
+export function openNotification(data: unknown, open: (route: string) => void): boolean {
+  const route = routeOfNotification(data);
+  if (!route) return false;
+  open(route);
+  return true;
+}
+
 /** The categories a person chooses, as the server names them (ai-agents `datalayer_solr.push`). */
 export const PUSH_CATEGORIES = [
   { value: 'approvals', label: 'Approvals waiting for you' },

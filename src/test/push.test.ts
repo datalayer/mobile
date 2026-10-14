@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { pushPreferenceOf, routeOfNotification } from '../push/routes';
+import { openNotification, pushPreferenceOf, routeOfNotification } from '../push/routes';
 import { pendingCount } from '../api/approvals';
 import { createClient } from '../api/client';
 import { attachSocket, isConnected, request, settleAnswer } from '../realtime/channel';
@@ -53,6 +53,13 @@ describe('a tapped notification (M-025)', () => {
   it('opens the inbox for a payload version it does not know, and nothing for no data', () => {
     expect(routeOfNotification({ v: 2, route: '/approvals/a-1' })).toBe('/');
     expect(routeOfNotification(null)).toBeNull();
+  });
+
+  it('actively navigates to the safe inbox fallback instead of leaving the current screen open', () => {
+    const open = jest.fn();
+    expect(openNotification({ v: 2, route: '/approvals/a-1' }, open)).toBe(true);
+    expect(open).toHaveBeenCalledWith('/');
+    expect(openNotification(null, open)).toBe(false);
   });
 });
 

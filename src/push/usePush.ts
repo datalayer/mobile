@@ -8,7 +8,7 @@ import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { onOpen } from '../realtime/channel';
 import { readPushPreference, registerPush } from './push';
-import { routeOfNotification } from './routes';
+import { openNotification } from './routes';
 
 /** Keeps the installation current: on every reconnect and every token change, when the person turned notifications on. */
 export function usePushRegistration(): void {
@@ -38,11 +38,8 @@ export function useNotificationRoutes(): void {
     if (!response) {
       return;
     }
-    const route = routeOfNotification(response.notification.request.content.data);
     void Notifications.clearLastNotificationResponseAsync();
-    if (route) {
-      router.push(route as never);
-    }
+    openNotification(response.notification.request.content.data, route => router.push(route as never));
   }, [response, router]);
 }
 
