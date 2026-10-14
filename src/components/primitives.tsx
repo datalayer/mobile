@@ -6,7 +6,7 @@
 /** What the app draws itself: screens, text and empty places. Native controls are in `./native`. */
 
 import type { ReactNode } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text as RNText, type TextProps, type TextStyle, View } from 'react-native';
+import { Platform, RefreshControl, ScrollView, StyleSheet, Text as RNText, type TextProps, type TextStyle, View } from 'react-native';
 import { SPACE, useColors, useNativeTheme } from '../theme/tokens';
 
 export { Button } from './native';
@@ -40,7 +40,9 @@ export function Text({
     fontWeight: weight === 'semibold' ? '600' : '400',
     fontFamily: theme.fontFamily ? `${theme.fontFamily}_${weight === 'semibold' ? '600SemiBold' : '400Regular'}` : undefined
   };
-  return <RNText allowFontScaling maxFontSizeMultiplier={2} {...rest} style={[typed, style]} />;
+  // Never cap Dynamic Type: critical approval and permission text must remain
+  // available at the person's largest accessibility setting.
+  return <RNText allowFontScaling {...rest} style={[typed, style]} />;
 }
 
 export function Screen({
@@ -58,6 +60,8 @@ export function Screen({
       style={{ backgroundColor: colors.background }}
       contentContainerStyle={styles.screen}
       contentInsetAdjustmentBehavior="automatic"
+      automaticallyAdjustKeyboardInsets
+      keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
       keyboardShouldPersistTaps="handled"
       refreshControl={
         onRefresh ? (

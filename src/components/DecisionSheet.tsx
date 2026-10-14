@@ -40,6 +40,7 @@ export function DecisionSheet({
         <NativeText textStyle={{ fontSize: 20, fontWeight: '600', color: theme.colors.text }}>
           {decision ? confirmTitle(decision, action) : ''}
         </NativeText>
+        <NativeText textStyle={{ color: theme.colors.text }}>Optional decision note</NativeText>
         <TextInput
           placeholder={DECISION_WORDS.note}
           defaultValue={note}

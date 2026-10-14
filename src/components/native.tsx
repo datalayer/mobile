@@ -11,8 +11,9 @@
 
 import { Button as NativeButton, Host, Picker as NativePicker, Switch as NativeSwitch } from '@expo/ui';
 import type { ReactNode } from 'react';
-import type { StyleProp, ViewStyle } from 'react-native';
+import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
+import { MIN_TOUCH } from '../theme/tokens';
 
 export function ThemedHost({
   children,
@@ -48,7 +49,7 @@ export function Button({
 }) {
   const variant = tone === 'primary' ? 'filled' : tone === 'secondary' ? 'outlined' : 'text';
   return (
-    <ThemedHost matchContents={{ vertical: true }}>
+    <ThemedHost matchContents={{ vertical: true }} style={styles.touchTarget}>
       <NativeButton label={busy ? `${label}…` : label} variant={variant} onPress={onPress} disabled={disabled || busy} testID={testID} />
     </ThemedHost>
   );
@@ -66,7 +67,7 @@ export function Switch({
   disabled?: boolean;
 }) {
   return (
-    <ThemedHost>
+    <ThemedHost style={styles.touchTarget}>
       <NativeSwitch label={label} value={value} onValueChange={onValueChange} disabled={disabled} />
     </ThemedHost>
   );
@@ -82,7 +83,7 @@ export function Picker<T extends string>({
   options: readonly { label: string; value: T }[];
 }) {
   return (
-    <ThemedHost>
+    <ThemedHost style={styles.touchTarget}>
       <NativePicker selectedValue={selectedValue} onValueChange={value => onValueChange(value as T)} appearance="menu">
         {options.map(option => (
           <NativePicker.Item key={option.value} label={option.label} value={option.value} />
@@ -91,3 +92,7 @@ export function Picker<T extends string>({
     </ThemedHost>
   );
 }
+
+const styles = StyleSheet.create({
+  touchTarget: { minWidth: MIN_TOUCH, minHeight: MIN_TOUCH, justifyContent: 'center' }
+});

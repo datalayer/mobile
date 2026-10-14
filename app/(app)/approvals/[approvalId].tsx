@@ -71,7 +71,11 @@ export default function ApprovalDetail() {
               <Text accessibilityRole="header" size="heading" weight="semibold">
                 {statusSays(item.status)}
               </Text>
-              {outcome ? <Text tone={outcome === 'retry' ? 'danger' : 'muted'}>{outcomeSays(outcome)}</Text> : null}
+              {outcome ? (
+                <Text accessibilityLiveRegion="assertive" tone={outcome === 'retry' ? 'danger' : 'muted'}>
+                  {outcomeSays(outcome)}
+                </Text>
+              ) : null}
               {outcome === 'retry' ? <ProblemView error={deciding.error} /> : null}
               <Field label="Application" value={applicationOf(item)} />
               <Field label={APPROVAL_WORDS.why} value={whyAsked(item)} />

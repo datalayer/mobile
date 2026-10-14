@@ -36,6 +36,7 @@ export function ProblemView({ error, onRetry }: { error: unknown; onRetry?: () =
       ) : null}
       <Pressable
         accessibilityRole="button"
+        accessibilityLabel={open ? 'Hide diagnostic details' : 'Show diagnostic details'}
         accessibilityState={{ expanded: open }}
         onPress={() => setOpen(value => !value)}
         style={styles.details}
@@ -116,7 +117,7 @@ export function Row({
     >
       <View style={styles.rowHead}>
         {leading}
-        <Text size="heading" weight="semibold" numberOfLines={1} style={styles.rowTitle}>
+        <Text size="heading" weight="semibold" style={styles.rowTitle}>
           {title}
         </Text>
         {badge ? (
@@ -129,7 +130,7 @@ export function Row({
           </Text>
         ) : null}
       </View>
-      {detail ? <Text numberOfLines={2}>{detail}</Text> : null}
+      {detail ? <Text>{detail}</Text> : null}
       {meta ? <Text tone="muted">{meta}</Text> : null}
     </Pressable>
   );
