@@ -7,7 +7,7 @@
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { mergePages, readActivity } from '../api/activity';
-import { type Approval, type Decision, decide, getApproval, listPending, markRead } from '../api/approvals';
+import { type Approval, type Decision, decide, getApproval, listPending, markRead, pendingCount } from '../api/approvals';
 import {
   applicationsOf, changeDeploymentState, getResetCounts, listDeploymentEvents, listDeployments, resetDeployment,
   type Deployment, type DeploymentState, type ResetCounts
@@ -24,6 +24,7 @@ export const KEYS = {
   deployments: ['deployments'] as const,
   runtimes: ['runtimes'] as const,
   approvals: ['approvals'] as const,
+  approvalCount: ['approvals', 'count'] as const,
   approval: (id: string) => ['approvals', id] as const,
   activity: (appUid: string) => ['activity', appUid] as const,
   deploymentEvents: (uid: string) => ['deployments', uid, 'events'] as const,
@@ -93,6 +94,12 @@ export function useAgentRuntimes() {
 export function usePendingApprovals() {
   const { client } = useSession();
   return useQuery({ queryKey: KEYS.approvals, queryFn: () => listPending(client) });
+}
+
+/** The uncapped server count drives the app badge; the inbox list is deliberately capped. */
+export function usePendingCount() {
+  const { client } = useSession();
+  return useQuery({ queryKey: KEYS.approvalCount, queryFn: () => pendingCount(client) });
 }
 
 /** Fetched on every open: `staleTime: 0` (MOBILE §3.2). */
@@ -196,6 +203,7 @@ export function useDecide(id: string) {
     onSuccess: approval => {
       queryClient.setQueryData(KEYS.approval(id), approval);
       queryClient.setQueryData<Approval[]>(KEYS.approvals, list => list?.filter(item => item.id !== approval.id));
+      void queryClient.invalidateQueries({ queryKey: KEYS.approvalCount });
     },
     onError: error => {
       if (isProblem(error) && (error.kind === 'conflict' || error.kind === 'not-found')) {

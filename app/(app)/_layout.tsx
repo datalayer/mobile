@@ -4,7 +4,7 @@
  */
 
 import { Stack } from 'expo-router';
-import { usePendingApprovals } from '../../src/features/queries';
+import { usePendingCount } from '../../src/features/queries';
 import { useBadge, useNotificationRoutes, usePushRegistration } from '../../src/push/usePush';
 import { useRealtime } from '../../src/realtime/useRealtime';
 import { useNativeTheme } from '../../src/theme/tokens';
@@ -13,7 +13,7 @@ export default function AppLayout() {
   useRealtime();
   usePushRegistration();
   useNotificationRoutes();
-  useBadge(usePendingApprovals().data?.length);
+  useBadge(usePendingCount().data);
   const { colors, fontFamily } = useNativeTheme();
   return (
     <Stack

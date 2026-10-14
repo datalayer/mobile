@@ -4,6 +4,8 @@
  */
 
 import { pushPreferenceOf, routeOfNotification } from '../push/routes';
+import { pendingCount } from '../api/approvals';
+import { createClient } from '../api/client';
 import { attachSocket, isConnected, request, settleAnswer } from '../realtime/channel';
 import { keysOfEvent } from '../realtime/useRealtime';
 
@@ -65,5 +67,20 @@ describe('the push preference', () => {
       categories: ['approvals']
     });
     expect(pushPreferenceOf('{broken').enabled).toBe(false);
+  });
+});
+
+describe('the app badge (M-024)', () => {
+  it('uses the server count rather than the capped inbox list', async () => {
+    const fetcher = jest.fn(async () => new Response(JSON.stringify({ count: 247 }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' }
+    }));
+    const client = createClient({ baseUrl: 'https://run.test', getAccessToken: () => 'person', fetch: fetcher as typeof fetch });
+    await expect(pendingCount(client)).resolves.toBe(247);
+    expect(fetcher).toHaveBeenCalledWith(
+      'https://run.test/api/ai-agents/v1/tool-approvals/pending/count',
+      expect.anything()
+    );
   });
 });

@@ -40,7 +40,7 @@ export function useNotificationRoutes(): void {
     }
     const route = routeOfNotification(response.notification.request.content.data);
     void Notifications.clearLastNotificationResponseAsync();
-    if (route && route !== '/') {
+    if (route) {
       router.push(route as never);
     }
   }, [response, router]);
@@ -53,4 +53,9 @@ export function useBadge(count: number | undefined): void {
       void Notifications.setBadgeCountAsync(count).catch(() => false);
     }
   }, [count]);
+  useEffect(() => () => {
+    // The protected application layout unmounts on sign-out; no previous
+    // account's attention count remains on the phone icon.
+    void Notifications.setBadgeCountAsync(0).catch(() => false);
+  }, []);
 }
