@@ -82,11 +82,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
             NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAppFunctionality']
           },
           {
-            // Conversation health (M-036): durations, counts and failure categories, never words.
+            // Conversation health (M-036, decided by the user 15 October 2026): durations, counts and
+            // failure categories, never words; linked to the account, not tracking.
             NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypePerformanceData',
             NSPrivacyCollectedDataTypeLinked: true,
             NSPrivacyCollectedDataTypeTracking: false,
-            NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAnalytics']
+            NSPrivacyCollectedDataTypePurposes: [
+              'NSPrivacyCollectedDataTypePurposeAppFunctionality',
+              'NSPrivacyCollectedDataTypePurposeAnalytics'
+            ]
           }
         ]
       }

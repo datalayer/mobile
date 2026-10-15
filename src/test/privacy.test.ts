@@ -33,7 +33,7 @@ describe('mobile privacy and store declarations (M-052)', () => {
     expect(performance).toMatchObject({
       NSPrivacyCollectedDataTypeLinked: true,
       NSPrivacyCollectedDataTypeTracking: false,
-      NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAnalytics']
+      NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAppFunctionality', 'NSPrivacyCollectedDataTypePurposeAnalytics']
     });
     for (const item of (privacy?.NSPrivacyCollectedDataTypes ?? []).slice(0, -1)) {
       expect(item).toMatchObject({

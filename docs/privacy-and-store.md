@@ -26,7 +26,7 @@ The app does not track a person across other companies' apps or websites and has
 
 Authentication/access/refresh tokens remain in platform secure storage. Prompt, answer, approval arguments, mail content, protocol credentials, signing keys and raw provider receipts are not analytics. The Query cache is memory-only and is rebuilt from the server after process death.
 
-The iOS app manifest declares the first four linked, non-tracking data types above for `App Functionality`, and performance data for `Analytics`. Expo/native dependencies contribute their own required-reason API manifests. A release owner must inspect the merged `PrivacyInfo.xcprivacy`; do not copy a dependency's required-reason API into the app manifest without verifying that the app itself calls it.
+The iOS app manifest declares the first four linked, non-tracking data types above for `App Functionality`, and performance data — linked, not tracking — for `App Functionality` and `Analytics` (decided by the user, 15 October 2026). Expo/native dependencies contribute their own required-reason API manifests. A release owner must inspect the merged `PrivacyInfo.xcprivacy`; do not copy a dependency's required-reason API into the app manifest without verifying that the app itself calls it.
 
 ## Apple App Privacy answers
 
@@ -34,7 +34,7 @@ Use the inventory above to prepare App Store Connect. Confirm against the built 
 
 - tracking: **No**;
 - linked to identity: **Yes** for the five listed types;
-- purpose: **App Functionality**, and **Analytics** for performance data;
+- purpose: **App Functionality**; performance data: **App Functionality** and **Analytics**;
 - advertising, third-party advertising, marketing and data-broker use: **No**;
 - precise/coarse location, contacts, photos, health, financial/payment information and browsing/search history: **Not collected by this app** unless a later feature changes the code and this document first;
 - diagnostics: no mobile crash/analytics SDK. Conversation health (above) is sent by the app's own code to Datalayer's metrics ingest, never to a third party; add the exact data here before adding anything else.
@@ -43,7 +43,7 @@ Apple's questionnaire is separate from `PrivacyInfo.xcprivacy`; both must agree.
 
 ## Google Play Data safety answers
 
-Treat transmission to Datalayer services and Expo Push Service as collection. In Play Console, map the same four rows to account management/app functionality, encrypted in transit, not sold, and not shared for advertising. Verify whether Google's current form classifies Expo as a service provider rather than a declared third-party share. State accurately whether each type is required or optional: the push installation/device identifier is optional because notifications are opt-in; authentication and ordinary service interactions are required for the signed-in app.
+Treat transmission to Datalayer services and Expo Push Service as collection. In Play Console, map the same four rows to account management/app functionality, encrypted in transit, not sold, and not shared for advertising. Declare **App info and performance → Diagnostics** (conversation health: durations, counts, failure categories, never content) as collected, linked to the account, for **App functionality** and **Analytics**, not shared, encrypted in transit, required while signed in (decided 15 October 2026). Verify whether Google's current form classifies Expo as a service provider rather than a declared third-party share. State accurately whether each type is required or optional: the push installation/device identifier is optional because notifications are opt-in; authentication and ordinary service interactions are required for the signed-in app.
 
 The production manifest requests notification permission only. Inspect the merged Android manifest for every release and explain or remove any permission contributed by a dependency before submission.
 
