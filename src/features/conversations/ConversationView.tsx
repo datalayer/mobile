@@ -19,15 +19,19 @@ import {
   ANSWER_BELOW, ANSWER_COMPLETE, composerOf, droppedWords, formFieldsOf, messageLabel, OPENING_WORDS, presenceLine,
   presenceOfConversation, questionWords, showsQuestion, stepLine, toolLabel,
   type ConversationItem, type ConversationQuestion, type ErrorRowProps, type MessageRowProps, type PresenceLineProps,
-  type QuestionCardProps, type StepRowProps, type ToolRowProps, type TurnEndRowProps
+  type ProtocolDisplayProps, type QuestionCardProps, type StepRowProps, type ToolRowProps, type TurnEndRowProps
 } from '@datalayer/agent-runtimes/lib/portable';
+import { useRouter, type Href } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { AccessibilityInfo, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { Button, Text } from '../../components/primitives';
 import { Switch } from '../../components/native';
 import { MIN_TOUCH, SPACE, useNativeTheme } from '../../theme/tokens';
 import { FILE_ON_THE_WEB, type ConversationController, type ConversationView as View_ } from './controller';
 import { Markdown } from './Markdown';
+import { ProtocolDisplayCard } from './ProtocolDisplayCard';
+import { linkHost } from './markdownBlocks';
 
 export function ToolRow({ item, expanded: open, onToggle }: ToolRowProps) {
   const { colors, radius } = useNativeTheme();
@@ -104,13 +108,31 @@ export function PresenceLine({ state }: PresenceLineProps) {
   );
 }
 
+/** What a protocol display's actions go out through: the system browser, Approvals, the next message. */
+type DisplayActions = Omit<ProtocolDisplayProps, 'display'>;
+
 /** A row by its kind; a tool row's open state is the screen's, by row id. */
-function ItemView({ item, expanded, onToggle }: { item: ConversationItem; expanded: boolean; onToggle: () => void }) {
+function ItemView({
+  item,
+  expanded,
+  onToggle,
+  actions
+}: {
+  item: ConversationItem;
+  expanded: boolean;
+  onToggle: () => void;
+  actions: DisplayActions;
+}) {
   switch (item.kind) {
     case 'message':
       return <MessageRow item={item} />;
     case 'tool':
-      return <ToolRow item={item} expanded={expanded} onToggle={onToggle} />;
+      return (
+        <>
+          <ToolRow item={item} expanded={expanded} onToggle={onToggle} />
+          {item.display ? <ProtocolDisplayCard display={item.display} {...actions} /> : null}
+        </>
+      );
     case 'step':
       return <StepRow item={item} />;
     case 'end':
@@ -206,6 +228,17 @@ export function ConversationView({
 }) {
   const { colors } = useNativeTheme();
   const [draft, setDraft] = useState('');
+  const router = useRouter();
+  const actions: DisplayActions = {
+    // A sign-in page opens in the system browser, after its address is named (M-037, M-039).
+    onOpenSignIn: url =>
+      Alert.alert('Open the sign-in page?', `It opens ${linkHost(url)} in your browser, outside Datalayer.`, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Open', onPress: () => void WebBrowser.openBrowserAsync(url) }
+      ]),
+    onOpenApproval: approvalId => router.push({ pathname: '/approvals/[approvalId]', params: { approvalId } } as unknown as Href),
+    onSignedIn: words => void controller.send(words)
+  };
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
   const toggle = (id: string) =>
     setExpanded(current => {
@@ -250,7 +283,7 @@ export function ConversationView({
         {conversation.dropped ? <Text tone="muted" size="small">{droppedWords(conversation.dropped)}</Text> : null}
         {opening ? <Text tone="muted" accessibilityRole="progressbar">{OPENING_WORDS}</Text> : null}
         {conversation.items.map(item => (
-          <ItemView key={item.id} item={item} expanded={expanded.has(item.id)} onToggle={() => toggle(item.id)} />
+          <ItemView key={item.id} item={item} expanded={expanded.has(item.id)} onToggle={() => toggle(item.id)} actions={actions} />
         ))}
         {asking && showsQuestion(conversation, running) ? (
           <QuestionCard
