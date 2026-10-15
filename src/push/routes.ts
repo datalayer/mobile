@@ -16,7 +16,9 @@ const ROUTES = [
   /^\/$/,
   /^\/approvals\/[A-Za-z0-9_-]{1,128}$/,
   /^\/apps\/[A-Za-z0-9_-]{1,128}$/,
-  /^\/apps\/[A-Za-z0-9_-]{1,128}\/protocols$/
+  /^\/apps\/[A-Za-z0-9_-]{1,128}\/protocols$/,
+  // A conversation that waits for an answer (M-023): opened through ai-agents' locator, which checks access again.
+  /^\/apps\/[A-Za-z0-9_-]{1,128}\/sessions\/[A-Za-z0-9_-]{1,128}$/
 ];
 
 /** The route to open for a tapped notification's data, or `null` to stay where it is. */

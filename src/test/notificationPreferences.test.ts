@@ -9,6 +9,7 @@
  */
 
 import {
+  routeOfNotification,
   categoriesOfApp, DEFAULT_PUSH_PREFERENCE, pushPreferenceOf, QUIET_TIMES, quietHoursOf, quietWords, withAppCategories
 } from '../push/routes';
 
@@ -57,5 +58,13 @@ describe('the notification preference, per application and with quiet hours (M-0
       'From 22:00 to 07:00, only approvals are sent; the rest waits until 07:00. Nothing waits in the app.'
     );
     expect(quietWords({ ...base, quietHours: QUIET, approvalsInQuiet: false })).toMatch(/nothing is sent/);
+  });
+});
+
+describe('a push for a conversation waiting on the person (M-023)', () => {
+  it('opens that conversation, and nothing that is not an allowlisted route', () => {
+    expect(routeOfNotification({ v: 1, route: '/apps/a-1/sessions/5c3554cd-0e78' })).toBe('/apps/a-1/sessions/5c3554cd-0e78');
+    expect(routeOfNotification({ v: 1, route: '/apps/a-1/sessions/../../x' })).toBe('/');
+    expect(routeOfNotification({ v: 1, route: '/apps/a-1/sessions/s-1/messages' })).toBe('/');
   });
 });
