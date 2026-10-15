@@ -13,6 +13,7 @@
  */
 
 import {
+  DIRECT_WORDS,
   displayLine,
   PAP_SIGN_IN_WORDS,
   replyAuthor,
@@ -42,7 +43,7 @@ const STATUS: Record<string, string> = {
   closed: 'The conversation is closed.'
 };
 
-function Body({ display, onOpenSignIn, onOpenApproval, onSignedIn }: ProtocolDisplayProps) {
+function Body({ display, onOpenSignIn, onOpenApproval, onSignedIn, onOpenDirect }: ProtocolDisplayProps) {
   switch (display.kind) {
     case 'sign-in': {
       const at = display.company || display.host;
@@ -97,6 +98,14 @@ function Body({ display, onOpenSignIn, onOpenApproval, onSignedIn }: ProtocolDis
           ))}
           {display.status ? <Text size="small" tone="muted">{STATUS[display.status]}</Text> : null}
           {display.responder === 'human' ? <Text size="small" tone="muted">One of its people is answering now.</Text> : null}
+          {onOpenDirect && display.status !== 'closed' ? (
+            <Button
+              label={DIRECT_WORDS.write(display.company)}
+              tone="secondary"
+              onPress={() => onOpenDirect(display.company, display.conversation)}
+              testID="display-open-direct"
+            />
+          ) : null}
         </>
       );
     case 'unknown':

@@ -22,6 +22,9 @@ import { ProblemView, QueryView } from '../../../../../src/components/states';
 import { STARTS_YOUR_RUNTIME, type ThreadReach } from '../../../../../src/api/conversations';
 import type { SessionAddress } from '../../../../../src/api/deployments';
 import { ConversationView } from '../../../../../src/features/conversations/ConversationView';
+import { directControllerFor } from '../../../../../src/features/conversations/direct';
+import { useSession } from '../../../../../src/auth/SessionProvider';
+import { environment } from '../../../../../src/config/environment';
 import {
   useConversation, useNewReach, useStartNewRuntime, useStartThreadRuntime, useThreadReach
 } from '../../../../../src/features/conversations/useConversation';
@@ -44,6 +47,9 @@ function AppConversation({
   // A new conversation is told apart from another started here by when this screen opened.
   const [key] = useState(() => `${Date.now()}`);
   const { controller, view } = useConversation({ kind: 'app', address, appUid, deploymentUid, version, sessionUid, key });
+  const { accessToken } = useSession();
+  // A Direct Conversation under this one, opened from what a company answered (M-038); in memory only.
+  const [direct] = useState(() => directControllerFor(appUid, environment().runUrl, accessToken, (input, init) => fetch(input, init)));
   const end = () =>
     Alert.alert('End this conversation?', 'It cannot be continued afterwards. What its record keeps stays.', [
       { text: 'Cancel', style: 'cancel' },
@@ -57,7 +63,7 @@ function AppConversation({
           headerRight: view.uid && !view.ended ? () => <Button label="End" tone="plain" onPress={end} /> : undefined
         }}
       />
-      <ConversationView controller={controller} view={view} placeholder={`Message ${name || 'the application'}`} />
+      <ConversationView controller={controller} view={view} placeholder={`Message ${name || 'the application'}`} direct={direct} />
     </>
   );
 }

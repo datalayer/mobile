@@ -19,18 +19,19 @@ import {
   ANSWER_BELOW, ANSWER_COMPLETE, composerOf, droppedWords, formFieldsOf, messageLabel, OPENING_WORDS, presenceLine,
   presenceOfConversation, questionWords, showsQuestion, stepLine, toolLabel,
   type ConversationItem, type ConversationQuestion, type ErrorRowProps, type MessageRowProps, type PresenceLineProps,
-  type ProtocolDisplayProps, type QuestionCardProps, type StepRowProps, type ToolRowProps, type TurnEndRowProps
+  DIRECT_WORDS, directAuthor, type ProtocolDisplayProps, type QuestionCardProps, type StepRowProps, type ToolRowProps, type TurnEndRowProps
 } from '@datalayer/agent-runtimes/lib/portable';
 import { useRouter, type Href } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { AccessibilityInfo, Alert, AppState, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { Button, Text } from '../../components/primitives';
 import { Switch } from '../../components/native';
 import { MIN_TOUCH, SPACE, useNativeTheme } from '../../theme/tokens';
 import { FILE_ON_THE_WEB, type ConversationController, type ConversationView as View_ } from './controller';
 import { Markdown } from './Markdown';
 import { ProtocolDisplayCard } from './ProtocolDisplayCard';
+import type { DirectController } from './direct';
 import { linkHost } from './markdownBlocks';
 
 export function ToolRow({ item, expanded: open, onToggle }: ToolRowProps) {
@@ -216,7 +217,8 @@ export function ConversationView({
   view,
   placeholder,
   closed,
-  paused = false
+  paused = false,
+  direct
 }: {
   controller: ConversationController;
   view: View_;
@@ -225,10 +227,23 @@ export function ConversationView({
   closed?: string;
   /** Its deployment is paused: its presence says so. */
   paused?: boolean;
+  /** A Direct Conversation that may be opened under it (an application's conversation only, M-038). */
+  direct?: DirectController;
 }) {
   const { colors } = useNativeTheme();
   const [draft, setDraft] = useState('');
   const router = useRouter();
+  const noDirect = useRef({ open: null, busy: false, problem: '' } as const).current;
+  const directView = useSyncExternalStore(direct?.subscribe ?? (() => () => undefined), direct?.getView ?? (() => noDirect));
+  const linked = directView.open;
+  // A Direct Conversation open: the replies are read back on returning to the app, never sent again.
+  useEffect(() => {
+    if (!direct) return;
+    const listening = AppState.addEventListener('change', state => {
+      if (state === 'active') void direct.read();
+    });
+    return () => listening.remove();
+  }, [direct]);
   const actions: DisplayActions = {
     // A sign-in page opens in the system browser, after its address is named (M-037, M-039).
     onOpenSignIn: url =>
@@ -237,7 +252,8 @@ export function ConversationView({
         { text: 'Open', onPress: () => void WebBrowser.openBrowserAsync(url) }
       ]),
     onOpenApproval: approvalId => router.push({ pathname: '/approvals/[approvalId]', params: { approvalId } } as unknown as Href),
-    onSignedIn: words => void controller.send(words)
+    onSignedIn: words => void controller.send(words),
+    ...(direct ? { onOpenDirect: (company: string, conversationId: string) => direct.open(company, conversationId) } : {})
   };
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
   const toggle = (id: string) =>
@@ -261,10 +277,19 @@ export function ConversationView({
 
   const asking = conversation.asking;
   const composer = composerOf({ state: conversation, opening, ended, closed, placeholder, running });
-  const { blocked, canType } = composer;
+  // Linked to a Direct Conversation, the parent's composer is locked: words go only to the company.
+  // Once the company closed it, the composer talks to the application again.
+  const writing = linked && !linked.closed ? linked : null;
+  const blocked = writing ? '' : composer.blocked;
+  const canType = writing ? !directView.busy : composer.canType;
   const presence = presenceOfConversation({ ...conversation, running }, paused);
   const send = () => {
     const words = draft;
+    if (writing && direct) {
+      // Kept until the company took them: a refusal leaves them where they were typed.
+      void direct.send(words).then(sent => sent && setDraft(current => (current === words ? '' : current)));
+      return;
+    }
     setDraft('');
     void controller.send(words);
   };
@@ -294,6 +319,21 @@ export function ConversationView({
           />
         ) : null}
       </ScrollView>
+      {linked && direct ? (
+        <View style={[styles.direct, { borderColor: colors.accent, backgroundColor: colors.surface }]} accessibilityRole="summary">
+          <Text weight="semibold">{DIRECT_WORDS.writing(linked.target.company)}</Text>
+          <Text size="small" tone="muted">{DIRECT_WORDS.how}</Text>
+          {linked.lines.map((line, index) => (
+            <View key={index} accessible accessibilityLabel={`${directAuthor(line)}: ${line.text}`}>
+              <Text size="small" tone="muted">{directAuthor(line)}</Text>
+              <Text selectable>{line.text}</Text>
+            </View>
+          ))}
+          {linked.closed ? <Text accessibilityRole="alert">{DIRECT_WORDS.closed(linked.target.company)}</Text> : null}
+          {directView.problem ? <Text tone="danger" accessibilityRole="alert">{directView.problem}</Text> : null}
+          <Button label={DIRECT_WORDS.back} tone="plain" onPress={() => direct.close()} testID="direct-back" />
+        </View>
+      ) : null}
       <View style={[styles.composer, { borderColor: colors.border, backgroundColor: colors.surface }]}>
         {blocked ? (
           <Text tone="muted" accessibilityRole="text">{blocked}</Text>
@@ -305,11 +345,11 @@ export function ConversationView({
               onChangeText={setDraft}
               editable={canType}
               multiline
-              placeholder={composer.placeholder}
+              placeholder={writing ? DIRECT_WORDS.says(writing.target.company) : composer.placeholder}
               placeholderTextColor={colors.muted}
               style={[styles.input, styles.message, { color: colors.text, borderColor: colors.border }]}
             />
-            {running ? (
+            {running && !writing ? (
               <Button label="Stop" tone="secondary" onPress={() => void controller.stop()} testID="conversation-stop" />
             ) : (
               <Button label="Send" disabled={!canType || !draft.trim()} onPress={send} testID="conversation-send" />
@@ -332,6 +372,7 @@ const styles = StyleSheet.create({
   choices: { gap: SPACE.xs },
   form: { gap: SPACE.sm },
   composer: { borderTopWidth: 1, padding: SPACE.sm, gap: SPACE.sm },
+  direct: { borderTopWidth: 2, padding: SPACE.sm, gap: SPACE.xs, maxHeight: 280 },
   input: { borderWidth: 1, borderRadius: 8, padding: SPACE.sm, minHeight: MIN_TOUCH, fontSize: 16 },
   message: { maxHeight: 160 }
 });
