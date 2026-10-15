@@ -14,7 +14,7 @@ import { AppState } from 'react-native';
 import {
   listThreads, locateNew, locateThread, startNewRuntime, startThreadRuntime, type ThreadReach
 } from '../../api/conversations';
-import type { SessionAddress } from '../../api/deployments';
+import { listShared, type SessionAddress } from '../../api/deployments';
 import { useSession } from '../../auth/SessionProvider';
 import { ConversationController } from './controller';
 import { conversationFor, holdAs } from './registry';
@@ -34,6 +34,12 @@ export function useThreads(appUid: string) {
 export function useAllThreads() {
   const { client } = useSession();
   return useQuery({ queryKey: ['conversations', '*'] as const, queryFn: () => listThreads(client) });
+}
+
+/** The deployments shared with the person, read from the server (all of them, talked to or not). */
+export function useShared() {
+  const { client } = useSession();
+  return useQuery({ queryKey: ['deployments', 'shared'] as const, queryFn: () => listShared(client) });
 }
 
 /** The query of where a thread continues: asked again each time, never kept. */

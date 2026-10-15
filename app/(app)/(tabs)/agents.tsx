@@ -10,7 +10,7 @@ import { useAgentRuntimes, useApplications, useFaces } from '../../../src/featur
 import { AppFace } from '../../../src/identity/AppFace';
 import { relativeTime } from '../../../src/i18n/time';
 import { threadTitle } from '../../../src/api/conversations';
-import { useAllThreads } from '../../../src/features/conversations/useConversation';
+import { useAllThreads, useShared } from '../../../src/features/conversations/useConversation';
 
 export default function Agents() {
   const router = useRouter();
@@ -18,10 +18,12 @@ export default function Agents() {
   const faces = useFaces();
   const runtimes = useAgentRuntimes();
   const threads = useAllThreads();
+  const shared = useShared();
   const refresh = () => {
     void applications.refetch();
     void runtimes.refetch();
     void threads.refetch();
+    void shared.refetch();
   };
   return (
     <Screen refreshing={applications.isRefetching || runtimes.isRefetching} onRefresh={refresh}>
@@ -71,32 +73,33 @@ export default function Agents() {
           )
         }
       </QueryView>
-      <QueryView query={threads}>
-        {list => {
-          // Applications shared with the person, met through their conversations: a new one starts there too.
-          const own = new Set((applications.data ?? []).map(app => app.appUid));
-          const shared = [...new Map(list.filter(t => !own.has(t.appUid) && t.deploymentUid).map(t => [t.appUid, t])).values()];
-          return shared.length ? (
-            <>
-              <SectionTitle>Shared with you</SectionTitle>
-              {shared.map(thread => (
-                <Row
-                  key={`new-${thread.appUid}`}
-                  leading={<AppFace face={faces.byUid.get(thread.appUid)} />}
-                  title="New conversation"
-                  detail={`With the application of “${threadTitle(thread)}”`}
-                  onPress={() =>
-                    router.push({
-                      pathname: '/apps/[appUid]/sessions/[sessionUid]',
-                      params: { appUid: thread.appUid, sessionUid: 'new', deployment: thread.deploymentUid }
-                    } as unknown as Href)
-                  }
-                  accessibilityHint="Starts a new conversation with this application"
-                />
-              ))}
-            </>
-          ) : null;
-        }}
+      <SectionTitle>Shared with you</SectionTitle>
+      <QueryView query={shared}>
+        {list =>
+          list.length === 0 ? (
+            <EmptyState title="Nothing shared with you" detail="Applications other people invite you to appear here." />
+          ) : (
+            list.map(item => (
+              <Row
+                key={`shared-${item.uid}`}
+                leading={<AppFace face={faces.byUid.get(item.appUid)} />}
+                title={item.appName || 'An application'}
+                badge={item.state === 'live' ? undefined : item.state === 'paused' ? 'Paused' : 'Gone'}
+                detail={item.says || (item.ownerName ? `Shared by ${item.ownerName}` : undefined)}
+                onPress={
+                  item.state === 'live'
+                    ? () =>
+                        router.push({
+                          pathname: '/apps/[appUid]/sessions/[sessionUid]',
+                          params: { appUid: item.appUid, sessionUid: 'new', deployment: item.uid }
+                        } as unknown as Href)
+                    : undefined
+                }
+                accessibilityHint={item.state === 'live' ? 'Starts a new conversation with this application' : undefined}
+              />
+            ))
+          )
+        }
       </QueryView>
       <SectionTitle>Running agents</SectionTitle>
       <QueryView query={runtimes}>

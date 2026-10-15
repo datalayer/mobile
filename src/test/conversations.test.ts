@@ -14,7 +14,7 @@ import { RUN_CUT_SHORT, RuntimeRefusal, type AgUiEvent, type AppSessionsClient, 
 import {
   locateNew, locateThread, REACH_UNREAD, runtimeAgents, startNewRuntime, startThreadRuntime, threadOf, threadReachOf, threadTitle
 } from '../api/conversations';
-import { deploymentOf } from '../api/deployments';
+import { deploymentOf, listShared } from '../api/deployments';
 import { ConversationController, FILE_ON_THE_WEB, ONE_TURN_AT_A_TIME } from '../features/conversations/controller';
 import { blocksOf, linkAllowed, spansOf } from '../features/conversations/markdownBlocks';
 import { conversationFor, forgetConversations, HELD_LIMIT, heldCount, holdAs } from '../features/conversations/registry';
@@ -364,5 +364,29 @@ describe('across navigation and the background (M-035)', () => {
     forgetConversations();
     expect(heldCount()).toBe(0);
     expect(conversationFor('app:d1:new:1', make)).not.toBe(first);
+  });
+});
+
+describe('applications shared with you, from the server (decided 15 October 2026)', () => {
+  it('lists every shared deployment, live, paused or gone, and offers nothing for one it cannot read as live', async () => {
+    const asked: string[] = [];
+    const client = (async (path: string) => {
+      asked.push(path);
+      return {
+        shared: [
+          { uid: 'd1', app_uid: 'a1', app_name: 'Desk', state: 'live', says: '', owner: { uid: 'u1', name: 'Ada', handle: 'ada' } },
+          { uid: 'd2', app_uid: 'a2', app_name: 'Shop', state: 'paused', says: 'Paused by its owner: nothing is sent to it now.', owner: { uid: 'u2', handle: 'bo' } },
+          { uid: 'd3', app_uid: 'a3', app_name: 'Odd', state: 'weird', owner: {} },
+          { app_uid: 'a4' }
+        ],
+        gone: [{ uid: 'd5', app_uid: 'a5', state: 'gone', says: 'No longer deployed.' }]
+      };
+    }) as never;
+    const listed = await listShared(client);
+    expect(asked).toEqual(['/api/ai-agents/v1/apps/deployments/shared']);
+    expect(listed.map(item => [item.uid, item.state, item.ownerName])).toEqual([
+      ['d1', 'live', 'Ada'], ['d2', 'paused', '@bo'], ['d3', 'paused', ''], ['d5', 'gone', '']
+    ]);
+    expect(listed[2].says).toBe('Nothing is sent to it now.');
   });
 });

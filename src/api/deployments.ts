@@ -223,3 +223,43 @@ export function deploymentEventWords(event: DeploymentEvent): string {
     : '';
   return `${verb}${event.actor ? ` by ${event.actor}${organization}` : ''}${event.at ? `, ${new Date(event.at).toLocaleString()}` : ''}${what}`;
 }
+
+/** A deployment shared with the person (invited, not theirs), as ai-agents lists it. */
+export type SharedDeployment = {
+  uid: string;
+  appUid: string;
+  appName: string;
+  state: 'live' | 'paused' | 'gone';
+  /** Why nothing is sent to it now; `''` while live. */
+  says: string;
+  ownerName: string;
+};
+
+const sharedOf = (raw: Raw, gone: boolean): SharedDeployment | null => {
+  const uid = text(raw.uid);
+  if (!uid) return null;
+  const owner = record(raw.owner);
+  const state = gone ? 'gone' : raw.state === 'live' ? 'live' : 'paused';
+  return {
+    uid,
+    appUid: text(raw.app_uid),
+    appName: text(raw.app_name),
+    state,
+    // A state the phone cannot read is not live: nothing is offered for it.
+    says: text(raw.says) || (state === 'live' ? '' : 'Nothing is sent to it now.'),
+    ownerName: text(owner.name) || (text(owner.handle) ? `@${text(owner.handle)}` : '')
+  };
+};
+
+/**
+ * The deployments shared with the person (ai-agents `/apps/deployments/shared`,
+ * decided 15 October 2026): those that invite them now, live or paused, and
+ * those they talked to that were taken down since.
+ */
+export async function listShared(client: Client): Promise<SharedDeployment[]> {
+  const body = await client('/api/ai-agents/v1/apps/deployments/shared');
+  return [
+    ...records(body.shared).map(raw => sharedOf(raw, false)),
+    ...records(body.gone).map(raw => sharedOf(raw, true))
+  ].filter((item): item is SharedDeployment => item !== null);
+}
