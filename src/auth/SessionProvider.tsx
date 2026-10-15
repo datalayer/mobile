@@ -4,8 +4,10 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
+import * as Application from 'expo-application';
 import Constants from 'expo-constants';
 import type { ReactNode } from 'react';
+import { AppState, Platform } from 'react-native';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { createClient, type Client } from '../api/client';
 import { isProblem } from '../api/problems';
@@ -25,6 +27,7 @@ import {
 import { tokenStore as defaultTokenStore, type TokenStore } from './tokenStore';
 import { forgetConversations } from '../features/conversations/registry';
 import { forgetSignIns } from '../features/conversations/signInWatch';
+import { dropRunMetrics, flushRunMetrics, setMetricsSink } from '../telemetry/runMetrics';
 
 export type SessionState =
   | { status: 'restoring' }
@@ -112,6 +115,25 @@ export function SessionProvider({
     [fetcher, credential, refresher]
   );
 
+  // Conversation health, measured without words (M-036): sent as the person, and when the app goes away.
+  useEffect(() => {
+    setMetricsSink({
+      baseUrl: environment().runUrl,
+      getAccessToken: () => credential.get()?.accessToken,
+      fetch: fetcher,
+      resource: {
+        'service.name': 'datalayer-mobile',
+        'service.version': Application.nativeApplicationVersion ?? '',
+        'os.type': Platform.OS
+      }
+    });
+    const listening = AppState.addEventListener('change', state => state === 'background' && void flushRunMetrics());
+    return () => {
+      listening.remove();
+      setMetricsSink(null);
+    };
+  }, [credential, fetcher]);
+
   const keep = useCallback(
     async (next: Credential) => {
       await tokenStore.write(next);
@@ -128,6 +150,7 @@ export function SessionProvider({
     // Conversations are held in memory only, and never cross an account.
     forgetConversations();
     forgetSignIns();
+    dropRunMetrics();
     await tokenStore.forget();
     setState({ status: 'signed-out' });
   }, [credential, queryClient, tokenStore]);

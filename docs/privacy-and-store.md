@@ -22,21 +22,22 @@ The app does not track a person across other companies' apps or websites and has
 | Device ID           | Expo push token and opaque installation id                              | Yes, only after notification consent   | Push installation; remove on sign-out/disable and invalid-token receipt |
 | Product interaction | Approval decisions, deployment controls and protocol connection actions | Yes, through audited APIs              | Service audit/operation policy                                          |
 | Other user content  | Optional approval note and, when conversations ship, prompts/answers    | Yes, only when the person submits it   | Owning service policy; never push or mobile analytics                   |
+| Performance data    | Conversation health (M-036): time to first token, to the complete answer, Stop latency, failed-stream category, lost streams read back | Yes, by tens and when the app goes to the background, to the platform's metrics ingest as the signed-in account | The platform's metrics retention; never a prompt, an answer, an argument or an id |
 
 Authentication/access/refresh tokens remain in platform secure storage. Prompt, answer, approval arguments, mail content, protocol credentials, signing keys and raw provider receipts are not analytics. The Query cache is memory-only and is rebuilt from the server after process death.
 
-The iOS app manifest declares the four linked, non-tracking data types above for `App Functionality`. Expo/native dependencies contribute their own required-reason API manifests. A release owner must inspect the merged `PrivacyInfo.xcprivacy`; do not copy a dependency's required-reason API into the app manifest without verifying that the app itself calls it.
+The iOS app manifest declares the first four linked, non-tracking data types above for `App Functionality`, and performance data for `Analytics`. Expo/native dependencies contribute their own required-reason API manifests. A release owner must inspect the merged `PrivacyInfo.xcprivacy`; do not copy a dependency's required-reason API into the app manifest without verifying that the app itself calls it.
 
 ## Apple App Privacy answers
 
 Use the inventory above to prepare App Store Connect. Confirm against the built binary and live privacy policy:
 
 - tracking: **No**;
-- linked to identity: **Yes** for the four listed types;
-- purpose: **App Functionality**;
+- linked to identity: **Yes** for the five listed types;
+- purpose: **App Functionality**, and **Analytics** for performance data;
 - advertising, third-party advertising, marketing and data-broker use: **No**;
 - precise/coarse location, contacts, photos, health, financial/payment information and browsing/search history: **Not collected by this app** unless a later feature changes the code and this document first;
-- diagnostics: no mobile crash/analytics SDK today. Add the exact data before adding one.
+- diagnostics: no mobile crash/analytics SDK. Conversation health (above) is sent by the app's own code to Datalayer's metrics ingest, never to a third party; add the exact data here before adding anything else.
 
 Apple's questionnaire is separate from `PrivacyInfo.xcprivacy`; both must agree.
 

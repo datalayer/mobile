@@ -25,9 +25,17 @@ describe('mobile privacy and store declarations (M-052)', () => {
       'NSPrivacyCollectedDataTypeUserID',
       'NSPrivacyCollectedDataTypeDeviceID',
       'NSPrivacyCollectedDataTypeProductInteraction',
-      'NSPrivacyCollectedDataTypeOtherUserContent'
+      'NSPrivacyCollectedDataTypeOtherUserContent',
+      'NSPrivacyCollectedDataTypePerformanceData'
     ]);
-    for (const item of privacy?.NSPrivacyCollectedDataTypes ?? []) {
+    // Conversation health (M-036) is the one analytics use: performance data, never content.
+    const [performance] = (privacy?.NSPrivacyCollectedDataTypes ?? []).slice(-1);
+    expect(performance).toMatchObject({
+      NSPrivacyCollectedDataTypeLinked: true,
+      NSPrivacyCollectedDataTypeTracking: false,
+      NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAnalytics']
+    });
+    for (const item of (privacy?.NSPrivacyCollectedDataTypes ?? []).slice(0, -1)) {
       expect(item).toMatchObject({
         NSPrivacyCollectedDataTypeLinked: true,
         NSPrivacyCollectedDataTypeTracking: false,

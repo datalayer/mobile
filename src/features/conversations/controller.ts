@@ -25,6 +25,7 @@
 import {
   emptyConversation,
   reduceConversation,
+  RunMeter,
   RuntimeRefusal,
   withError,
   withPrompt,
@@ -32,7 +33,8 @@ import {
   type AgentRunClient,
   type AgUiEvent,
   type AppSessionsClient,
-  type ConversationState
+  type ConversationState,
+  type RunMeasure
 } from '@datalayer/agent-runtimes/lib/portable';
 
 export type AppTarget = {
@@ -71,11 +73,18 @@ export class ConversationController {
   private abort: AbortController | null = null;
   /** A turn's stream was lost (the app went away, the network dropped): read back, never resent. */
   private lost = false;
+  /** The turn streaming now, measured without its words (M-036). */
+  private meter: RunMeter | null = null;
 
   constructor(
     readonly target: AppTarget | AgentTarget,
     uid: string | null,
-    private readonly newId: () => string
+    private readonly newId: () => string,
+    /** Where a measured turn and a lost stream read back are told (M-036); nothing of their words. */
+    private readonly measures: { turn: (measure: RunMeasure) => void; recovered: () => void } = {
+      turn: () => undefined,
+      recovered: () => undefined
+    }
   ) {
     this.view = { conversation: emptyConversation(), opening: false, uid, ended: false };
   }
@@ -95,6 +104,7 @@ export class ConversationController {
   }
 
   private apply = (event: AgUiEvent): void => {
+    this.meter?.event(event);
     const conversation = reduceConversation(this.view.conversation, event);
     const session = conversation.session;
     const uid = this.view.uid ?? (session && typeof session.uid === 'string' ? session.uid : null);
@@ -207,6 +217,8 @@ export class ConversationController {
       return 0;
     }
     const started = Date.now();
+    const meter = this.meter;
+    this.meter = null;
     this.abort?.abort();
     this.abort = null;
     const uid = this.view.uid;
@@ -222,7 +234,12 @@ export class ConversationController {
         this.set({ conversation: withError(this.view.conversation, error instanceof Error ? error.message : String(error)) });
       }
     }
-    return Date.now() - started;
+    const latency = Date.now() - started;
+    if (meter) {
+      meter.stopped(latency);
+      this.measures.turn(meter.read());
+    }
+    return latency;
   }
 
   /** End an application's conversation for good (its record stays). */
@@ -244,6 +261,7 @@ export class ConversationController {
    */
   async foreground(): Promise<void> {
     if (this.lost && !this.abort) {
+      this.measures.recovered();
       await this.open();
     }
   }
@@ -258,12 +276,15 @@ export class ConversationController {
   private async stream(run: (signal: AbortSignal) => Promise<void>): Promise<void> {
     const abort = new AbortController();
     this.abort = abort;
+    const meter = new RunMeter(this.target.kind === 'app' ? 'application' : 'agent');
+    this.meter = meter;
     try {
       await run(abort.signal);
     } catch (error) {
       if (abort.signal.aborted || isAbort(error)) {
         return;
       }
+      meter.failure(error);
       if (error instanceof RuntimeRefusal) {
         this.set({ conversation: withError(this.view.conversation, error.message) });
         return;
@@ -275,6 +296,11 @@ export class ConversationController {
     } finally {
       if (this.abort === abort) {
         this.abort = null;
+      }
+      // A turn stopped is told by Stop, with its latency; one let go (sign-out) is not told.
+      if (this.meter === meter) {
+        this.meter = null;
+        if (!abort.signal.aborted) this.measures.turn(meter.read());
       }
     }
   }

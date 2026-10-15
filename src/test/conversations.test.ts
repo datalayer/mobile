@@ -15,6 +15,7 @@ import {
   locateNew, locateThread, REACH_UNREAD, runtimeAgents, startNewRuntime, startThreadRuntime, threadOf, threadReachOf, threadTitle
 } from '../api/conversations';
 import { deploymentOf, listShared } from '../api/deployments';
+import { flushRunMetrics, runMetrics, setMetricsSink } from '../telemetry/runMetrics';
 import { ConversationController, FILE_ON_THE_WEB, ONE_TURN_AT_A_TIME } from '../features/conversations/controller';
 import { blocksOf, linkAllowed, spansOf } from '../features/conversations/markdownBlocks';
 import { conversationFor, forgetConversations, HELD_LIMIT, heldCount, holdAs } from '../features/conversations/registry';
@@ -388,5 +389,56 @@ describe('applications shared with you, from the server (decided 15 October 2026
       ['d1', 'live', 'Ada'], ['d2', 'paused', '@bo'], ['d3', 'paused', ''], ['d5', 'gone', '']
     ]);
     expect(listed[2].says).toBe('Nothing is sent to it now.');
+  });
+});
+
+describe('conversation health, measured without words (M-036)', () => {
+  it('measures each turn, a Stop and a lost stream read back, and sends them as OTLP without words', async () => {
+    const told: unknown[] = [];
+    const recovered = jest.fn();
+    const measures = { turn: (m: unknown) => told.push(m), recovered };
+    let release: () => void = () => {};
+    const { sessions } = fakeSessions([
+      turn(...words('a1', 'A private answer')),
+      options => new Promise<void>(resolve => { options.onEvent({ type: 'RUN_STARTED' }); release = resolve; }),
+      async () => { throw new TypeError('Network request failed'); },
+      turn(...words('a2', 'Read back'))
+    ], { uid: 's1', state: 'stopped', asking: null });
+    const controller = new ConversationController(appTarget(sessions), 's1', newId, measures);
+    await controller.send('A private question');
+    expect(told[0]).toMatchObject({ surface: 'application', failure: null, stopLatencyMs: null });
+    expect((told[0] as { firstTokenMs: number }).firstTokenMs).toBeGreaterThanOrEqual(0);
+    const second = controller.send('Next');
+    await controller.stop();
+    release();
+    await second;
+    expect(told[1]).toMatchObject({ answerMs: null, failure: null });
+    expect((told[1] as { stopLatencyMs: number }).stopLatencyMs).toBeGreaterThanOrEqual(0);
+    await controller.send('Third');
+    expect(told[2]).toMatchObject({ failure: 'network' });
+    await controller.foreground();
+    expect(recovered).toHaveBeenCalledTimes(1);
+    expect(told).toHaveLength(4);
+    expect(JSON.stringify(told)).not.toMatch(/private|Next|Third/);
+
+    const posted: { url: string; body: string; auth: string }[] = [];
+    setMetricsSink({
+      baseUrl: 'https://run.test/', getAccessToken: () => 'tok', resource: { 'service.name': 'datalayer-mobile' },
+      fetch: (async (url: string, init: RequestInit) => {
+        posted.push({ url, body: String(init.body), auth: (init.headers as Record<string, string>).Authorization });
+        return new Response('{}');
+      }) as never
+    });
+    (told as never[]).forEach(m => runMetrics.turn(m));
+    runMetrics.recovered();
+    await flushRunMetrics();
+    expect(posted).toHaveLength(1);
+    expect(posted[0].url).toBe('https://run.test/api/otel/v1/otlp/v1/metrics');
+    expect(posted[0].auth).toBe('Bearer tok');
+    expect(posted[0].body).toContain('datalayer.client.run.failures');
+    expect(posted[0].body).not.toMatch(/private|question/);
+    await flushRunMetrics();
+    expect(posted).toHaveLength(1);
+    setMetricsSink(null);
   });
 });

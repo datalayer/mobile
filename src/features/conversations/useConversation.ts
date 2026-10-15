@@ -16,6 +16,7 @@ import {
 } from '../../api/conversations';
 import { listShared, type SessionAddress } from '../../api/deployments';
 import { useSession } from '../../auth/SessionProvider';
+import { runMetrics } from '../../telemetry/runMetrics';
 import { ConversationController } from './controller';
 import { conversationFor, holdAs } from './registry';
 
@@ -124,7 +125,8 @@ export function useConversation(target: ConversationTarget) {
       return new ConversationController(
         { kind: 'agent', runs: agentRunClient({ ...options, baseUrl: target.baseUrl, agent: target.agent }) },
         null,
-        randomUUID
+        randomUUID,
+        runMetrics
       );
     }
     return new ConversationController(
@@ -137,7 +139,8 @@ export function useConversation(target: ConversationTarget) {
         version: target.version
       },
       target.sessionUid,
-      randomUUID
+      randomUUID,
+      runMetrics
     );
   });
   const view = useSyncExternalStore(controller.subscribe, controller.getView);
