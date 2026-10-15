@@ -122,7 +122,8 @@ export function SessionProvider({
     setMetricsSink({
       baseUrl: environment().runUrl,
       getAccessToken: () => credential.get()?.accessToken,
-      fetch: fetcher,
+      // The platform's `fetch` unless a test hands one in.
+      fetch: fetcher ?? ((input, init) => fetch(input, init)),
       resource: {
         'service.name': 'datalayer-mobile',
         'service.version': Application.nativeApplicationVersion ?? '',

@@ -388,7 +388,7 @@ describe('applications shared with you, from the server (decided 15 October 2026
     expect(listed.map(item => [item.uid, item.state, item.ownerName])).toEqual([
       ['d1', 'live', 'Ada'], ['d2', 'paused', '@bo'], ['d3', 'paused', ''], ['d5', 'gone', '']
     ]);
-    expect(listed[2].says).toBe('Nothing is sent to it now.');
+    expect(listed[2]?.says).toBe('Nothing is sent to it now.');
   });
 });
 
@@ -425,7 +425,7 @@ describe('conversation health, measured without words (M-036)', () => {
     setMetricsSink({
       baseUrl: 'https://run.test/', getAccessToken: () => 'tok', resource: { 'service.name': 'datalayer-mobile' },
       fetch: (async (url: string, init: RequestInit) => {
-        posted.push({ url, body: String(init.body), auth: (init.headers as Record<string, string>).Authorization });
+        posted.push({ url, body: String(init.body), auth: (init.headers as Record<string, string>).Authorization ?? '' });
         return new Response('{}');
       }) as never
     });
@@ -433,10 +433,11 @@ describe('conversation health, measured without words (M-036)', () => {
     runMetrics.recovered();
     await flushRunMetrics();
     expect(posted).toHaveLength(1);
-    expect(posted[0].url).toBe('https://run.test/api/otel/v1/otlp/v1/metrics');
-    expect(posted[0].auth).toBe('Bearer tok');
-    expect(posted[0].body).toContain('datalayer.client.run.failures');
-    expect(posted[0].body).not.toMatch(/private|question/);
+    const [sent] = posted;
+    expect(sent?.url).toBe('https://run.test/api/otel/v1/otlp/v1/metrics');
+    expect(sent?.auth).toBe('Bearer tok');
+    expect(sent?.body).toContain('datalayer.client.run.failures');
+    expect(sent?.body).not.toMatch(/private|question/);
     await flushRunMetrics();
     expect(posted).toHaveLength(1);
     setMetricsSink(null);

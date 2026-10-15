@@ -66,8 +66,10 @@ export function spansOf(line: string): Span[] {
     } else if (match[4] || match[5]) {
       spans.push({ kind: 'em', text: token.slice(1, -1) });
     } else {
-      const [, label, url] = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(token) as RegExpExecArray;
-      spans.push(linkAllowed(url) ? { kind: 'link', text: label, url } : { kind: 'text', text: token });
+      const link = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(token);
+      const label = link?.[1];
+      const url = link?.[2];
+      spans.push(label && url && linkAllowed(url) ? { kind: 'link', text: label, url } : { kind: 'text', text: token });
     }
     rest = rest.slice(match.index + token.length);
   }
@@ -97,13 +99,13 @@ export function blocksOf(markdown: string): Block[] {
     }
   };
   for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i];
+    const line = lines[i] ?? '';
     if (/^\s*```/.test(line)) {
       flush();
       const code: string[] = [];
       i += 1;
-      while (i < lines.length && !/^\s*```/.test(lines[i])) {
-        code.push(lines[i]);
+      for (let next = lines[i]; next !== undefined && !/^\s*```/.test(next); next = lines[i]) {
+        code.push(next);
         i += 1;
       }
       blocks.push({ kind: 'code', text: code.join('\n') });
@@ -116,13 +118,13 @@ export function blocksOf(markdown: string): Block[] {
     const heading = /^(#{1,6})\s+(.*)$/.exec(line);
     if (heading) {
       flush();
-      blocks.push({ kind: 'heading', level: Math.min(heading[1].length, 3) as 1 | 2 | 3, spans: spansOf(heading[2]) });
+      blocks.push({ kind: 'heading', level: Math.min((heading[1] ?? '').length, 3) as 1 | 2 | 3, spans: spansOf(heading[2] ?? '') });
       continue;
     }
     const quote = /^>\s?(.*)$/.exec(line);
     if (quote) {
       flush();
-      blocks.push({ kind: 'quote', spans: spansOf(quote[1]) });
+      blocks.push({ kind: 'quote', spans: spansOf(quote[1] ?? '') });
       continue;
     }
     const item = LIST_ITEM.exec(line);
@@ -131,9 +133,9 @@ export function blocksOf(markdown: string): Block[] {
       const ordered = Boolean(item[2]);
       const last = blocks[blocks.length - 1];
       if (last?.kind === 'list' && last.ordered === ordered && (lines[i - 1] ?? '').trim()) {
-        last.items.push(spansOf(item[3]));
+        last.items.push(spansOf(item[3] ?? ''));
       } else {
-        blocks.push({ kind: 'list', ordered, items: [spansOf(item[3])] });
+        blocks.push({ kind: 'list', ordered, items: [spansOf(item[3] ?? '')] });
       }
       continue;
     }

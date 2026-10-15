@@ -25,6 +25,12 @@ const draw = (element: ReactElement) => render(<ThemeProvider store={store}>{ele
 const fixture = conversationFixture();
 const of = <K extends ConversationItem['kind']>(kind: K) =>
   fixture.items.filter((item): item is Extract<ConversationItem, { kind: K }> => item.kind === kind);
+/** The n-th row of a kind in the fixture, which the fixture promises to hold. */
+const nth = <K extends ConversationItem['kind']>(kind: K, index = 0): Extract<ConversationItem, { kind: K }> => {
+  const item = of(kind)[index];
+  if (!item) throw new Error(`The fixture holds no ${kind} row ${index}.`);
+  return item;
+};
 
 describe('native renderers behind the shared conversation contract', () => {
   it('draws messages with the contract labels, the answer through the safe Markdown subset', async () => {
@@ -37,7 +43,8 @@ describe('native renderers behind the shared conversation contract', () => {
   });
 
   it('draws a tool call collapsed until it is opened, by its contract label', async () => {
-    const [done, failed] = of('tool');
+    const done = nth('tool', 0);
+    const failed = nth('tool', 1);
     const toggled = jest.fn();
     const drawn = await draw(<ToolRow item={done} expanded={false} onToggle={toggled} />);
     expect(drawn.getByLabelText(toolLabel(done))).toBeTruthy();
@@ -52,12 +59,12 @@ describe('native renderers behind the shared conversation contract', () => {
   });
 
   it('draws steps, a wordless end, a failure and the presence line in the contract words', async () => {
-    const step = await draw(<StepRow item={of('step')[0]} />);
-    expect(step.getByText(stepLine(of('step')[0]))).toBeTruthy();
-    const end = await draw(<TurnEndRow item={of('end')[0]} />);
-    expect(end.getByText(of('end')[0].words)).toBeTruthy();
-    const failure = await draw(<ErrorRow item={of('error')[0]} />);
-    expect(failure.getByText(of('error')[0].text)).toBeTruthy();
+    const step = await draw(<StepRow item={nth('step')} />);
+    expect(step.getByText(stepLine(nth('step')))).toBeTruthy();
+    const end = await draw(<TurnEndRow item={nth('end')} />);
+    expect(end.getByText(nth('end').words)).toBeTruthy();
+    const failure = await draw(<ErrorRow item={nth('error')} />);
+    expect(failure.getByText(nth('error').text)).toBeTruthy();
     const state = presenceOfConversation(fixture);
     expect(state).toBe('waiting');
     const presence = await draw(<PresenceLine state={state} />);
