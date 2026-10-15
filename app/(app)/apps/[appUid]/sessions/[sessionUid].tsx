@@ -50,11 +50,11 @@ function AppConversation({
   const { controller, view } = useConversation({ kind: 'app', address, appUid, deploymentUid, version, sessionUid, key });
   const { accessToken } = useSession();
   // A Direct Conversation under this one, opened from what a company answered (M-038); in memory only.
-  const [direct] = useState(() => directControllerFor(appUid, environment().runUrl, accessToken, (input, init) => fetch(input, init)));
+  const [direct] = useState(() => directControllerFor(appUid, environment().runUrl, environment().gatewayUrl, accessToken, (input, init) => fetch(input, init)));
   // How a sign-in this conversation started stands, asked with the person's own sign-in (M-039).
   const [signIns] = useState(() => ({
     appUid,
-    ask: signInStatusClient({ baseUrl: environment().runUrl, getAccessToken: accessToken, fetch: (input, init) => fetch(input, init) }),
+    ask: signInStatusClient({ baseUrl: environment().gatewayUrl, getAccessToken: accessToken, fetch: (input, init) => fetch(input, init) }),
     typed: protectedInputClient({ iamUrl: environment().runUrl, getAccessToken: accessToken, fetch: (input, init) => fetch(input, init) })
   }));
   const end = () =>

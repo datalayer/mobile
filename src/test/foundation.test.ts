@@ -23,7 +23,11 @@ describe('the environment (MOBILE.md §5.4)', () => {
 
   it('offers the interim sign-in to development builds only (M-019)', () => {
     const of = (profile: string) =>
-      environmentOf({ EXPO_PUBLIC_DATALAYER_RUN_URL: 'https://prod1.datalayer.run/', EXPO_PUBLIC_BUILD_PROFILE: profile });
+      environmentOf({
+        EXPO_PUBLIC_DATALAYER_RUN_URL: 'https://prod1.datalayer.run/',
+        EXPO_PUBLIC_DATALAYER_MCP_URL: 'https://mcp.datalayer.run/mcp',
+        EXPO_PUBLIC_BUILD_PROFILE: profile
+      });
     expect(of('development').allowsInterimSignIn).toBe(true);
     expect(of('e2e').allowsInterimSignIn).toBe(true);
     expect(of('preview').allowsInterimSignIn).toBe(true);
@@ -31,6 +35,9 @@ describe('the environment (MOBILE.md §5.4)', () => {
     expect(of('production').allowsInterimSignIn).toBe(false);
     expect(of('unknown').profile).toBe('production');
     expect(of('development').runUrl).toBe('https://prod1.datalayer.run');
+    // The MCP gateway is published on its own host (M-038, M-039).
+    expect(of('development').gatewayUrl).toBe('https://mcp.datalayer.run');
+    expect(() => environmentOf({ EXPO_PUBLIC_DATALAYER_RUN_URL: 'https://prod1.datalayer.run' })).toThrow(/EXPO_PUBLIC_DATALAYER_MCP_URL/);
   });
 });
 

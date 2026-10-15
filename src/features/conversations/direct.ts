@@ -98,11 +98,11 @@ export class DirectController {
   }
 }
 
-/** A controller for one conversation of an application, over the platform's address. */
+/** A controller for one conversation of an application: IAM under the run address, the gateway at its own. */
 export const directControllerFor = (
   appUid: string,
-  baseUrl: string,
+  iamUrl: string,
+  gatewayUrl: string,
   getAccessToken: () => string | undefined,
   fetcher: typeof fetch
-): DirectController =>
-  new DirectController(directClient({ iamUrl: baseUrl, gatewayUrl: baseUrl, getAccessToken, fetch: fetcher }), appUid);
+): DirectController => new DirectController(directClient({ iamUrl, gatewayUrl, getAccessToken, fetch: fetcher }), appUid);
