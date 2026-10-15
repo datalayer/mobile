@@ -4,20 +4,26 @@
  */
 
 /**
- * A conversation with an application (MOBILE §3.4, M-033): a session of the
- * runtime its deployment is kept on now, read from the deployment each time —
- * `new` starts one with the first message.
+ * A conversation with an application (MOBILE §3.4, M-031, M-033). A thread
+ * is continued where ai-agents says it continues now, asked on every open
+ * (§4.4.7): the runtime its deployment is kept on, a runtime of the person's
+ * own — started here first, after they agree, when nothing runs it for them —
+ * or nowhere, in ai-agents' sentence. That holds for an application somebody
+ * shared with them as for their own. `new` starts a conversation with the
+ * first message where the owner's deployment is kept running.
  */
 
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Alert } from 'react-native';
-import { Button, EmptyState } from '../../../../../src/components/primitives';
-import { QueryView } from '../../../../../src/components/states';
-import { reachOf } from '../../../../../src/api/conversations';
+import { Button, EmptyState, Screen, Text } from '../../../../../src/components/primitives';
+import { ProblemView, QueryView } from '../../../../../src/components/states';
+import { reachOf, STARTS_YOUR_RUNTIME } from '../../../../../src/api/conversations';
 import type { SessionAddress } from '../../../../../src/api/deployments';
 import { ConversationView } from '../../../../../src/features/conversations/ConversationView';
-import { useConversation } from '../../../../../src/features/conversations/useConversation';
+import {
+  useConversation, useStartThreadRuntime, useThreadReach
+} from '../../../../../src/features/conversations/useConversation';
 import { useApplications } from '../../../../../src/features/queries';
 
 function AppConversation({
@@ -56,6 +62,47 @@ function AppConversation({
   );
 }
 
+/** A thread, continued where ai-agents says it continues now. */
+function ThreadConversation({ sessionUid }: { sessionUid: string }) {
+  const reach = useThreadReach(sessionUid);
+  const starting = useStartThreadRuntime(sessionUid);
+  return (
+    <QueryView query={reach}>
+      {place => {
+        if (place.kind === 'closed') {
+          return <EmptyState title="Not continued now" detail={place.why} />;
+        }
+        if (place.kind === 'launch') {
+          return (
+            <Screen>
+              <Stack.Screen options={{ title: place.appName || 'Conversation' }} />
+              <Text>{STARTS_YOUR_RUNTIME}</Text>
+              {starting.isError ? <ProblemView error={starting.error} /> : null}
+              <Button
+                label="Start and continue"
+                busy={starting.isPending}
+                disabled={starting.isPending}
+                onPress={() => starting.mutate()}
+                testID="conversation-start-runtime"
+              />
+            </Screen>
+          );
+        }
+        return (
+          <AppConversation
+            address={place.address}
+            appUid={place.appUid}
+            deploymentUid={place.deploymentUid}
+            version={place.version}
+            sessionUid={sessionUid}
+            name={place.appName}
+          />
+        );
+      }}
+    </QueryView>
+  );
+}
+
 export default function ApplicationConversation() {
   const { appUid = '', sessionUid = 'new', deployment = '' } = useLocalSearchParams<{
     appUid: string;
@@ -63,6 +110,9 @@ export default function ApplicationConversation() {
     deployment: string;
   }>();
   const applications = useApplications();
+  if (sessionUid !== 'new') {
+    return <ThreadConversation sessionUid={sessionUid} />;
+  }
   return (
     <QueryView query={applications}>
       {apps => {
@@ -78,7 +128,7 @@ export default function ApplicationConversation() {
             appUid={appUid}
             deploymentUid={found.uid}
             version={found.version}
-            sessionUid={sessionUid === 'new' ? null : sessionUid}
+            sessionUid={null}
             name={app?.name ?? ''}
           />
         );

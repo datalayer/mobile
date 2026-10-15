@@ -8,15 +8,18 @@
  * record (`/apps/conversations/mine/threads`, LOOP P-24), read as the web's
  * *Your conversations* reads them, and where each one can be reached now.
  *
- * A thread names its deployment, never a runtime: where its session is held
- * is read again from that deployment each time it is opened
- * (`Deployment.sessionAddress`), so an old runtime address is never trusted.
+ * A thread names its deployment, never a runtime: where it is continued is
+ * asked of ai-agents each time it is opened (`locateThread`, MOBILE §4.4.7) —
+ * the runtime its deployment is kept on, a runtime of the person's own, one to
+ * start, or why not — whoever's the application, so an old runtime address is
+ * never trusted. A new conversation is started where an owner's deployment is
+ * kept running (`Deployment.sessionAddress`).
  */
 
 import { agentRuntimesUrlOf, askedOf } from '@datalayer/agent-runtimes/lib/portable';
 import type { Client } from './client';
 import type { Deployment, SessionAddress } from './deployments';
-import { count, type Raw, records, segment, text } from './fields';
+import { count, type Raw, record, records, segment, text } from './fields';
 import type { AgentRuntime } from './runtimes';
 
 /** One of the person's conversations with an application. */
@@ -50,10 +53,76 @@ export function threadOf(raw: Raw): ConversationThread {
 export const threadTitle = (thread: ConversationThread): string =>
   thread.title || thread.firstAsked || 'A conversation with no words yet';
 
-/** The person's threads with one application, newest first. */
-export async function listThreads(client: Client, appUid: string): Promise<ConversationThread[]> {
-  const body = await client(`/api/ai-agents/v1/apps/conversations/mine/threads?app_uid=${segment(appUid)}&limit=50`);
+const THREADS = '/api/ai-agents/v1/apps/conversations/mine/threads';
+
+/** The person's threads, newest first: with one application, or with every one, whoever's. */
+export async function listThreads(client: Client, appUid = ''): Promise<ConversationThread[]> {
+  const body = await client(`${THREADS}?${appUid ? `app_uid=${segment(appUid)}&` : ''}limit=50`);
   return records(body.threads).map(threadOf).filter(thread => thread.sessionUid);
+}
+
+/** What the thread's deployment is, as ai-agents names it with where it is continued. */
+export type ThreadPlace = { appUid: string; appName: string; deploymentUid: string; version: number; owner: boolean };
+
+/**
+ * Where one of the person's conversations is continued now (ai-agents'
+ * `…/threads/{uid}/reach`): on a runtime that answers now — the one its
+ * deployment is kept on, or one of their own — with a runtime of their own to
+ * start first, or not, in ai-agents' sentence.
+ */
+export type ThreadReach =
+  | ({ kind: 'reachable'; address: SessionAddress; on: 'kept' | 'own' } & ThreadPlace)
+  | ({ kind: 'launch' } & ThreadPlace)
+  | { kind: 'closed'; why: string };
+
+/** Said when ai-agents' answer cannot be read: nothing is sent anywhere. */
+export const REACH_UNREAD = 'Where this conversation continues could not be read: open it on the web.';
+
+/** Said before a runtime of the person's own is started for a conversation. */
+export const STARTS_YOUR_RUNTIME =
+  'Nothing runs this application for you now. Continuing starts a computer of your own for it, as its page on the web does, and its time is counted to your credits.';
+
+const reachable = (url: unknown, agent: unknown): SessionAddress | null => {
+  const baseUrl = text(url).replace(/\/+$/, '');
+  const id = text(agent);
+  return /^https:\/\//.test(baseUrl) && id ? { baseUrl, agent: id } : null;
+};
+
+/** ai-agents' answer, strictly: an unknown kind or an address that is not HTTPS is closed. */
+export function threadReachOf(raw: Raw): ThreadReach {
+  const place: ThreadPlace = {
+    appUid: text(raw.app_uid),
+    appName: text(raw.app_name),
+    deploymentUid: text(raw.deployment_uid),
+    version: Math.max(1, Math.trunc(count(raw.version))),
+    owner: raw.owner === true
+  };
+  if (raw.reach === 'closed') {
+    return { kind: 'closed', why: text(raw.reason) || REACH_UNREAD };
+  }
+  if (!place.appUid || !place.deploymentUid) {
+    return { kind: 'closed', why: REACH_UNREAD };
+  }
+  if (raw.reach === 'launch') {
+    return { kind: 'launch', ...place };
+  }
+  if (raw.reach === 'kept' || raw.reach === 'runtime') {
+    const address = reachable(raw.url, raw.agent_id);
+    return address ? { kind: 'reachable', address, on: raw.reach === 'kept' ? 'kept' : 'own', ...place } : { kind: 'closed', why: REACH_UNREAD };
+  }
+  return { kind: 'closed', why: REACH_UNREAD };
+}
+
+/** Where a conversation continues now; asked each time it is opened, never remembered. */
+export async function locateThread(client: Client, sessionUid: string): Promise<ThreadReach> {
+  const body = await client(`${THREADS}/${segment(sessionUid)}/reach`);
+  return threadReachOf(record(body.reach));
+}
+
+/** Start a runtime of the person's own for a conversation ai-agents said `launch` of; answers where it continues. */
+export async function startThreadRuntime(client: Client, sessionUid: string): Promise<ThreadReach> {
+  const body = await client(`${THREADS}/${segment(sessionUid)}/reach`, { method: 'POST' });
+  return threadReachOf(record(body.reach));
 }
 
 /** Where a conversation can be held, or why it opens on the web only. */

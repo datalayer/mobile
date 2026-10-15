@@ -6,12 +6,12 @@
 /** A conversation for a screen: held in memory across navigation, read back when the app returns. */
 
 import { agentRunClient, appSessionsClient } from '@datalayer/agent-runtimes/lib/portable';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { fetch as streamingFetch } from 'expo/fetch';
 import { useEffect, useSyncExternalStore } from 'react';
 import { AppState } from 'react-native';
-import { listThreads } from '../../api/conversations';
+import { listThreads, locateThread, startThreadRuntime, type ThreadReach } from '../../api/conversations';
 import type { SessionAddress } from '../../api/deployments';
 import { useSession } from '../../auth/SessionProvider';
 import { ConversationController } from './controller';
@@ -26,6 +26,38 @@ export const threadsKey = (appUid: string) => ['conversations', appUid] as const
 export function useThreads(appUid: string) {
   const { client } = useSession();
   return useQuery({ queryKey: threadsKey(appUid), queryFn: () => listThreads(client, appUid), enabled: Boolean(appUid) });
+}
+
+/** Every one of the person's threads, whoever's the application (an invited person's included). */
+export function useAllThreads() {
+  const { client } = useSession();
+  return useQuery({ queryKey: ['conversations', '*'] as const, queryFn: () => listThreads(client) });
+}
+
+/** The query of where a thread continues: asked again each time, never kept. */
+export const threadReachKey = (sessionUid: string) => ['conversations', 'reach', sessionUid] as const;
+
+/** Where a thread continues now (MOBILE §4.4.7): read on every open, not cached past the screen. */
+export function useThreadReach(sessionUid: string | null) {
+  const { client } = useSession();
+  return useQuery({
+    queryKey: threadReachKey(sessionUid ?? ''),
+    queryFn: () => locateThread(client, sessionUid ?? ''),
+    enabled: Boolean(sessionUid),
+    staleTime: 0,
+    gcTime: 0
+  });
+}
+
+/** Start a runtime of the person's own for a thread, then hold where it continues. */
+export function useStartThreadRuntime(sessionUid: string) {
+  const { client } = useSession();
+  const queries = useQueryClient();
+  return useMutation({
+    mutationFn: () => startThreadRuntime(client, sessionUid),
+    retry: false,
+    onSuccess: (reach: ThreadReach) => queries.setQueryData(threadReachKey(sessionUid), reach)
+  });
 }
 
 /** What a screen opens: an application's session (new or not), or a standalone agent's thread. */
@@ -44,8 +76,9 @@ export type ConversationTarget =
   | { kind: 'agent'; baseUrl: string; agent: string; runtimeName: string; key: string };
 
 function keyOf(target: ConversationTarget): string {
+  // The runtime is part of its key: a conversation held for one runtime is never sent to another.
   return target.kind === 'app'
-    ? `app:${target.deploymentUid}:${target.sessionUid ?? `new:${target.key}`}`
+    ? `app:${target.deploymentUid}:${target.address.baseUrl}:${target.sessionUid ?? `new:${target.key}`}`
     : `agent:${target.runtimeName}:${target.agent}:${target.key}`;
 }
 
@@ -91,7 +124,7 @@ export function useConversation(target: ConversationTarget) {
   // A new conversation is also held under its session, so its thread opens it as it is.
   useEffect(() => {
     if (target.kind === 'app' && !target.sessionUid && view.uid) {
-      holdAs(`app:${target.deploymentUid}:${view.uid}`, controller);
+      holdAs(`app:${target.deploymentUid}:${target.address.baseUrl}:${view.uid}`, controller);
     }
   }, [controller, target, view.uid]);
 

@@ -11,7 +11,9 @@
  */
 
 import { RUN_CUT_SHORT, RuntimeRefusal, type AgUiEvent, type AppSessionsClient, type AgentRunClient, type StreamOptions } from '@datalayer/agent-runtimes/lib/portable';
-import { OPENS_ON_THE_WEB, reachOf, runtimeAgents, threadOf, threadTitle } from '../api/conversations';
+import {
+  locateThread, OPENS_ON_THE_WEB, REACH_UNREAD, reachOf, runtimeAgents, startThreadRuntime, threadOf, threadReachOf, threadTitle
+} from '../api/conversations';
 import { deploymentOf, sessionAddressOf } from '../api/deployments';
 import { ConversationController, FILE_ON_THE_WEB, ONE_TURN_AT_A_TIME } from '../features/conversations/controller';
 import { blocksOf, linkAllowed, spansOf } from '../features/conversations/markdownBlocks';
@@ -45,6 +47,42 @@ describe('threads and where they are reached (M-031)', () => {
     // Paused: nothing is sent, whatever the runtime.
     expect(reachOf(deploymentOf({ ...KEPT, state: 'paused' }))).toMatchObject({ kind: 'web', why: expect.stringMatching(/paused/) });
     expect(reachOf(undefined)).toMatchObject({ kind: 'web' });
+  });
+
+  it('continues a thread where ai-agents says it continues now, whoever the application is (§4.4.7)', async () => {
+    const place = { session_uid: 's1', app_uid: 'a1', app_name: 'Desk', deployment_uid: 'd1', version: 4, owner: false };
+    expect(threadReachOf({ ...place, reach: 'kept', url: 'https://r1.datalayer.run/agent-runtimes/rt-9/', agent_id: 'desk' })).toEqual({
+      kind: 'reachable', on: 'kept', address: { baseUrl: 'https://r1.datalayer.run/agent-runtimes/rt-9', agent: 'desk' },
+      appUid: 'a1', appName: 'Desk', deploymentUid: 'd1', version: 4, owner: false
+    });
+    expect(threadReachOf({ ...place, reach: 'runtime', url: 'https://r1/agent-runtimes/rt-2', agent_id: 'desk' })).toMatchObject({ kind: 'reachable', on: 'own' });
+    expect(threadReachOf({ ...place, reach: 'launch' })).toMatchObject({ kind: 'launch', deploymentUid: 'd1', owner: false });
+    expect(threadReachOf({ ...place, reach: 'closed', reason: 'Desk is paused by its owner, so this conversation is not continued now.' })).toEqual({
+      kind: 'closed', why: 'Desk is paused by its owner, so this conversation is not continued now.'
+    });
+    // Fail closed: no address, not HTTPS, no agent, an unknown kind, no deployment.
+    for (const raw of [
+      { ...place, reach: 'kept' },
+      { ...place, reach: 'runtime', url: 'http://r1/agent-runtimes/rt-2', agent_id: 'desk' },
+      { ...place, reach: 'runtime', url: 'javascript:alert(1)', agent_id: 'desk' },
+      { ...place, reach: 'kept', url: 'https://r1/agent-runtimes/rt-2' },
+      { ...place, reach: 'somewhere', url: 'https://r1/agent-runtimes/rt-2', agent_id: 'desk' },
+      { ...place, deployment_uid: '', reach: 'launch' },
+      { reach: 'closed' }
+    ]) {
+      expect(threadReachOf(raw)).toEqual({ kind: 'closed', why: REACH_UNREAD });
+    }
+    const asked: { path: string; method?: string }[] = [];
+    const client = (async (path: string, options?: { method?: string }) => {
+      asked.push({ path, method: options?.method });
+      return { reach: { ...place, reach: options?.method === 'POST' ? 'runtime' : 'launch', url: 'https://r1/agent-runtimes/rt-2', agent_id: 'desk' } };
+    }) as never;
+    expect(await locateThread(client, 's 1')).toMatchObject({ kind: 'launch' });
+    expect(await startThreadRuntime(client, 's 1')).toMatchObject({ kind: 'reachable', on: 'own' });
+    expect(asked).toEqual([
+      { path: '/api/ai-agents/v1/apps/conversations/mine/threads/s%201/reach', method: undefined },
+      { path: '/api/ai-agents/v1/apps/conversations/mine/threads/s%201/reach', method: 'POST' }
+    ]);
   });
 
   it('finds a standalone runtime agents from its ingress, AG-UI only', async () => {
