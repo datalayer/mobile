@@ -4,14 +4,23 @@
  */
 
 /**
- * A conversation drawn natively (MOBILE M-032 to M-034): what Agent Runtimes'
+ * A conversation drawn natively (MOBILE M-030 to M-034): what Agent Runtimes'
  * conversation reducer holds — messages, tool calls and steps collapsed, how
  * a wordless turn ended, failures — with the question the application asks,
- * the composer, Stop, and a screen-reader announcement once an answer is
- * complete (never each token).
+ * the composer, Stop, the application's presence line, and a screen-reader
+ * announcement once an answer is complete (never each token).
+ *
+ * Each component is the native renderer of Agent Runtimes' `portable/views`
+ * contract: its props, its words and labels, and when a person may type are
+ * that contract's, shared with the web; only the markup and look are here.
  */
 
-import { formFieldsOf, questionWords, type ConversationItem, type ConversationQuestion } from '@datalayer/agent-runtimes/lib/portable';
+import {
+  ANSWER_BELOW, ANSWER_COMPLETE, composerOf, droppedWords, formFieldsOf, messageLabel, OPENING_WORDS, presenceLine,
+  presenceOfConversation, questionWords, showsQuestion, stepLine, toolLabel,
+  type ConversationItem, type ConversationQuestion, type ErrorRowProps, type MessageRowProps, type PresenceLineProps,
+  type QuestionCardProps, type StepRowProps, type ToolRowProps, type TurnEndRowProps
+} from '@datalayer/agent-runtimes/lib/portable';
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { Button, Text } from '../../components/primitives';
@@ -20,18 +29,15 @@ import { MIN_TOUCH, SPACE, useNativeTheme } from '../../theme/tokens';
 import { FILE_ON_THE_WEB, type ConversationController, type ConversationView as View_ } from './controller';
 import { Markdown } from './Markdown';
 
-const STATUS_WORDS = { running: 'running', complete: 'done', error: 'failed' } as const;
-
-function ToolRow({ item }: { item: Extract<ConversationItem, { kind: 'tool' }> }) {
-  const [open, setOpen] = useState(false);
+export function ToolRow({ item, expanded: open, onToggle }: ToolRowProps) {
   const { colors, radius } = useNativeTheme();
-  const label = `Tool ${item.name || 'call'}, ${STATUS_WORDS[item.status]}`;
+  const label = toolLabel(item);
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ expanded: open, busy: item.status === 'running' }}
-      onPress={() => setOpen(!open)}
+      onPress={onToggle}
       style={[styles.tool, { borderColor: colors.border, borderRadius: Math.min(radius.control, 12) }]}
     >
       <Text tone={item.status === 'error' ? 'danger' : 'muted'} size="small">
@@ -48,45 +54,69 @@ function ToolRow({ item }: { item: Extract<ConversationItem, { kind: 'tool' }> }
   );
 }
 
-function ItemView({ item }: { item: ConversationItem }) {
+export function MessageRow({ item }: MessageRowProps) {
   const { colors, radius } = useNativeTheme();
+  const mine = item.role === 'user';
+  return (
+    <View
+      accessible
+      accessibilityLabel={messageLabel(item)}
+      style={[
+        styles.bubble,
+        {
+          alignSelf: mine ? 'flex-end' : 'stretch',
+          backgroundColor: mine ? colors.accentEmphasis : colors.surface,
+          borderColor: colors.border,
+          borderRadius: Math.min(radius.card, 18)
+        }
+      ]}
+    >
+      {mine ? <Text tone="onEmphasis" selectable>{item.text}</Text> : <Markdown text={item.text} />}
+    </View>
+  );
+}
+
+export function StepRow({ item }: StepRowProps) {
+  return (
+    <Text tone="muted" size="small" accessibilityState={{ busy: item.status === 'running' }}>
+      {stepLine(item)}
+    </Text>
+  );
+}
+
+export function TurnEndRow({ item }: TurnEndRowProps) {
+  return <Text tone="muted" size="small">{item.words}</Text>;
+}
+
+export function ErrorRow({ item }: ErrorRowProps) {
+  return (
+    <Text tone="danger" accessibilityRole="alert" selectable>
+      {item.text}
+    </Text>
+  );
+}
+
+export function PresenceLine({ state }: PresenceLineProps) {
+  return (
+    <Text tone={state === 'waiting' ? 'default' : 'muted'} size="small">
+      {presenceLine({ state })}
+    </Text>
+  );
+}
+
+/** A row by its kind; a tool row's open state is the screen's, by row id. */
+function ItemView({ item, expanded, onToggle }: { item: ConversationItem; expanded: boolean; onToggle: () => void }) {
   switch (item.kind) {
-    case 'message': {
-      const mine = item.role === 'user';
-      return (
-        <View
-          accessible
-          accessibilityLabel={`${mine ? 'You' : 'Answer'}: ${item.text}`}
-          style={[
-            styles.bubble,
-            {
-              alignSelf: mine ? 'flex-end' : 'stretch',
-              backgroundColor: mine ? colors.accentEmphasis : colors.surface,
-              borderColor: colors.border,
-              borderRadius: Math.min(radius.card, 18)
-            }
-          ]}
-        >
-          {mine ? <Text tone="onEmphasis" selectable>{item.text}</Text> : <Markdown text={item.text} />}
-        </View>
-      );
-    }
+    case 'message':
+      return <MessageRow item={item} />;
     case 'tool':
-      return <ToolRow item={item} />;
+      return <ToolRow item={item} expanded={expanded} onToggle={onToggle} />;
     case 'step':
-      return (
-        <Text tone="muted" size="small" accessibilityState={{ busy: item.status === 'running' }}>
-          {`${item.status === 'running' ? '…' : '✓'} ${item.name}`}
-        </Text>
-      );
+      return <StepRow item={item} />;
     case 'end':
-      return <Text tone="muted" size="small">{item.words}</Text>;
+      return <TurnEndRow item={item} />;
     case 'error':
-      return (
-        <Text tone="danger" accessibilityRole="alert" selectable>
-          {item.text}
-        </Text>
-      );
+      return <ErrorRow item={item} />;
   }
 }
 
@@ -134,7 +164,7 @@ function FormQuestion({ question, busy, onSubmit }: { question: ConversationQues
   );
 }
 
-function QuestionCard({ question, busy, onChoose, onForm }: { question: ConversationQuestion; busy: boolean; onChoose: (option: string) => void; onForm: (values: Record<string, unknown>) => void }) {
+export function QuestionCard({ question, busy, onChoose, onForm }: QuestionCardProps) {
   const { colors, radius } = useNativeTheme();
   return (
     <View
@@ -153,7 +183,7 @@ function QuestionCard({ question, busy, onChoose, onForm }: { question: Conversa
       ) : question.kind === 'file' ? (
         <Text tone="muted">{FILE_ON_THE_WEB}</Text>
       ) : (
-        <Text tone="muted" size="small">Answer in the message box below.</Text>
+        <Text tone="muted" size="small">{ANSWER_BELOW}</Text>
       )}
     </View>
   );
@@ -163,16 +193,26 @@ export function ConversationView({
   controller,
   view,
   placeholder,
-  closed
+  closed,
+  paused = false
 }: {
   controller: ConversationController;
   view: View_;
   placeholder: string;
   /** Why nothing can be sent, when nothing can. */
   closed?: string;
+  /** Its deployment is paused: its presence says so. */
+  paused?: boolean;
 }) {
   const { colors } = useNativeTheme();
   const [draft, setDraft] = useState('');
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
+  const toggle = (id: string) =>
+    setExpanded(current => {
+      const next = new Set(current);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
   const scroll = useRef<ScrollView>(null);
   const { conversation, opening, ended } = view;
   const running = conversation.running || controller.running;
@@ -181,14 +221,15 @@ export function ConversationView({
   // Announced once the answer is complete, never token by token.
   useEffect(() => {
     if (wasRunning.current && !running) {
-      AccessibilityInfo.announceForAccessibility('The answer is complete.');
+      AccessibilityInfo.announceForAccessibility(ANSWER_COMPLETE);
     }
     wasRunning.current = running;
   }, [running]);
 
   const asking = conversation.asking;
-  const blocked = closed || (ended ? 'This conversation has ended. Its record stays.' : '');
-  const canType = !blocked && !opening && !running && asking?.kind !== 'form' && asking?.kind !== 'file';
+  const composer = composerOf({ state: conversation, opening, ended, closed, placeholder, running });
+  const { blocked, canType } = composer;
+  const presence = presenceOfConversation({ ...conversation, running }, paused);
   const send = () => {
     const words = draft;
     setDraft('');
@@ -205,14 +246,13 @@ export function ConversationView({
         keyboardShouldPersistTaps="handled"
         onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: false })}
       >
-        {conversation.dropped ? (
-          <Text tone="muted" size="small">{`${conversation.dropped} earlier rows are not kept on this device.`}</Text>
-        ) : null}
-        {opening ? <Text tone="muted" accessibilityRole="progressbar">Opening your conversation…</Text> : null}
+        <PresenceLine state={presence} />
+        {conversation.dropped ? <Text tone="muted" size="small">{droppedWords(conversation.dropped)}</Text> : null}
+        {opening ? <Text tone="muted" accessibilityRole="progressbar">{OPENING_WORDS}</Text> : null}
         {conversation.items.map(item => (
-          <ItemView key={item.id} item={item} />
+          <ItemView key={item.id} item={item} expanded={expanded.has(item.id)} onToggle={() => toggle(item.id)} />
         ))}
-        {asking && !running ? (
+        {asking && showsQuestion(conversation, running) ? (
           <QuestionCard
             question={asking}
             busy={running}
@@ -232,7 +272,7 @@ export function ConversationView({
               onChangeText={setDraft}
               editable={canType}
               multiline
-              placeholder={asking?.kind === 'text' ? asking.prompt : placeholder}
+              placeholder={composer.placeholder}
               placeholderTextColor={colors.muted}
               style={[styles.input, styles.message, { color: colors.text, borderColor: colors.border }]}
             />
