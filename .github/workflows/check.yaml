@@ -21,6 +21,10 @@ jobs:
           node-version: 22
       # Outside the monorepo the @datalayer packages come from npm: the
       # Primer Addons release must carry lib/theme/portable.
+      # onnxruntime-node (through agent-runtimes' voice) downloads its binaries in
+      # a postinstall that times out on the runner; the check needs none of them.
       - run: npm install
+        env:
+          ONNXRUNTIME_NODE_INSTALL: skip
       - run: npm run check
       - run: npm run check:bundle
