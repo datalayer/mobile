@@ -9,13 +9,13 @@
  * views, row by row in runs: no native module, no image decoder.
  */
 
-import qrcode from 'qrcode-generator';
+import makeQrCode from 'qrcode-generator';
 import { useMemo } from 'react';
 import { View } from 'react-native';
 
 /** Each row of the code as runs of `[dark, length]`. */
 export function qrRows(text: string): { size: number; rows: [boolean, number][][] } {
-  const code = qrcode(0, 'M');
+  const code = makeQrCode(0, 'M');
   code.addData(text);
   code.make();
   const size = code.getModuleCount();
