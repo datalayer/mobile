@@ -23,6 +23,7 @@ import { STARTS_YOUR_RUNTIME, type ThreadReach } from '../../../../../src/api/co
 import type { SessionAddress } from '../../../../../src/api/deployments';
 import { ConversationView } from '../../../../../src/features/conversations/ConversationView';
 import { directControllerFor } from '../../../../../src/features/conversations/direct';
+import { protectedInputClient, signInStatusClient } from '@datalayer/agent-runtimes/lib/portable';
 import { useSession } from '../../../../../src/auth/SessionProvider';
 import { environment } from '../../../../../src/config/environment';
 import {
@@ -50,6 +51,12 @@ function AppConversation({
   const { accessToken } = useSession();
   // A Direct Conversation under this one, opened from what a company answered (M-038); in memory only.
   const [direct] = useState(() => directControllerFor(appUid, environment().runUrl, accessToken, (input, init) => fetch(input, init)));
+  // How a sign-in this conversation started stands, asked with the person's own sign-in (M-039).
+  const [signIns] = useState(() => ({
+    appUid,
+    ask: signInStatusClient({ baseUrl: environment().runUrl, getAccessToken: accessToken, fetch: (input, init) => fetch(input, init) }),
+    typed: protectedInputClient({ iamUrl: environment().runUrl, getAccessToken: accessToken, fetch: (input, init) => fetch(input, init) })
+  }));
   const end = () =>
     Alert.alert('End this conversation?', 'It cannot be continued afterwards. What its record keeps stays.', [
       { text: 'Cancel', style: 'cancel' },
@@ -63,7 +70,7 @@ function AppConversation({
           headerRight: view.uid && !view.ended ? () => <Button label="End" tone="plain" onPress={end} /> : undefined
         }}
       />
-      <ConversationView controller={controller} view={view} placeholder={`Message ${name || 'the application'}`} direct={direct} />
+      <ConversationView controller={controller} view={view} placeholder={`Message ${name || 'the application'}`} direct={direct} signIns={signIns} />
     </>
   );
 }

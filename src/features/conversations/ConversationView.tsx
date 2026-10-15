@@ -19,7 +19,7 @@ import {
   ANSWER_BELOW, ANSWER_COMPLETE, composerOf, droppedWords, formFieldsOf, messageLabel, OPENING_WORDS, presenceLine,
   presenceOfConversation, questionWords, showsQuestion, stepLine, toolLabel,
   type ConversationItem, type ConversationQuestion, type ErrorRowProps, type MessageRowProps, type PresenceLineProps,
-  DIRECT_WORDS, directAuthor, type ProtocolDisplayProps, type QuestionCardProps, type StepRowProps, type ToolRowProps, type TurnEndRowProps
+  DIRECT_WORDS, directAuthor, PAP_SIGN_IN_WORDS, type QuestionCardProps, type StepRowProps, type ToolRowProps, type TurnEndRowProps
 } from '@datalayer/agent-runtimes/lib/portable';
 import { useRouter, type Href } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
@@ -30,8 +30,10 @@ import { Switch } from '../../components/native';
 import { MIN_TOUCH, SPACE, useNativeTheme } from '../../theme/tokens';
 import { FILE_ON_THE_WEB, type ConversationController, type ConversationView as View_ } from './controller';
 import { Markdown } from './Markdown';
-import { ProtocolDisplayCard } from './ProtocolDisplayCard';
+import type { ProtectedInput } from './MediatedForm';
+import { ProtocolDisplayCard, type NativeDisplayProps } from './ProtocolDisplayCard';
 import type { DirectController } from './direct';
+import { pollSignIns, signInWatchOf, SIGN_IN_POLL_MS, subscribeSignIn, watchingAny, watchSignIn, type SignInAsk } from './signInWatch';
 import { linkHost } from './markdownBlocks';
 
 export function ToolRow({ item, expanded: open, onToggle }: ToolRowProps) {
@@ -110,7 +112,7 @@ export function PresenceLine({ state }: PresenceLineProps) {
 }
 
 /** What a protocol display's actions go out through: the system browser, Approvals, the next message. */
-type DisplayActions = Omit<ProtocolDisplayProps, 'display'>;
+type DisplayActions = Omit<NativeDisplayProps, 'display'>;
 
 /** A row by its kind; a tool row's open state is the screen's, by row id. */
 function ItemView({
@@ -218,7 +220,8 @@ export function ConversationView({
   placeholder,
   closed,
   paused = false,
-  direct
+  direct,
+  signIns
 }: {
   controller: ConversationController;
   view: View_;
@@ -229,6 +232,8 @@ export function ConversationView({
   paused?: boolean;
   /** A Direct Conversation that may be opened under it (an application's conversation only, M-038). */
   direct?: DirectController;
+  /** How a sign-in under way stands, asked of the gateway, the application it is for, and IAM's protected input (M-039). */
+  signIns?: { appUid: string; ask: SignInAsk; typed?: ProtectedInput };
 }) {
   const { colors } = useNativeTheme();
   const [draft, setDraft] = useState('');
@@ -236,6 +241,33 @@ export function ConversationView({
   const noDirect = useRef({ open: null, busy: false, problem: '' } as const).current;
   const directView = useSyncExternalStore(direct?.subscribe ?? (() => () => undefined), direct?.getView ?? (() => noDirect));
   const linked = directView.open;
+  // The newest sign-in shown is watched until it finishes, then the conversation goes on, once (M-039).
+  const newestSignIn = [...view.conversation.items]
+    .reverse()
+    .find((item): item is Extract<ConversationItem, { kind: 'tool' }> => item.kind === 'tool' && item.display?.kind === 'sign-in');
+  const shownSignIn = newestSignIn?.display?.kind === 'sign-in' ? newestSignIn.display : null;
+  const signInCompany = shownSignIn ? shownSignIn.company || shownSignIn.host : '';
+  const [, watched] = useState(0);
+  useEffect(() => {
+    if (!signIns || !shownSignIn || !signInCompany) return;
+    watchSignIn(signIns.appUid, signInCompany, shownSignIn.expiresAt, () =>
+      void controller.send(PAP_SIGN_IN_WORDS.checkMessage(signInCompany))
+    );
+    const unsubscribe = subscribeSignIn(signIns.appUid, signInCompany, () => watched(n => n + 1));
+    const poll = () => {
+      if (AppState.currentState === 'active' && watchingAny()) void pollSignIns(signIns.ask);
+    };
+    const timer = setInterval(poll, SIGN_IN_POLL_MS);
+    // Back in front: asked at once, never later than it needs.
+    const listening = AppState.addEventListener('change', state => state === 'active' && poll());
+    return () => {
+      unsubscribe();
+      clearInterval(timer);
+      listening.remove();
+    };
+  }, [signIns, shownSignIn, signInCompany, controller]);
+  const watchOf = (item: ConversationItem) =>
+    signIns && item.kind === 'tool' && item === newestSignIn && signInCompany ? signInWatchOf(signIns.appUid, signInCompany) : undefined;
   // A Direct Conversation open: the replies are read back on returning to the app, never sent again.
   useEffect(() => {
     if (!direct) return;
@@ -308,7 +340,7 @@ export function ConversationView({
         {conversation.dropped ? <Text tone="muted" size="small">{droppedWords(conversation.dropped)}</Text> : null}
         {opening ? <Text tone="muted" accessibilityRole="progressbar">{OPENING_WORDS}</Text> : null}
         {conversation.items.map(item => (
-          <ItemView key={item.id} item={item} expanded={expanded.has(item.id)} onToggle={() => toggle(item.id)} actions={actions} />
+          <ItemView key={item.id} item={item} expanded={expanded.has(item.id)} onToggle={() => toggle(item.id)} actions={{ ...actions, watch: watchOf(item), typed: signIns?.typed }} />
         ))}
         {asking && showsQuestion(conversation, running) ? (
           <QuestionCard

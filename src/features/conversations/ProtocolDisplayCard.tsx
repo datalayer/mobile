@@ -13,6 +13,7 @@
  */
 
 import {
+  ticketOfPage,
   DIRECT_WORDS,
   displayLine,
   PAP_SIGN_IN_WORDS,
@@ -23,6 +24,9 @@ import {
 import { StyleSheet, View } from 'react-native';
 import { Button, Text } from '../../components/primitives';
 import { SPACE, useNativeTheme } from '../../theme/tokens';
+import { MediatedForm, type ProtectedInput } from './MediatedForm';
+import { QrCode } from './QrCode';
+import type { SignInWatch } from './signInWatch';
 
 /** A term's value in words: a JSON value said as it is, never interpreted. */
 const termWords = (value: unknown): string => (typeof value === 'string' ? value : JSON.stringify(value));
@@ -43,7 +47,22 @@ const STATUS: Record<string, string> = {
   closed: 'The conversation is closed.'
 };
 
-function Body({ display, onOpenSignIn, onOpenApproval, onSignedIn, onOpenDirect }: ProtocolDisplayProps) {
+/** The contract's props, and how a sign-in shown is watched on this phone (M-039). */
+export type NativeDisplayProps = ProtocolDisplayProps & {
+  watch?: SignInWatch;
+  /** A mediated sign-in typed here, with its one-use protected ticket (M-039). */
+  typed?: ProtectedInput;
+};
+
+const WATCH_WORDS: Record<SignInWatch['state'], string> = {
+  watching: 'Waiting for you to sign in: this conversation goes on by itself once you have.',
+  signed_in: 'Signed in: the conversation goes on.',
+  refused: '',
+  expired: 'This sign-in has expired: ask again to start a new one.',
+  unread: 'How the sign-in stands could not be read: it is asked again.'
+};
+
+function Body({ display, onOpenSignIn, onOpenApproval, onSignedIn, onOpenDirect, watch, typed }: NativeDisplayProps) {
   switch (display.kind) {
     case 'sign-in': {
       const at = display.company || display.host;
@@ -61,7 +80,17 @@ function Body({ display, onOpenSignIn, onOpenApproval, onSignedIn, onOpenDirect 
           {display.sentTo ? <Text size="small">{PAP_SIGN_IN_WORDS.sentTo(display.sentTo)}</Text> : null}
           {display.needs?.length ? <Text size="small">{PAP_SIGN_IN_WORDS.needs(display.needs)}</Text> : null}
           {display.expiresAt ? <Text size="small" tone="muted">{PAP_SIGN_IN_WORDS.until(display.expiresAt)}</Text> : null}
-          <Button label={PAP_SIGN_IN_WORDS.open(display.host)} onPress={() => onOpenSignIn(display.open)} testID="display-open-sign-in" />
+          {display.mode === 'device' ? <QrCode value={display.open} label={PAP_SIGN_IN_WORDS.qr(display.host)} /> : null}
+          {watch ? (
+            <Text size="small" tone={watch.state === 'refused' ? 'danger' : 'muted'} accessibilityLiveRegion="polite">
+              {watch.state === 'refused' ? watch.reason || 'The sign-in was refused: ask again.' : WATCH_WORDS[watch.state]}
+            </Text>
+          ) : null}
+          {display.mode === 'mediated' && typed && ticketOfPage(display.open) ? (
+            <MediatedForm ticket={ticketOfPage(display.open)} input={typed} />
+          ) : (
+            <Button label={PAP_SIGN_IN_WORDS.open(display.host)} onPress={() => onOpenSignIn(display.open)} testID="display-open-sign-in" />
+          )}
           <Button label={PAP_SIGN_IN_WORDS.checkAgain} tone="secondary" onPress={() => onSignedIn(PAP_SIGN_IN_WORDS.checkMessage(at))} testID="display-signed-in" />
         </>
       );
@@ -120,7 +149,7 @@ function Body({ display, onOpenSignIn, onOpenApproval, onSignedIn, onOpenDirect 
   }
 }
 
-export function ProtocolDisplayCard(props: ProtocolDisplayProps) {
+export function ProtocolDisplayCard(props: NativeDisplayProps) {
   const { colors, radius } = useNativeTheme();
   return (
     <View
