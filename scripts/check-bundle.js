@@ -15,8 +15,12 @@ const fs = require('fs');
 const path = require('path');
 
 // Primer Addons' portable entry and what it reaches; anything else of the package renders Primer web.
+// `css/primerComponentsCss` is a pure string builder `createThemeCSSVars` reads since 1.0.40: no DOM, no Primer React.
 const PORTABLE =
-  /\/(primer\/addons|@datalayer\/primer-addons)\/lib\/theme\/(portable|portableTheme|themeTokens|fontStacks|loopEyes|colors\/[A-Za-z]+|indicators\/[A-Za-z]+|themes\/[a-z]+ThemeStyles|css\/createThemeCSSVars)\.js$/;
+  /\/(primer\/addons|@datalayer\/primer-addons)\/lib\/theme\/(portable|portableTheme|themeTokens|fontStacks|loopEyes|colors\/[A-Za-z]+|indicators\/[A-Za-z]+|themes\/[a-z]+ThemeStyles|css\/createThemeCSSVars|css\/primerComponentsCss)\.js$/;
+
+// Core's portable entry and the one pure model it re-exports (`personOf`, core 1.2.19: `models/Person` imports nothing).
+const CORE_PORTABLE = /\/(tech\/datalayer\/core|@datalayer\/core)\/lib\/(portable\/[A-Za-z]+|models\/Person)\.js$/;
 
 const FORBIDDEN = [
   { pattern: /\/node_modules\/@jupyter\//, why: 'Jupyter' },
@@ -29,7 +33,7 @@ const FORBIDDEN = [
   { pattern: /\.css$/, why: 'CSS' },
   {
     pattern: /\/node_modules\/@datalayer\/core\/|\/tech\/datalayer\/core\//,
-    allowed: /\/(tech\/datalayer\/core|@datalayer\/core)\/lib\/portable\/[A-Za-z]+\.js$/,
+    allowed: CORE_PORTABLE,
     why: 'Core beyond its portable entry (M-002)'
   },
   {

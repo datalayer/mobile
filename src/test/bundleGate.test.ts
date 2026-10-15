@@ -23,6 +23,7 @@ describe('the resolved-bundle gate (M-006)', () => {
       '/tech/datalayer/core/lib/index.js',
       '/ai/agent-runtimes/lib/index.js',
       '/node_modules/@datalayer/core/lib/client/index.js',
+      '/node_modules/@datalayer/core/lib/models/Space.js',
       '/ai/agent-runtimes/lib/hooks/useToolApprovals.js',
       '/tech/primer/addons/lib/theme/themes/loopTheme.js',
       '/tech/primer/addons/lib/theme/themeRegistry.js',
@@ -38,6 +39,8 @@ describe('the resolved-bundle gate (M-006)', () => {
     const allowed = [
       '/tech/datalayer/core/lib/portable/index.js',
       '/node_modules/@datalayer/core/lib/portable/person.js',
+      // The pure model core's portable entry re-exports (personOf), and nothing else of core's models.
+      '/node_modules/@datalayer/core/lib/models/Person.js',
       '/ai/agent-runtimes/lib/portable/approvals.js',
       '/node_modules/@datalayer/agent-runtimes/lib/portable/index.js',
       '/tech/primer/addons/lib/theme/portable.js',
@@ -48,6 +51,7 @@ describe('the resolved-bundle gate (M-006)', () => {
       '/tech/primer/addons/lib/theme/colors/loopColors.js',
       '/tech/primer/addons/lib/theme/themes/loopThemeStyles.js',
       '/tech/primer/addons/lib/theme/css/createThemeCSSVars.js',
+      '/node_modules/@datalayer/primer-addons/lib/theme/css/primerComponentsCss.js',
       '/node_modules/react-native/index.js',
       '/node_modules/@expo/ui/build/index.js',
       '/tech/datalayer/mobile/app/(app)/_layout.tsx'
