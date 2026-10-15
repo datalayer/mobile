@@ -9,7 +9,7 @@ import { applicationsOf, deploymentOf } from '../api/deployments';
 import { isAgentRuntime, runtimeOf } from '../api/runtimes';
 import { environmentOf } from '../config/environment';
 import { actionOf, argumentsShown, messageOfApproval, rowSummary, whyAsked } from '../features/approvals/format';
-import { keysOfEvent, wsUrlOf } from '../realtime/useRealtime';
+import { keysOfEvent, wsUrlOf } from '../realtime/events';
 
 const approval = (raw: Record<string, unknown>) =>
   approvalOf({ id: 'a1', tool_name: 'send', status: 'pending', created_at: '2026-01-01T00:00:00Z', ...raw });
@@ -131,7 +131,11 @@ describe('realtime', () => {
 
 describe('interim sign-in (M-019)', () => {
   const of = (profile: string) =>
-    environmentOf({ EXPO_PUBLIC_DATALAYER_RUN_URL: 'https://prod1.datalayer.run', EXPO_PUBLIC_BUILD_PROFILE: profile });
+    environmentOf({
+      EXPO_PUBLIC_DATALAYER_RUN_URL: 'https://prod1.datalayer.run',
+      EXPO_PUBLIC_DATALAYER_MCP_URL: 'https://mcp.datalayer.run',
+      EXPO_PUBLIC_BUILD_PROFILE: profile
+    });
 
   it.each(['staging', 'production'])('is not offered by a %s build', profile => {
     expect(of(profile).allowsInterimSignIn).toBe(false);

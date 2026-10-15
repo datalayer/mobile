@@ -15,24 +15,11 @@ import { useEffect } from 'react';
 import { AppState, Platform } from 'react-native';
 import { useSession } from '../auth/SessionProvider';
 import { environment } from '../config/environment';
-import { KEYS, RECONCILED } from '../features/queries';
+import { RECONCILED } from '../features/queryKeys';
 import { attachSocket, settleAnswer } from './channel';
+import { keysOfEvent, wsUrlOf } from './events';
 
-/** `https://host` -> `wss://host/api/ai-agents/v1/ws`. */
-export const wsUrlOf = (runUrl: string): string => `${runUrl.replace(/^http/, 'ws')}/api/ai-agents/v1/ws`;
-
-/** The queries one server broadcast (`{channel, event, data}`) makes stale. */
-export function keysOfEvent(raw: unknown): readonly QueryKey[] {
-  const frame = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
-  const name = String(frame.event ?? frame.type ?? '');
-  if (name.startsWith('tool_approval') || name.startsWith('tool-approval') || name === 'notification_created') {
-    return [KEYS.approvals];
-  }
-  if (name.startsWith('deployment') || name.startsWith('app_')) {
-    return [KEYS.deployments, ['activity']];
-  }
-  return [];
-}
+export { keysOfEvent, wsUrlOf } from './events';
 
 const MAX_BACKOFF_MS = 30_000;
 

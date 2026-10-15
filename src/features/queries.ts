@@ -21,24 +21,9 @@ import { readProtocolActivity } from '../api/protocolActivity';
 import { readRunningPermissions } from '../api/appPermissions';
 import { useSession } from '../auth/SessionProvider';
 import { decideShown, oneDecisionAtATime } from './approvals/decision';
+import { KEYS } from './queryKeys';
 
-export const KEYS = {
-  deployments: ['deployments'] as const,
-  runtimes: ['runtimes'] as const,
-  approvals: ['approvals'] as const,
-  approvalCount: ['approvals', 'count'] as const,
-  approval: (id: string) => ['approvals', id] as const,
-  activity: (appUid: string) => ['activity', appUid] as const,
-  deploymentEvents: (uid: string) => ['deployments', uid, 'events'] as const,
-  allActivity: ['activity', '*all'] as const,
-  faces: ['faces'] as const,
-  protocolConnections: ['protocol-connections'] as const,
-  protocolActivity: ['activity', 'protocols'] as const,
-  runningPermissions: (appUid: string, version: number) => ['apps', appUid, 'versions', version, 'permissions'] as const
-};
-
-/** Every key a reconnect refetches: approvals, deployments and visible activity. */
-export const RECONCILED = [KEYS.approvals, KEYS.deployments, KEYS.runtimes, KEYS.protocolConnections, ['activity']] as const;
+export { KEYS, RECONCILED } from './queryKeys';
 
 export function useApplications() {
   const { client } = useSession();
@@ -153,8 +138,9 @@ export function useProtocolConnections() {
 }
 
 export function useProtocolActivity() {
-  const { client } = useSession();
-  return useQuery({ queryKey: KEYS.protocolActivity, queryFn: () => readProtocolActivity(client), staleTime: 30_000 });
+  // The audit is the MCP gateway's, at its own host: under the run address it is not found.
+  const { gatewayClient } = useSession();
+  return useQuery({ queryKey: KEYS.protocolActivity, queryFn: () => readProtocolActivity(gatewayClient), staleTime: 30_000 });
 }
 
 export function useRunningPermissions(appUid: string, version: number) {

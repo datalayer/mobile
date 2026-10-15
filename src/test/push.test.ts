@@ -7,7 +7,7 @@ import { openNotification, pushPreferenceOf, routeOfNotification } from '../push
 import { pendingCount } from '../api/approvals';
 import { createClient } from '../api/client';
 import { attachSocket, isConnected, request, settleAnswer } from '../realtime/channel';
-import { keysOfEvent } from '../realtime/useRealtime';
+import { keysOfEvent } from '../realtime/events';
 
 describe('the WebSocket channel', () => {
   afterEach(() => attachSocket(null));

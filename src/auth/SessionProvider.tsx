@@ -36,6 +36,8 @@ export type SessionState =
 
 export type Session = SessionState & {
   client: Client;
+  /** The same, at the MCP gateway's own host (`EXPO_PUBLIC_DATALAYER_MCP_URL`): the audit, sign-ins, Direct Conversations. */
+  gatewayClient: Client;
   /** The current token, read when a connection opens; never rendered or logged. */
   accessToken: () => string | undefined;
   /** Authorization Code + PKCE in the system browser; `false` when the person cancelled. */
@@ -133,6 +135,17 @@ export function SessionProvider({
       setMetricsSink(null);
     };
   }, [credential, fetcher]);
+
+  const gatewayClient = useMemo(
+    () =>
+      createClient({
+        baseUrl: environment().gatewayUrl,
+        getAccessToken: () => credential.get()?.accessToken,
+        refreshAccessToken: refresher.run,
+        fetch: fetcher
+      }),
+    [fetcher, credential, refresher]
+  );
 
   const keep = useCallback(
     async (next: Credential) => {
@@ -287,13 +300,14 @@ export function SessionProvider({
     () => ({
       ...state,
       client,
+      gatewayClient,
       accessToken: () => credential.get()?.accessToken,
       signInWithDatalayer,
       signInWithPassword,
       signInWithToken,
       signOut
     }),
-    [state, client, credential, signInWithDatalayer, signInWithPassword, signInWithToken, signOut]
+    [state, client, gatewayClient, credential, signInWithDatalayer, signInWithPassword, signInWithToken, signOut]
   );
 
   return <SessionContext.Provider value={session}>{children}</SessionContext.Provider>;

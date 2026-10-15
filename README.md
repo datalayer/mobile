@@ -64,7 +64,7 @@ make start-tunnel               # Metro over a tunnel, for a phone that cannot r
 
 Every `dev:*` and `start*` script sets `APP_VARIANT=development`, so the app installs as *Datalayer Dev* (`ai.datalayer.mobile.dev`, scheme `datalayer-dev`) beside a store build. Once Metro is up, press `a` or `i` to open the installed development build, `r` to reload, `j` to open the debugger, `m` for the dev menu. Shake the phone (or `Cmd+D` / `Cmd+M` in a simulator) for the same menu on the device.
 
-Against a local server: set `EXPO_PUBLIC_DATALAYER_RUN_URL=http://localhost:8080` for the iOS Simulator or `http://10.0.2.2:8080` for the Android emulator; a phone needs an HTTPS URL or `npm run start:tunnel` plus a tunnel to the server. `EXPO_PUBLIC_*` values are read when Metro starts: restart it after changing `.env`.
+Against a local server: set `EXPO_PUBLIC_DATALAYER_RUN_URL=http://localhost:8080` (and `EXPO_PUBLIC_DATALAYER_MCP_URL` to the local MCP gateway) for the iOS Simulator or `http://10.0.2.2:8080` for the Android emulator; a phone needs an HTTPS URL or `npm run start:tunnel` plus a tunnel to the server. `EXPO_PUBLIC_*` values are read when Metro starts: restart it after changing `.env`.
 
 Without a local native toolchain, make the development build in the cloud and install it from the link:
 
@@ -101,7 +101,7 @@ Rebuild the development build (`npm run prebuild`, then `dev:*` or an EAS build)
 
 ### Environments
 
-`EXPO_PUBLIC_DATALAYER_RUN_URL` names the services, HTTPS except for `localhost`, `127.0.0.1` and `10.0.2.2` (the Android emulator's host). A phone reaches a local server only through an HTTPS development URL or a tunnel. `EXPO_PUBLIC_BUILD_PROFILE` is one of `development`, `development-simulator`, `e2e`, `preview`, `staging`, `production`; it decides whether the interim sign-in is offered.
+`EXPO_PUBLIC_DATALAYER_RUN_URL` names the services, HTTPS except for `localhost`, `127.0.0.1` and `10.0.2.2` (the Android emulator's host). `EXPO_PUBLIC_DATALAYER_MCP_URL` names the MCP gateway, which is published on its own host (production `https://mcp.datalayer.run`; a trailing `/mcp` is accepted): the protocol audit, a sign-in under way and Direct Conversations are read there. Both are required, with the same HTTPS rule; a build without either is refused at start. A phone reaches a local server only through an HTTPS development URL or a tunnel. `EXPO_PUBLIC_BUILD_PROFILE` is one of `development`, `development-simulator`, `e2e`, `preview`, `staging`, `production`; it decides whether the interim sign-in is offered.
 
 Development, `e2e` and `preview` builds sign in with a handle and password or a Datalayer API token; store builds will sign in with Datalayer through the system browser.
 
@@ -112,9 +112,17 @@ npm run check            # typecheck, lint, forbidden imports, tests
 npm run test:watch       # tests while editing
 npm run check:imports    # no Jupyter, JupyterLab, Lumino, React DOM, Primer web or browser global
 npm run check:bundle     # the same, on what Metro resolved into the iOS and Android bundles (source maps)
-npm run doctor           # expo-doctor
+npm run doctor           # diagnostic only; known monorepo/tooling issue below
 npm run export           # both bundles into dist/, to prove the Metro graph resolves
 ```
+
+`expo-doctor` is temporarily diagnostic rather than a required check. Its
+package-version check sees the monorepo root's web React/Expo packages beside
+the SDK 57 packages nested for mobile; this Node/npm combination also exposes
+child-output and `npm explain` incompatibilities, while two checks require the
+Expo API. The installed mobile versions still match `expo install --check`.
+MOBILE.md M-010b tracks making Doctor clean; CI and release gates intentionally
+use `npm run check` and `npm run check:bundle` until that issue is resolved.
 
 ## Build
 
@@ -139,10 +147,10 @@ credential files never belong in the repository.
 
 | Profile | EAS environment | Non-secret configuration | Credential source |
 |---|---|---|---|
-| `development`, `development-simulator`, `e2e` | `development` | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EAS_PROJECT_ID`; profile and variant come from `eas.json` | EAS development signing credentials |
-| `preview` | `preview` | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EAS_PROJECT_ID` | EAS internal-distribution credentials |
-| `staging` | `preview` | staging `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EAS_PROJECT_ID` | The production app's EAS/store signing credentials |
-| `production` | `production` | production `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EAS_PROJECT_ID` | The production app's EAS/store signing credentials |
+| `development`, `development-simulator`, `e2e` | `development` | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID`; profile and variant come from `eas.json` | EAS development signing credentials |
+| `preview` | `preview` | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID` | EAS internal-distribution credentials |
+| `staging` | `preview` | staging `EXPO_PUBLIC_DATALAYER_RUN_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID` | The production app's EAS/store signing credentials |
+| `production` | `production` | production `EXPO_PUBLIC_DATALAYER_RUN_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID` | The production app's EAS/store signing credentials |
 | GitHub release workflow | repository Actions secrets | none | `EXPO_TOKEN`, scoped to the Datalayer Expo project |
 
 EAS owns the iOS distribution/provisioning material and Android keystore.
@@ -184,7 +192,7 @@ Google (`make publish-android`):
 Before tagging:
 
 - confirm the release commit is reviewed, clean, pushed and green in CI;
-- run `npm run doctor`, `npm run check` and `npm run check:bundle` with the committed lockfile;
+- run `npm run check` and `npm run check:bundle` with the committed lockfile; Doctor remains the explicitly deferred M-010b diagnostic;
 - bump `version`, verify the remote iOS build number and Android version code will increase, and check `runtimeVersion` equals the app version;
 - verify staging against the same backend contract and run the sign-in, approval race/stale state, notification tap, stream/stop and pause/reset smoke journeys;
 - verify store copy, screenshots, privacy/data-safety answers, support/privacy/deletion links and the non-customer review account;
