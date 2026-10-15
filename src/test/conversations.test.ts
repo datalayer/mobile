@@ -12,9 +12,9 @@
 
 import { RUN_CUT_SHORT, RuntimeRefusal, type AgUiEvent, type AppSessionsClient, type AgentRunClient, type StreamOptions } from '@datalayer/agent-runtimes/lib/portable';
 import {
-  locateThread, OPENS_ON_THE_WEB, REACH_UNREAD, reachOf, runtimeAgents, startThreadRuntime, threadOf, threadReachOf, threadTitle
+  locateNew, locateThread, REACH_UNREAD, runtimeAgents, startNewRuntime, startThreadRuntime, threadOf, threadReachOf, threadTitle
 } from '../api/conversations';
-import { deploymentOf, sessionAddressOf } from '../api/deployments';
+import { deploymentOf } from '../api/deployments';
 import { ConversationController, FILE_ON_THE_WEB, ONE_TURN_AT_A_TIME } from '../features/conversations/controller';
 import { blocksOf, linkAllowed, spansOf } from '../features/conversations/markdownBlocks';
 import { conversationFor, forgetConversations, HELD_LIMIT, heldCount, holdAs } from '../features/conversations/registry';
@@ -36,17 +36,29 @@ describe('threads and where they are reached (M-031)', () => {
     expect(() => threadOf({ session_uid: 's', first_asked: '<asked-for>never closed' })).toThrow(/never closes/);
   });
 
-  it('reaches a deployment only where it is kept running now, read again with the deployment', () => {
-    expect(sessionAddressOf(KEPT)).toEqual({ baseUrl: 'https://r1.datalayer.run/agent-runtimes/rt-9', agent: 'desk-agent' });
-    expect(reachOf(deploymentOf(KEPT))).toEqual({ kind: 'reachable', address: { baseUrl: 'https://r1.datalayer.run/agent-runtimes/rt-9', agent: 'desk-agent' } });
-    // Not kept on, its runtime ended, a bad address: the web.
-    expect(sessionAddressOf({ ...KEPT, always_on: false })).toBeNull();
-    expect(sessionAddressOf({ ...KEPT, kept: { state: 'ended', agent_id: 'desk-agent' } })).toBeNull();
-    expect(sessionAddressOf({ ...KEPT, kept: { ...KEPT.kept, url: 'javascript:alert(1)' } })).toBeNull();
-    expect(reachOf(deploymentOf({ ...KEPT, always_on: false }))).toEqual({ kind: 'web', why: OPENS_ON_THE_WEB });
-    // Paused: nothing is sent, whatever the runtime.
-    expect(reachOf(deploymentOf({ ...KEPT, state: 'paused' }))).toMatchObject({ kind: 'web', why: expect.stringMatching(/paused/) });
-    expect(reachOf(undefined)).toMatchObject({ kind: 'web' });
+  it('never reads a conversation address from a deployment: only ai-agents locates it', () => {
+    const deployment = deploymentOf(KEPT) as Record<string, unknown>;
+    expect(deployment.sessionAddress).toBeUndefined();
+    expect(JSON.stringify(deployment)).not.toContain('rt-9');
+  });
+
+  it('starts a new conversation with a deployment where ai-agents says, after the person asks (decided 15 October 2026)', async () => {
+    const asked: { path: string; method?: string }[] = [];
+    const client = (async (path: string, options?: { method?: string }) => {
+      asked.push({ path, method: options?.method });
+      return {
+        reach: {
+          session_uid: '', app_uid: 'a1', app_name: 'Desk', deployment_uid: 'd 1', version: 3, owner: false,
+          reach: options?.method === 'POST' ? 'runtime' : 'launch', url: 'https://r1/agent-runtimes/rt-2', agent_id: 'desk'
+        }
+      };
+    }) as never;
+    expect(await locateNew(client, 'd 1')).toMatchObject({ kind: 'launch', deploymentUid: 'd 1', owner: false });
+    expect(await startNewRuntime(client, 'd 1')).toMatchObject({ kind: 'reachable', on: 'own', address: { agent: 'desk' } });
+    expect(asked).toEqual([
+      { path: '/api/ai-agents/v1/apps/conversations/mine/deployments/d%201/reach', method: undefined },
+      { path: '/api/ai-agents/v1/apps/conversations/mine/deployments/d%201/reach', method: 'POST' }
+    ]);
   });
 
   it('continues a thread where ai-agents says it continues now, whoever the application is (§4.4.7)', async () => {

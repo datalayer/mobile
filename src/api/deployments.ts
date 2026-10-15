@@ -22,27 +22,14 @@ export type Deployment = {
   slug: string;
   updatedAt: string;
   speaks: DeploymentProtocols | null;
-  /**
-   * Where a conversation with it is held now: the runtime it is kept on and
-   * the agent made there (ai-agents' `kept`, LOOP R-33), or `null` when it is
-   * not kept running — read again with the deployment, never remembered.
-   */
-  sessionAddress: SessionAddress | null;
 };
 
-/** A kept deployment's runtime and the agent its sessions are opened on. */
+/**
+ * A runtime and the agent a conversation is had with there — always as
+ * ai-agents locates it on opening (`locateThread`, `locateNew`), never read
+ * from a deployment and remembered.
+ */
 export type SessionAddress = { baseUrl: string; agent: string };
-
-/** Where a deployment's conversation is held now: live, always on and its runtime running (`app_keeper.address_of`). */
-export function sessionAddressOf(raw: Raw): SessionAddress | null {
-  const kept = record(raw.kept);
-  if (raw.state !== 'live' || raw.always_on !== true || kept.state !== 'running') {
-    return null;
-  }
-  const baseUrl = text(kept.url).replace(/\/+$/, '');
-  const agent = text(kept.agent_id);
-  return /^https?:\/\//.test(baseUrl) && agent ? { baseUrl, agent } : null;
-}
 
 export type StoppedWork = {
   stopped: { what: string; runtime: string }[];
@@ -76,8 +63,7 @@ export function deploymentOf(raw: Raw): Deployment {
     state: raw.state === 'paused' ? 'paused' : 'live',
     slug: text(raw.slug),
     updatedAt: text(raw.updated_at),
-    speaks: deploymentProtocolsOf(raw.speaks),
-    sessionAddress: sessionAddressOf(raw)
+    speaks: deploymentProtocolsOf(raw.speaks)
   };
 }
 

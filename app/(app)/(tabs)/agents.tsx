@@ -71,6 +71,33 @@ export default function Agents() {
           )
         }
       </QueryView>
+      <QueryView query={threads}>
+        {list => {
+          // Applications shared with the person, met through their conversations: a new one starts there too.
+          const own = new Set((applications.data ?? []).map(app => app.appUid));
+          const shared = [...new Map(list.filter(t => !own.has(t.appUid) && t.deploymentUid).map(t => [t.appUid, t])).values()];
+          return shared.length ? (
+            <>
+              <SectionTitle>Shared with you</SectionTitle>
+              {shared.map(thread => (
+                <Row
+                  key={`new-${thread.appUid}`}
+                  leading={<AppFace face={faces.byUid.get(thread.appUid)} />}
+                  title="New conversation"
+                  detail={`With the application of “${threadTitle(thread)}”`}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/apps/[appUid]/sessions/[sessionUid]',
+                      params: { appUid: thread.appUid, sessionUid: 'new', deployment: thread.deploymentUid }
+                    } as unknown as Href)
+                  }
+                  accessibilityHint="Starts a new conversation with this application"
+                />
+              ))}
+            </>
+          ) : null;
+        }}
+      </QueryView>
       <SectionTitle>Running agents</SectionTitle>
       <QueryView query={runtimes}>
         {list =>

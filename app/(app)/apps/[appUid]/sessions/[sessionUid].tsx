@@ -10,21 +10,21 @@
  * own — started here first, after they agree, when nothing runs it for them —
  * or nowhere, in ai-agents' sentence. That holds for an application somebody
  * shared with them as for their own. `new` starts a conversation with the
- * first message where the owner's deployment is kept running.
+ * deployment named, located the same way (decided 15 October 2026).
  */
 
+import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Alert } from 'react-native';
 import { Button, EmptyState, Screen, Text } from '../../../../../src/components/primitives';
 import { ProblemView, QueryView } from '../../../../../src/components/states';
-import { reachOf, STARTS_YOUR_RUNTIME } from '../../../../../src/api/conversations';
+import { STARTS_YOUR_RUNTIME, type ThreadReach } from '../../../../../src/api/conversations';
 import type { SessionAddress } from '../../../../../src/api/deployments';
 import { ConversationView } from '../../../../../src/features/conversations/ConversationView';
 import {
-  useConversation, useStartThreadRuntime, useThreadReach
+  useConversation, useNewReach, useStartNewRuntime, useStartThreadRuntime, useThreadReach
 } from '../../../../../src/features/conversations/useConversation';
-import { useApplications } from '../../../../../src/features/queries';
 
 function AppConversation({
   address,
@@ -62,15 +62,21 @@ function AppConversation({
   );
 }
 
-/** A thread, continued where ai-agents says it continues now. */
-function ThreadConversation({ sessionUid }: { sessionUid: string }) {
-  const reach = useThreadReach(sessionUid);
-  const starting = useStartThreadRuntime(sessionUid);
+/** A conversation where ai-agents says it is had now: a thread (`sessionUid`) or a new one (`null`). */
+function Located({
+  reach,
+  starting,
+  sessionUid
+}: {
+  reach: UseQueryResult<ThreadReach>;
+  starting: UseMutationResult<ThreadReach, Error, void>;
+  sessionUid: string | null;
+}) {
   return (
     <QueryView query={reach}>
       {place => {
         if (place.kind === 'closed') {
-          return <EmptyState title="Not continued now" detail={place.why} />;
+          return <EmptyState title={sessionUid ? 'Not continued now' : 'Not started now'} detail={place.why} />;
         }
         if (place.kind === 'launch') {
           return (
@@ -103,36 +109,19 @@ function ThreadConversation({ sessionUid }: { sessionUid: string }) {
   );
 }
 
+function ThreadConversation({ sessionUid }: { sessionUid: string }) {
+  return <Located reach={useThreadReach(sessionUid)} starting={useStartThreadRuntime(sessionUid)} sessionUid={sessionUid} />;
+}
+
+function NewConversation({ deploymentUid }: { deploymentUid: string }) {
+  return <Located reach={useNewReach(deploymentUid)} starting={useStartNewRuntime(deploymentUid)} sessionUid={null} />;
+}
+
 export default function ApplicationConversation() {
-  const { appUid = '', sessionUid = 'new', deployment = '' } = useLocalSearchParams<{
+  const { sessionUid = 'new', deployment = '' } = useLocalSearchParams<{
     appUid: string;
     sessionUid: string;
     deployment: string;
   }>();
-  const applications = useApplications();
-  if (sessionUid !== 'new') {
-    return <ThreadConversation sessionUid={sessionUid} />;
-  }
-  return (
-    <QueryView query={applications}>
-      {apps => {
-        const app = apps.find(item => item.appUid === appUid);
-        const found = app?.deployments.find(item => item.uid === deployment);
-        const reach = reachOf(found);
-        if (reach.kind === 'web' || !found) {
-          return <EmptyState title="Not on this phone" detail={reach.kind === 'web' ? reach.why : ''} />;
-        }
-        return (
-          <AppConversation
-            address={reach.address}
-            appUid={appUid}
-            deploymentUid={found.uid}
-            version={found.version}
-            sessionUid={null}
-            name={app?.name ?? ''}
-          />
-        );
-      }}
-    </QueryView>
-  );
+  return sessionUid === 'new' ? <NewConversation deploymentUid={deployment} /> : <ThreadConversation sessionUid={sessionUid} />;
 }

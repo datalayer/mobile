@@ -12,13 +12,13 @@
  * asked of ai-agents each time it is opened (`locateThread`, MOBILE §4.4.7) —
  * the runtime its deployment is kept on, a runtime of the person's own, one to
  * start, or why not — whoever's the application, so an old runtime address is
- * never trusted. A new conversation is started where an owner's deployment is
- * kept running (`Deployment.sessionAddress`).
+ * never trusted. A new conversation is located the same way from its
+ * deployment (`locateNew`), the person's own or one shared with them.
  */
 
 import { agentRuntimesUrlOf, askedOf } from '@datalayer/agent-runtimes/lib/portable';
 import type { Client } from './client';
-import type { Deployment, SessionAddress } from './deployments';
+import type { SessionAddress } from './deployments';
 import { count, type Raw, record, records, segment, text } from './fields';
 import type { AgentRuntime } from './runtimes';
 
@@ -54,6 +54,7 @@ export const threadTitle = (thread: ConversationThread): string =>
   thread.title || thread.firstAsked || 'A conversation with no words yet';
 
 const THREADS = '/api/ai-agents/v1/apps/conversations/mine/threads';
+const NEW = '/api/ai-agents/v1/apps/conversations/mine/deployments';
 
 /** The person's threads, newest first: with one application, or with every one, whoever's. */
 export async function listThreads(client: Client, appUid = ''): Promise<ConversationThread[]> {
@@ -119,28 +120,26 @@ export async function locateThread(client: Client, sessionUid: string): Promise<
   return threadReachOf(record(body.reach));
 }
 
+/**
+ * Where a new conversation with a deployment is had now (decided 15 October
+ * 2026): the person's own, or one shared with them, as a thread is located;
+ * one they may not open is not found.
+ */
+export async function locateNew(client: Client, deploymentUid: string): Promise<ThreadReach> {
+  const body = await client(`${NEW}/${segment(deploymentUid)}/reach`);
+  return threadReachOf(record(body.reach));
+}
+
+/** Start a runtime of the person's own for a new conversation ai-agents said `launch` of. */
+export async function startNewRuntime(client: Client, deploymentUid: string): Promise<ThreadReach> {
+  const body = await client(`${NEW}/${segment(deploymentUid)}/reach`, { method: 'POST' });
+  return threadReachOf(record(body.reach));
+}
+
 /** Start a runtime of the person's own for a conversation ai-agents said `launch` of; answers where it continues. */
 export async function startThreadRuntime(client: Client, sessionUid: string): Promise<ThreadReach> {
   const body = await client(`${THREADS}/${segment(sessionUid)}/reach`, { method: 'POST' });
   return threadReachOf(record(body.reach));
-}
-
-/** Where a conversation can be held, or why it opens on the web only. */
-export type Reach = { kind: 'reachable'; address: SessionAddress } | { kind: 'web'; why: string };
-
-/** Said when a deployment has no runtime a phone can reach. */
-export const OPENS_ON_THE_WEB =
-  'This application runs while its page is open on the web: talk to it there, or have its owner keep it running.';
-
-/** Where a deployment's conversations are held now. */
-export function reachOf(deployment: Deployment | undefined): Reach {
-  if (!deployment) {
-    return { kind: 'web', why: 'This conversation’s deployment is no longer yours to open.' };
-  }
-  if (deployment.state === 'paused') {
-    return { kind: 'web', why: 'This application is paused: nothing can be sent to it until its owner resumes it.' };
-  }
-  return deployment.sessionAddress ? { kind: 'reachable', address: deployment.sessionAddress } : { kind: 'web', why: OPENS_ON_THE_WEB };
 }
 
 /** An agent on a standalone runtime, as its `/api/v1/agents` lists it. */

@@ -22,7 +22,7 @@ import { resetWords, stoppedWorkWords, type Deployment, type ResetCounts } from 
 import { SPACE } from '../../../../src/theme/tokens';
 import { LifecycleHistory } from '../../../../src/features/deployments/LifecycleHistory';
 import { RunningPermissions } from '../../../../src/features/apps/RunningPermissions';
-import { OPENS_ON_THE_WEB, reachOf, threadTitle } from '../../../../src/api/conversations';
+import { threadTitle } from '../../../../src/api/conversations';
 import { useThreads } from '../../../../src/features/conversations/useConversation';
 import { AppNotifications } from '../../../../src/features/notifications/AppNotifications';
 
@@ -120,14 +120,15 @@ export default function ApplicationDetail() {
               <Field label="Deployments" value={app.deployments.map(d => `${d.target} · version ${d.version}`).join('\n')} />
               <SectionTitle>Conversations</SectionTitle>
               {(() => {
-                // Hosted first: the conversation a person has at its address.
-                const reachable = [...app.deployments]
+                // Hosted first: the conversation a person has at its address. Where it is had —
+                // kept running, or on a computer of their own started first — ai-agents says on opening.
+                const live = [...app.deployments]
                   .sort((a, b) => Number(b.target === 'hosted') - Number(a.target === 'hosted'))
-                  .find(deployment => reachOf(deployment).kind === 'reachable');
-                return reachable ? (
-                  <Button label="New conversation" onPress={() => openConversation(reachable.uid, 'new')} testID="conversation-new" />
+                  .find(deployment => deployment.state === 'live' && deployment.target !== 'embedded');
+                return live ? (
+                  <Button label="New conversation" onPress={() => openConversation(live.uid, 'new')} testID="conversation-new" />
                 ) : (
-                  <Text tone="muted">{app.state === 'paused' ? 'This application is paused: nothing can be sent to it until its owner resumes it.' : OPENS_ON_THE_WEB}</Text>
+                  <Text tone="muted">{app.state === 'paused' ? 'This application is paused: nothing can be sent to it until its owner resumes it.' : 'This application is only embedded on a site: talk to it there.'}</Text>
                 );
               })()}
               <QueryView query={threads}>

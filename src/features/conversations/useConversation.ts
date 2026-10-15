@@ -11,7 +11,9 @@ import { randomUUID } from 'expo-crypto';
 import { fetch as streamingFetch } from 'expo/fetch';
 import { useEffect, useSyncExternalStore } from 'react';
 import { AppState } from 'react-native';
-import { listThreads, locateThread, startThreadRuntime, type ThreadReach } from '../../api/conversations';
+import {
+  listThreads, locateNew, locateThread, startNewRuntime, startThreadRuntime, type ThreadReach
+} from '../../api/conversations';
 import type { SessionAddress } from '../../api/deployments';
 import { useSession } from '../../auth/SessionProvider';
 import { ConversationController } from './controller';
@@ -46,6 +48,31 @@ export function useThreadReach(sessionUid: string | null) {
     enabled: Boolean(sessionUid),
     staleTime: 0,
     gcTime: 0
+  });
+}
+
+/** Where a new conversation with a deployment is had now: read on every open, not kept. */
+export const newReachKey = (deploymentUid: string) => ['conversations', 'reach-new', deploymentUid] as const;
+
+export function useNewReach(deploymentUid: string) {
+  const { client } = useSession();
+  return useQuery({
+    queryKey: newReachKey(deploymentUid),
+    queryFn: () => locateNew(client, deploymentUid),
+    enabled: Boolean(deploymentUid),
+    staleTime: 0,
+    gcTime: 0
+  });
+}
+
+/** Start a runtime of the person's own for a new conversation, then hold where it is had. */
+export function useStartNewRuntime(deploymentUid: string) {
+  const { client } = useSession();
+  const queries = useQueryClient();
+  return useMutation({
+    mutationFn: () => startNewRuntime(client, deploymentUid),
+    retry: false,
+    onSuccess: (reach: ThreadReach) => queries.setQueryData(newReachKey(deploymentUid), reach)
   });
 }
 
