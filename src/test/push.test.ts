@@ -65,11 +65,17 @@ describe('a tapped notification (M-025)', () => {
 
 describe('the push preference', () => {
   it('is off until turned on, with the server defaults', () => {
-    expect(pushPreferenceOf(null)).toEqual({ enabled: false, categories: ['approvals', 'attention', 'failures'] });
+    expect(pushPreferenceOf(null)).toEqual({
+      enabled: false,
+      categories: ['approvals', 'attention', 'failures'],
+      quietHours: null,
+      approvalsInQuiet: true,
+      appCategories: {}
+    });
   });
 
   it('keeps only categories the server knows', () => {
-    expect(pushPreferenceOf(JSON.stringify({ enabled: true, categories: ['approvals', 'spam'] }))).toEqual({
+    expect(pushPreferenceOf(JSON.stringify({ enabled: true, categories: ['approvals', 'spam'] }))).toMatchObject({
       enabled: true,
       categories: ['approvals']
     });

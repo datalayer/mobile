@@ -24,6 +24,7 @@ import { LifecycleHistory } from '../../../../src/features/deployments/Lifecycle
 import { RunningPermissions } from '../../../../src/features/apps/RunningPermissions';
 import { OPENS_ON_THE_WEB, reachOf, threadTitle } from '../../../../src/api/conversations';
 import { useThreads } from '../../../../src/features/conversations/useConversation';
+import { AppNotifications } from '../../../../src/features/notifications/AppNotifications';
 
 export default function ApplicationDetail() {
   const { appUid = '' } = useLocalSearchParams<{ appUid: string }>();
@@ -183,6 +184,7 @@ export default function ApplicationDetail() {
                 accessibilityHint="Shows what each running version speaks and its connections"
               />
               {app.deployments.map(deployment => <RunningPermissions key={`${deployment.uid}-permissions`} deployment={deployment} />)}
+              <AppNotifications appUid={appUid} name={app.name} />
               <SectionTitle>{`Waiting for you (${waiting.length})`}</SectionTitle>
               {waiting.map(approval => (
                 <Row

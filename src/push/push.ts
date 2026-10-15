@@ -99,7 +99,11 @@ export async function registerPush(preference: PushPreference, { ask = false } =
     provider: 'expo',
     appVersion: Application.nativeApplicationVersion ?? '',
     locale: getLocales()[0]?.languageTag ?? '',
-    categories: preference.categories
+    categories: preference.categories,
+    // Kept on the server's installation, which holds what can wait (M-043).
+    quietHours: preference.quietHours,
+    approvalsInQuiet: preference.approvalsInQuiet,
+    appCategories: preference.appCategories
   });
   if (answer.error) {
     throw new Error(answer.error);

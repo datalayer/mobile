@@ -3,20 +3,27 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { getCalendars } from 'expo-localization';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Switch } from '../../../src/components/native';
+import { Picker, Switch } from '../../../src/components/native';
 import { Screen, Text } from '../../../src/components/primitives';
 import { SectionTitle } from '../../../src/components/states';
 import { pushSupported, readPushPreference, registerPush, unregisterPush, writePushPreference } from '../../../src/push/push';
-import { DEFAULT_PUSH_PREFERENCE, PUSH_CATEGORIES, type PushCategory, type PushPreference } from '../../../src/push/routes';
+import {
+  DEFAULT_PUSH_PREFERENCE, DEFAULT_QUIET_END, DEFAULT_QUIET_START, PUSH_CATEGORIES, QUIET_TIMES, quietWords,
+  type PushCategory, type PushPreference, type QuietHours
+} from '../../../src/push/routes';
 import { isConnected } from '../../../src/realtime/channel';
 import { SPACE } from '../../../src/theme/tokens';
 
 /**
- * Notifications on this phone (M-024): explained before the system asks,
- * asked only when turned on, by category, kept on the server's installation.
- * A notification says only that something waits; the app shows it once open.
+ * Notifications on this phone (M-024, M-043): explained before the system
+ * asks, asked only when turned on, by category, with quiet hours — what can
+ * wait is held by the server until they end, approvals pass unless the person
+ * says otherwise — kept on the server's installation. Each application can be
+ * told otherwise on its own page. A notification says only that something
+ * waits; the app shows it once open.
  */
 export default function NotificationSettings() {
   const [preference, setPreference] = useState<PushPreference | null>(null);
@@ -62,6 +69,9 @@ export default function NotificationSettings() {
     }
   };
 
+  const quiet = (quietHours: QuietHours | null) => void apply({ ...shown, quietHours }, false);
+  const zone = () => getCalendars()[0]?.timeZone || 'UTC';
+
   const toggleCategory = (category: PushCategory, on: boolean) => {
     const categories = on ? [...shown.categories, category] : shown.categories.filter(item => item !== category);
     void apply({ ...shown, categories }, false);
@@ -96,6 +106,37 @@ export default function NotificationSettings() {
               onValueChange={on => toggleCategory(category.value, on)}
             />
           ))}
+          <SectionTitle>Quiet hours</SectionTitle>
+          <Switch
+            label="Quiet hours"
+            value={Boolean(shown.quietHours)}
+            disabled={busy}
+            onValueChange={on => quiet(on ? { start: DEFAULT_QUIET_START, end: DEFAULT_QUIET_END, tz: zone() } : null)}
+          />
+          {shown.quietHours ? (
+            <>
+              <Text size="small" tone="muted">From</Text>
+              <Picker
+                selectedValue={shown.quietHours.start}
+                onValueChange={start => start !== shown.quietHours?.end && quiet({ ...shown.quietHours!, start, tz: zone() })}
+                options={QUIET_TIMES}
+              />
+              <Text size="small" tone="muted">Until</Text>
+              <Picker
+                selectedValue={shown.quietHours.end}
+                onValueChange={end => end !== shown.quietHours?.start && quiet({ ...shown.quietHours!, end, tz: zone() })}
+                options={QUIET_TIMES}
+              />
+              <Switch
+                label="Approvals still reach me"
+                value={shown.approvalsInQuiet}
+                disabled={busy}
+                onValueChange={on => void apply({ ...shown, approvalsInQuiet: on }, false)}
+              />
+            </>
+          ) : null}
+          <Text size="small" tone="muted">{quietWords(shown)}</Text>
+          <Text size="small" tone="muted">Each application can be told otherwise on its page, under Notifications.</Text>
         </View>
       ) : null}
     </Screen>
