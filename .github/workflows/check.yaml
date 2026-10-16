@@ -28,3 +28,59 @@ jobs:
           ONNXRUNTIME_NODE_INSTALL: skip
       - run: npm run check
       - run: npm run check:bundle
+
+  # The Expo/Hermes proof of M-002: the shared portable entries, bundled by
+  # this app's Metro from an entry that imports nothing else, compiled by the
+  # hermesc React Native ships and run by the Hermes VM alone (no React Native
+  # runtime, no DOM, no shim). The VM is built from the Hermes tag React Native
+  # pins, so it reads that hermesc's bytecode.
+  hermes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+        env:
+          ONNXRUNTIME_NODE_INSTALL: skip
+      - name: The Hermes tag React Native pins
+        id: tag
+        run: |
+          tag=$(cat node_modules/react-native/sdks/.hermesv1version)
+          echo "Hermes $tag, hermes-compiler $(node -p "require('hermes-compiler/package.json').version")"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        id: vm
+        with:
+          path: hermes-vm
+          key: hermes-vm-${{ steps.tag.outputs.tag }}-${{ runner.os }}
+      - name: Build the Hermes VM
+        if: steps.vm.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update -q && sudo apt-get install -yq ninja-build libicu-dev
+          git clone --depth 1 --branch "${{ steps.tag.outputs.tag }}" https://github.com/facebook/hermes.git hermes-src
+          cmake -S hermes-src -B hermes-build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build hermes-build --target hermes
+          mkdir -p hermes-vm && cp hermes-build/bin/hermes hermes-vm/
+      - name: Bundle the proof with Metro
+        run: |
+          for platform in ios android; do
+            npx expo export:embed --platform $platform --dev false --minify false \
+              --entry-file scripts/hermes-proof/index.ts \
+              --bundle-output dist/hermes/$platform/proof.js \
+              --sourcemap-output dist/hermes/$platform/proof.js.map
+          done
+      - name: No forbidden module in the proof's bundles
+        run: node scripts/check-bundle.js dist/hermes
+      - name: Compile with React Native's hermesc and run under the Hermes VM
+        run: |
+          hermesc=node_modules/hermes-compiler/hermesc/linux64-bin/hermesc
+          $hermesc -version | head -3
+          ./hermes-vm/hermes -version | head -3
+          for platform in ios android; do
+            $hermesc -emit-binary -O -out dist/hermes/$platform/proof.hbc dist/hermes/$platform/proof.js
+            ./hermes-vm/hermes dist/hermes/$platform/proof.hbc | tee dist/hermes/$platform/proof.txt
+            grep -qx 'HERMES PROOF HELD' dist/hermes/$platform/proof.txt
+          done
