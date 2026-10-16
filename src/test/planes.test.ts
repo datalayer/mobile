@@ -25,7 +25,7 @@ describe('the two planes (M-001, 16 October 2026)', () => {
   it("holds Core's table of where each service lives", () => {
     // Read as text: the import gate keeps Core to lib/portable, and the table is a plain literal.
     const planes = readFileSync(join(dirname(require.resolve('@datalayer/core/lib/portable')), '..', 'config', 'planes.js'), 'utf8');
-    const onRuntimes = [...planes.matchAll(/(\w+)Url: RUNTIMES_PLANE_URL/g)].map(match => match[1]).sort();
+    const onRuntimes = [...planes.matchAll(/(\w+)Url: RUNTIMES_PLANE_URL/g)].map(match => match[1] ?? '').sort();
     const prefixOf: Record<string, string> = {
       aiAgents: '/api/ai-agents/',
       runtimes: '/api/runtimes/',
