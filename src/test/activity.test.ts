@@ -3,10 +3,22 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { activityOf, mergeActivityPages } from '@datalayer/agent-runtimes/lib/portable';
+import { activityFixture, activityOf, entrySaid, mergeActivityPages, scheduledSays } from '@datalayer/agent-runtimes/lib/portable';
 import { readActivity } from '../api/activity';
 
 const page = (body: Record<string, unknown>) => activityOf(body);
+
+describe('Activity on the shared fixture (M-015b)', () => {
+  it('reads and says what the Studio reads and says', async () => {
+    const client = (async () => activityFixture()) as unknown as Parameters<typeof readActivity>[0];
+    const work = await readActivity(client, 'app-1');
+    expect(work.inProgress.map(entry => entrySaid(entry))).toEqual(['Triage the inbox']);
+    expect(work.scheduled.map(scheduledSays)).toEqual(['Every weekday morning (0 8 * * 1-5) · version 3']);
+    // A session whose words are not kept is said by how its run ended.
+    expect(work.completed.map(entry => entrySaid(entry))).toEqual(['Stopped']);
+    expect(work.nextOffset).toBe(20);
+  });
+});
 
 describe('the activity of every application (M-040)', () => {
   it('names the application of each session and scheduled run', () => {
