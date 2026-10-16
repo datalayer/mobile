@@ -9,6 +9,8 @@ import path from 'path';
 const {
   DECLARED_DATA,
   ANDROID_PERMISSIONS,
+  BADGE_PERMISSIONS,
+  DEV_LAUNCHER_STRIP_PHASE,
   privacyProblems,
   infoPlistProblems,
   permissionsOf,
@@ -77,6 +79,20 @@ describe('the release manifests (M-052)', () => {
     ]);
   });
 
+  it("lets the development client's local-network text through only while its build phase strips it from release", () => {
+    const info = {
+      ITSAppUsesNonExemptEncryption: false,
+      NSLocalNetworkUsageDescription: 'Expo Dev Launcher uses the local network to discover development servers.'
+    };
+    expect(infoPlistProblems(info, `/* ${DEV_LAUNCHER_STRIP_PHASE} */`)).toEqual([]);
+    expect(infoPlistProblems(info, '')).toEqual([
+      'NSLocalNetworkUsageDescription asks for a permission the app never uses ("Expo Dev Launcher uses the local network to discover development servers.")'
+    ]);
+    expect(
+      infoPlistProblems({ ...info, NSLocalNetworkUsageDescription: 'Finds printers.' }, `/* ${DEV_LAUNCHER_STRIP_PHASE} */`)
+    ).toEqual(['NSLocalNetworkUsageDescription asks for a permission the app never uses ("Finds printers.")']);
+  });
+
   it('reads the permissions a merged manifest grants, leaving out the removed ones', () => {
     const manifest = `<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
       <uses-permission android:name="android.permission.INTERNET" />
@@ -92,6 +108,7 @@ describe('the release manifests (M-052)', () => {
       'android.permission.POST_NOTIFICATIONS'
     ]);
     expect(permissionProblems(permissions)).toEqual([]);
+    expect(permissionProblems([...permissions, ...BADGE_PERMISSIONS])).toEqual([]);
   });
 
   it('refuses an unexplained permission, and a manifest without the notification permission', () => {
@@ -106,8 +123,15 @@ describe('the release manifests (M-052)', () => {
     expect(config.android.blockedPermissions).toEqual([
       'android.permission.READ_EXTERNAL_STORAGE',
       'android.permission.WRITE_EXTERNAL_STORAGE',
-      'android.permission.SYSTEM_ALERT_WINDOW'
+      'android.permission.SYSTEM_ALERT_WINDOW',
+      'android.permission.USE_BIOMETRIC',
+      'android.permission.USE_FINGERPRINT',
+      'com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE'
     ]);
+    for (const blocked of config.android.blockedPermissions) {
+      expect(Object.keys(ANDROID_PERMISSIONS)).not.toContain(blocked);
+      expect(BADGE_PERMISSIONS).not.toContain(blocked);
+    }
     expect(config.plugins).toContainEqual(['expo-secure-store', { faceIDPermission: false }]);
     expect(config.ios.config.usesNonExemptEncryption).toBe(false);
   });
@@ -116,5 +140,6 @@ describe('the release manifests (M-052)', () => {
     for (const name of Object.keys(ANDROID_PERMISSIONS)) {
       expect(DOCS).toContain(`\`${name}\``);
     }
+    expect(DOCS).toContain('ShortcutBadger');
   });
 });

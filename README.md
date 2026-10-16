@@ -211,7 +211,7 @@ Google (`make publish-android`):
 Before tagging:
 
 - confirm the release commit is reviewed, clean, pushed and green in CI;
-- run `npm run check` and `npm run check:bundle` with the committed lockfile, and see the release commit's Check green, its `doctor` job included;
+- run `npm run check` and `npm run check:bundle` with the committed lockfile, and see the release commit's Check green, its `doctor` and `manifests` jobs included (`manifests` holds the generated privacy manifest, `Info.plist` and merged Android permissions to `docs/privacy-and-store.md`; its `release-manifests` artifact goes to the release record);
 - bump `version`, verify the remote iOS build number and Android version code will increase, and check `runtimeVersion` equals the app version;
 - verify staging against the same backend contract and run the sign-in, approval race/stale state, notification tap, stream/stop and pause/reset smoke journeys;
 - verify store copy, screenshots, privacy/data-safety answers, support/privacy/deletion links and the non-customer review account;

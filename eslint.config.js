@@ -12,8 +12,8 @@ module.exports = defineConfig([
     ignores: ['node_modules/*', '.expo/*', 'dist/*', 'scripts/fixtures/*']
   },
   {
-    // The import gate runs under plain node, and its test loads it the same way.
-    files: ['scripts/**/*.js', 'src/test/forbiddenImports.test.ts', 'src/test/bundleGate.test.ts', 'src/test/bundleSize.test.ts'],
+    // The gates run under plain node, and their tests load them the same way (app.config.ts as the CLI does).
+    files: ['scripts/**/*.js', 'src/test/forbiddenImports.test.ts', 'src/test/bundleGate.test.ts', 'src/test/bundleSize.test.ts', 'src/test/releaseManifests.test.ts'],
     languageOptions: { globals: { __dirname: 'readonly', require: 'readonly', module: 'readonly', process: 'readonly' } },
     rules: { '@typescript-eslint/no-require-imports': 'off' }
   }

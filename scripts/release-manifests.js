@@ -10,8 +10,10 @@
  * It holds them to docs/privacy-and-store.md:
  *  - iOS PrivacyInfo.xcprivacy: no tracking, no tracking domain, and exactly
  *    the five data types declared, each linked, not tracking, for its purposes;
- *  - iOS Info.plist: no usage description (the app asks for nothing but
- *    notifications, which iOS asks without one) and exempt encryption only;
+ *  - iOS Info.plist: no usage description in a release build (the app asks for
+ *    nothing but notifications, which iOS asks without one; the development
+ *    client's local-network text is deleted from non-Debug builds by its own
+ *    build phase) and exempt encryption only;
  *  - Android: every permission of the merged release manifest is one this file
  *    explains; anything a dependency adds fails until it is explained or removed
  *    (app.config.ts' android.blockedPermissions).
@@ -43,6 +45,43 @@ const ANDROID_PERMISSIONS = {
   'android.permission.WAKE_LOCK': 'Firebase Messaging wakes the app to deliver a push',
   'com.google.android.c2dm.permission.RECEIVE': 'receives pushes through Firebase Cloud Messaging'
 };
+
+/*
+ * The icon badge's count of pending approvals (M-025) on launchers without
+ * Android's own badges: ShortcutBadger, which expo-notifications ships,
+ * declares these for each launcher it writes to. All are install-time
+ * permissions nobody is asked for.
+ */
+const BADGE_PERMISSIONS = [
+  'android.permission.READ_APP_BADGE',
+  'com.android.launcher.permission.INSTALL_SHORTCUT',
+  'com.android.launcher.permission.UNINSTALL_SHORTCUT',
+  'com.android.launcher.permission.READ_SETTINGS',
+  'com.android.launcher.permission.WRITE_SETTINGS',
+  'com.anddoes.launcher.permission.UPDATE_COUNT',
+  'com.htc.launcher.permission.READ_SETTINGS',
+  'com.htc.launcher.permission.UPDATE_SHORTCUT',
+  'com.huawei.android.launcher.permission.CHANGE_BADGE',
+  'com.huawei.android.launcher.permission.READ_SETTINGS',
+  'com.huawei.android.launcher.permission.WRITE_SETTINGS',
+  'com.majeur.launcher.permission.UPDATE_BADGE',
+  'com.oppo.launcher.permission.READ_SETTINGS',
+  'com.oppo.launcher.permission.WRITE_SETTINGS',
+  'com.sec.android.provider.badge.permission.READ',
+  'com.sec.android.provider.badge.permission.WRITE',
+  'com.sonyericsson.home.permission.BROADCAST_BADGE',
+  'com.sonymobile.home.permission.PROVIDER_INSERT_BADGE',
+  'me.everything.badger.permission.BADGE_COUNT_READ',
+  'me.everything.badger.permission.BADGE_COUNT_WRITE'
+];
+const BADGE_WHY = "the icon badge's count on launchers without Android's own badges (ShortcutBadger, through expo-notifications)";
+
+/*
+ * The development client's local-network description: expo-dev-launcher adds it
+ * to Info.plist and its own build phase deletes it from every non-Debug build.
+ */
+const DEV_LAUNCHER_NETWORK = /Expo Dev Launcher/;
+const DEV_LAUNCHER_STRIP_PHASE = '[Expo Dev Launcher] Strip Local Network Keys for Release';
 
 /** Permissions the app declares itself and keeps to itself: AndroidX's guard on its own receivers. */
 const OWN_PERMISSION = /\.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION$/;
@@ -98,10 +137,18 @@ function privacyProblems(privacy) {
   return problems;
 }
 
-/** What is wrong with the app's Info.plist, parsed: usage descriptions and the encryption answer. */
-function infoPlistProblems(info) {
+/** Whether a usage description leaves the release build: the development client's, stripped by its build phase. */
+function strippedForRelease(key, text, project) {
+  return key === 'NSLocalNetworkUsageDescription' && DEV_LAUNCHER_NETWORK.test(text) && project.includes(DEV_LAUNCHER_STRIP_PHASE);
+}
+
+/**
+ * What is wrong with the app's Info.plist, parsed, beside its Xcode project's
+ * text: usage descriptions a release build keeps, and the encryption answer.
+ */
+function infoPlistProblems(info, project = '') {
   const problems = Object.keys(info)
-    .filter(key => /UsageDescription$/.test(key))
+    .filter(key => /UsageDescription$/.test(key) && !strippedForRelease(key, info[key], project))
     .map(key => `${key} asks for a permission the app never uses ("${info[key]}")`);
   if (info.ITSAppUsesNonExemptEncryption !== false) {
     problems.push('ITSAppUsesNonExemptEncryption is not false (docs/store-listing.md answers export compliance with it)');
@@ -125,7 +172,7 @@ function permissionsOf(manifest) {
 /** The permissions nobody explained, and the one notifications cannot work without. */
 function permissionProblems(permissions) {
   const problems = permissions
-    .filter(name => !(name in ANDROID_PERMISSIONS) && !OWN_PERMISSION.test(name))
+    .filter(name => !(name in ANDROID_PERMISSIONS) && !BADGE_PERMISSIONS.includes(name) && !OWN_PERMISSION.test(name))
     .map(name => `${name} is in the release manifest and docs/privacy-and-store.md does not explain it`);
   if (!permissions.includes('android.permission.POST_NOTIFICATIONS')) {
     problems.push('android.permission.POST_NOTIFICATIONS is missing: notifications could not be asked for');
@@ -136,6 +183,8 @@ function permissionProblems(permissions) {
 module.exports = {
   DECLARED_DATA,
   ANDROID_PERMISSIONS,
+  BADGE_PERMISSIONS,
+  DEV_LAUNCHER_STRIP_PHASE,
   privacyProblems,
   infoPlistProblems,
   permissionsOf,
@@ -158,6 +207,11 @@ if (require.main === module) {
     "the app's PrivacyInfo.xcprivacy"
   );
   const infoFile = path.join(path.dirname(privacyFile), 'Info.plist');
+  const projectFile = one(
+    iosFiles.filter(file => file.endsWith('.xcodeproj/project.pbxproj')),
+    "the app's Xcode project"
+  );
+  const project = fs.readFileSync(projectFile, 'utf8');
   const manifestFile = one(
     filesUnder(path.join(root, 'android', 'app', 'build', 'intermediates')).filter(
       file => path.basename(file) === 'AndroidManifest.xml' && /merged_manifest[^/]*\/release\//.test(file)
@@ -167,12 +221,17 @@ if (require.main === module) {
   const privacy = plist.parse(fs.readFileSync(privacyFile, 'utf8'));
   const info = plist.parse(fs.readFileSync(infoFile, 'utf8'));
   const permissions = permissionsOf(fs.readFileSync(manifestFile, 'utf8'));
-  const why = name => ANDROID_PERMISSIONS[name] ?? (OWN_PERMISSION.test(name) ? "the app's own receivers (AndroidX)" : 'unexplained');
+  const why = name =>
+    ANDROID_PERMISSIONS[name] ??
+    (BADGE_PERMISSIONS.includes(name) ? BADGE_WHY : OWN_PERMISSION.test(name) ? "the app's own receivers (AndroidX)" : 'unexplained');
+  const kept = Object.keys(info).filter(key => /UsageDescription$/.test(key) && !strippedForRelease(key, info[key], project));
+  const stripped = Object.keys(info).filter(key => /UsageDescription$/.test(key) && strippedForRelease(key, info[key], project));
   const lines = [
     `iOS PrivacyInfo.xcprivacy (${path.relative(root, privacyFile)}): tracking ${privacy.NSPrivacyTracking}, ` +
       `collected ${(privacy.NSPrivacyCollectedDataTypes ?? []).map(item => item.NSPrivacyCollectedDataType.replace('NSPrivacyCollectedDataType', '')).join(', ')}; ` +
       `required-reason APIs declared by the app: ${(privacy.NSPrivacyAccessedAPITypes ?? []).map(item => item.NSPrivacyAccessedAPIType).join(', ') || 'none'}`,
-    `iOS Info.plist: usage descriptions ${Object.keys(info).filter(key => /UsageDescription$/.test(key)).join(', ') || 'none'}; ` +
+    `iOS Info.plist: usage descriptions in the release build ${kept.join(', ') || 'none'}` +
+      `${stripped.length ? ` (${stripped.join(', ')} only in Debug: the development client's, stripped by its build phase)` : ''}; ` +
       `ITSAppUsesNonExemptEncryption ${info.ITSAppUsesNonExemptEncryption}; UIBackgroundModes ${(info.UIBackgroundModes ?? []).join(', ') || 'none'}`,
     '',
     '| Android permission (merged release manifest) | Why |',
@@ -183,7 +242,7 @@ if (require.main === module) {
   if (process.env.GITHUB_STEP_SUMMARY) {
     fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Release manifests (M-052)\n\n${lines.join('\n')}\n`);
   }
-  const problems = [...privacyProblems(privacy), ...infoPlistProblems(info), ...permissionProblems(permissions)];
+  const problems = [...privacyProblems(privacy), ...infoPlistProblems(info, project), ...permissionProblems(permissions)];
   if (problems.length) {
     problems.forEach(problem => console.error(problem));
     process.exit(1);

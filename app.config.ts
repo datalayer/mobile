@@ -135,12 +135,17 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: variant.id,
-      // Expo's template asks for storage and drawing over other apps; the app needs neither, and
-      // scripts/release-manifests.js holds the merged release manifest to docs/privacy-and-store.md (M-052).
+      // Expo's template asks for storage and drawing over other apps, expo-secure-store's biometric
+      // library for biometrics and expo-application's install-referrer library for the Play Store's
+      // referrer: the app uses none of them. scripts/release-manifests.js holds the merged release
+      // manifest to docs/privacy-and-store.md (M-052).
       blockedPermissions: [
         'android.permission.READ_EXTERNAL_STORAGE',
         'android.permission.WRITE_EXTERNAL_STORAGE',
-        'android.permission.SYSTEM_ALERT_WINDOW'
+        'android.permission.SYSTEM_ALERT_WINDOW',
+        'android.permission.USE_BIOMETRIC',
+        'android.permission.USE_FINGERPRINT',
+        'com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE'
       ],
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
