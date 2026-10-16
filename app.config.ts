@@ -3,6 +3,8 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { existsSync } from 'fs';
+import { join } from 'path';
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 /** The build variants that are installed side by side (MOBILE.md §5.1). */
@@ -34,6 +36,41 @@ const VARIANTS: Record<Variant, { name: string; id: string; scheme: string; icon
   }
 };
 
+/*
+ * Over-the-air updates (MOBILE M-053): each EAS profile builds on its own
+ * channel (eas.json), on the runtime of its app version. An update that can
+ * reach people — preview, staging, production — is signed: the build carries
+ * the public certificate, the private key stays with the account holders
+ * (M-007b), and such a build is refused while the certificate is missing.
+ */
+const UPDATES_CERTIFICATE = './certs/updates-certificate.pem';
+const SIGNED_PROFILES = new Set(['preview', 'staging', 'production']);
+
+function updatesOf(projectId: string | undefined): ExpoConfig['updates'] {
+  const profile = process.env.EAS_BUILD_PROFILE ?? '';
+  const certified = existsSync(join(__dirname, UPDATES_CERTIFICATE));
+  if (SIGNED_PROFILES.has(profile) && !certified) {
+    throw new Error(
+      `The ${profile} build receives over-the-air updates, which are signed: ${UPDATES_CERTIFICATE} is missing ` +
+        '(npx expo-updates codesigning:generate, the key kept by the account holders; MOBILE M-007b, M-053).'
+    );
+  }
+  if (SIGNED_PROFILES.has(profile) && !projectId) {
+    throw new Error(`The ${profile} build needs EAS_PROJECT_ID: its updates are served from the project's address.`);
+  }
+  return {
+    ...(projectId ? { url: `https://u.expo.dev/${projectId}` } : {}),
+    checkAutomatically: 'ON_LOAD',
+    fallbackToCacheTimeout: 0,
+    ...(certified
+      ? {
+          codeSigningCertificate: UPDATES_CERTIFICATE,
+          codeSigningMetadata: { keyid: 'main', alg: 'rsa-v1_5-sha256' }
+        }
+      : {})
+  };
+}
+
 export default ({ config }: ConfigContext): ExpoConfig => {
   const variant = VARIANTS[VARIANT];
   return {
@@ -48,6 +85,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     orientation: 'portrait',
     userInterfaceStyle: 'automatic',
     runtimeVersion: { policy: 'appVersion' },
+    updates: updatesOf(process.env.EAS_PROJECT_ID),
     ios: {
       bundleIdentifier: variant.id,
       supportsTablet: true,

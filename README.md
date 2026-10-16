@@ -171,6 +171,8 @@ Before any store build:
 - Signing and submit credentials live in EAS and the platform consoles, with named owners. Nothing is committed here.
 - Store listing, screenshots, privacy and data-safety answers, support and privacy-policy URLs, the account-deletion route and a review account without real customer data are current.
 - No over-the-air update reaches `production` before the same update was verified on `staging` on the same runtime; a native, permission or config change always means a new store binary.
+- Every EAS profile builds on its own update channel (`development`, `development-simulator`, `e2e`, `preview`, `staging`, `production`; `eas.json`) with `runtimeVersion` from the app version. `make update-staging` publishes to `staging`; `make promote-update GROUP=<id>` republishes that verified group to `production`, never a new bundle.
+- Updates are signed. A `preview`, `staging` or `production` build refuses to configure without `certs/updates-certificate.pem` (the public certificate, committed) and `EAS_PROJECT_ID`; the private key from `npx expo-updates codesigning:generate` is kept by the account holders with the other signing credentials (M-007b) and is never committed.
 
 Apple (`make publish-ios`):
 

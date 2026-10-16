@@ -21,6 +21,8 @@ android/
 *.p12
 *.key
 *.mobileprovision
+# the updates signing key (expo-updates codesigning:generate): the account holders keep it
+keys/
 google-services.json
 GoogleService-Info.plist
 

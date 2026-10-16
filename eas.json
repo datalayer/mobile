@@ -12,28 +12,51 @@
       "developmentClient": true,
       "distribution": "internal",
       "environment": "development",
-      "env": { "APP_VARIANT": "development", "EXPO_PUBLIC_BUILD_PROFILE": "development" }
+      "env": {
+        "APP_VARIANT": "development",
+        "EXPO_PUBLIC_BUILD_PROFILE": "development"
+      },
+      "channel": "development"
     },
     "development-simulator": {
       "extends": "development",
-      "ios": { "simulator": true },
-      "env": { "APP_VARIANT": "development", "EXPO_PUBLIC_BUILD_PROFILE": "development-simulator" }
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "APP_VARIANT": "development",
+        "EXPO_PUBLIC_BUILD_PROFILE": "development-simulator"
+      },
+      "channel": "development-simulator"
     },
     "e2e": {
       "extends": "base",
       "distribution": "internal",
       "environment": "development",
-      "ios": { "simulator": true },
-      "android": { "buildType": "apk" },
-      "env": { "APP_VARIANT": "preview", "EXPO_PUBLIC_BUILD_PROFILE": "e2e" }
+      "ios": {
+        "simulator": true
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "APP_VARIANT": "preview",
+        "EXPO_PUBLIC_BUILD_PROFILE": "e2e"
+      },
+      "channel": "e2e"
     },
     "preview": {
       "extends": "base",
       "distribution": "internal",
       "channel": "preview",
       "environment": "preview",
-      "android": { "buildType": "apk" },
-      "env": { "APP_VARIANT": "preview", "EXPO_PUBLIC_BUILD_PROFILE": "preview" }
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "APP_VARIANT": "preview",
+        "EXPO_PUBLIC_BUILD_PROFILE": "preview"
+      }
     },
     "staging": {
       "extends": "base",
@@ -41,7 +64,10 @@
       "channel": "staging",
       "environment": "preview",
       "autoIncrement": true,
-      "env": { "APP_VARIANT": "production", "EXPO_PUBLIC_BUILD_PROFILE": "staging" }
+      "env": {
+        "APP_VARIANT": "production",
+        "EXPO_PUBLIC_BUILD_PROFILE": "staging"
+      }
     },
     "production": {
       "extends": "base",
@@ -49,15 +75,23 @@
       "channel": "production",
       "environment": "production",
       "autoIncrement": true,
-      "env": { "APP_VARIANT": "production", "EXPO_PUBLIC_BUILD_PROFILE": "production" }
+      "env": {
+        "APP_VARIANT": "production",
+        "EXPO_PUBLIC_BUILD_PROFILE": "production"
+      }
     }
   },
   "submit": {
     "staging": {
-      "android": { "track": "internal" }
+      "android": {
+        "track": "internal"
+      }
     },
     "production": {
-      "android": { "track": "internal", "releaseStatus": "draft" }
+      "android": {
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
     }
   }
 }
