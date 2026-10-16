@@ -112,11 +112,11 @@ npm run check            # typecheck, lint, forbidden imports, tests
 npm run test:watch       # tests while editing
 npm run check:imports    # no Jupyter, JupyterLab, Lumino, React DOM, Primer web or browser global
 npm run check:bundle     # the same, on what Metro resolved into the iOS and Android bundles (source maps)
-npm run doctor           # Expo Doctor: required in CI, outside the monorepo (below)
+npm run doctor           # Expo Doctor: a job of Check in CI, outside the monorepo (below)
 npm run export           # both bundles into dist/, to prove the Metro graph resolves
 ```
 
-Expo Doctor is a required check in CI (the `doctor` job of Check), where the
+Expo Doctor runs in CI (the `doctor` job of Check: a failure turns Check red), where the
 repository installs on its own: there `package.json`'s `overrides` hold every
 dependency's `react` and `react-dom` to the app's own (Core, Agent Runtimes,
 Jupyter UI and Loro depend on 19.2.8 exactly, the Jupyter packages on 18.3.1),
@@ -155,7 +155,7 @@ In CI, a release is a tag. Set `version` in `app.config.ts`, commit, then tag an
 git tag v0.1.0 && git push origin v0.1.0
 ```
 
-`.github/workflows/release.yaml` checks that the tag names that version, runs `npm run check` and `npm run check:bundle`, has EAS build the `.ipa` and `.aab` and submit them (TestFlight, Google Play internal track as a draft), and creates the GitHub release with the build ids. It needs the repository secret `EXPO_TOKEN` (an Expo robot token) and the signing and submit credentials kept in EAS (`eas credentials`: the App Store Connect API key, the Google Play service account). `.github/workflows/check.yaml` runs the checks on every pull request and push to `main`.
+`.github/workflows/release.yaml` checks that the tag names that version, runs `npm run check` and `npm run check:bundle`, has EAS build the `.ipa` and `.aab` and submit them (TestFlight, Google Play internal track as a draft), and creates the GitHub release with the build ids. It needs the repository secret `EXPO_TOKEN` (an Expo robot token) and the signing and submit credentials kept in EAS (`eas credentials`: the App Store Connect API key, the Google Play service account). `.github/workflows/check.yaml` runs the checks on every pull request and push to `main`. A failed job turns Check red; it does not block merging, as `main` has no branch protection yet (a repository administrator may require the Check jobs). A release does require it: `release.yaml` refuses a tag whose commit's Check run is not green, every job included. The repository commits no lockfile; `release.yaml` keeps the `package-lock.json` its install resolved as the `release-lockfile` artifact and writes its checksum into the GitHub release. It pins the EAS CLI (`eas-version`); raise it deliberately.
 
 ### Environments and credentials
 
@@ -184,7 +184,7 @@ commit → npm run check → preview build → staging (TestFlight, Play interna
 Before any store build:
 
 - `version` in `app.config.ts` is the user-facing version; Android `versionCode` and iOS `buildNumber` are managed by EAS (`appVersionSource: remote`) and only ever increase.
-- The build is made from a clean, pushed commit by EAS, never from a working tree. Record the commit, the EAS build id, the runtime version and the lockfile.
+- The build is made from a clean, pushed commit by EAS, never from a working tree. Record the commit, the EAS build id, the runtime version and the lockfile the release resolved (the `release-lockfile` artifact and its checksum; no lockfile is committed).
 - Signing and submit credentials live in EAS and the platform consoles, with named owners. Nothing is committed here.
 - Store listing, screenshots, privacy and data-safety answers, support and privacy-policy URLs, the account-deletion route and a review account without real customer data are current.
 - No over-the-air update reaches `production` before the same update was verified on `staging` on the same runtime; a native, permission or config change always means a new store binary.
@@ -211,7 +211,7 @@ Google (`make publish-android`):
 Before tagging:
 
 - confirm the release commit is reviewed, clean, pushed and green in CI;
-- run `npm run check` and `npm run check:bundle` with the committed lockfile, and see the release commit's Check green, its `doctor` and `manifests` jobs included (`manifests` holds the generated privacy manifest, `Info.plist` and merged Android permissions to `docs/privacy-and-store.md`; its `release-manifests` artifact goes to the release record);
+- run `npm run check` and `npm run check:bundle`, and see the release commit's Check green (`release.yaml` refuses the tag otherwise), its `doctor` and `manifests` jobs included (`manifests` holds the generated privacy manifest, `Info.plist` and merged Android permissions to `docs/privacy-and-store.md`; its `release-manifests` artifact goes to the release record);
 - bump `version`, verify the remote iOS build number and Android version code will increase, and check `runtimeVersion` equals the app version;
 - verify staging against the same backend contract and run the sign-in, approval race/stale state, notification tap, stream/stop and pause/reset smoke journeys;
 - verify store copy, screenshots, privacy/data-safety answers, support/privacy/deletion links and the non-customer review account;

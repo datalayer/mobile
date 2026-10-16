@@ -41,4 +41,16 @@ describe('the mobile release runbook (M-007 and M-059)', () => {
       expect(readme).toContain(required);
     }
   });
+
+  it('releases only a commit whose Check passed, with a pinned EAS CLI and the resolved lockfile kept', () => {
+    const release = read('.github/workflows/release.yaml');
+    expect(release).toContain('--workflow check.yaml --commit "$GITHUB_SHA"');
+    expect(release.indexOf("The tagged commit's Check passed")).toBeLessThan(release.indexOf('eas build'));
+    expect(release).toMatch(/eas-version: \d+\.\d+\.\d+\n/);
+    expect(release).toContain('name: release-lockfile');
+    expect(read('.gitignore').split('\n')).toContain('package-lock.json');
+    const readme = read('README.md');
+    expect(readme).not.toContain('committed lockfile');
+    expect(readme).toContain('does not block merging');
+  });
 });

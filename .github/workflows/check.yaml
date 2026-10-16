@@ -37,8 +37,9 @@ jobs:
   # where the React the app ships is the only one (the workspace's root React
   # 19.2.8 beside Expo's 19.2.3 stays in the monorepo, held apart there by
   # metro.config.js and Jest's moduleNameMapper; here package.json's overrides
-  # hold every dependency's React to the app's own). Required: all 21 checks
-  # passed in run 38895458353.
+  # hold every dependency's React to the app's own). All 21 checks passed in
+  # run 38895458353. A failure turns Check red, and release.yaml refuses a tag
+  # whose Check is not green; main has no branch protection, so it blocks no merge.
   doctor:
     runs-on: ubuntu-latest
     timeout-minutes: 15

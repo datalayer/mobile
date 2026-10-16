@@ -19,10 +19,12 @@ Drafted 16 October 2026.
 | iOS bundle id / Android package | `ai.datalayer.mobile` | Decided in `app.config.ts`; not registered yet |
 | Category | Productivity (Apple and Google) | Draft |
 | Age rating | 4+ (Apple), Everyone / PEGI 3 (Google, from the questionnaire below) | Draft |
-| Support URL | `https://datalayer.ai/support` | Live |
-| Privacy policy URL | `https://datalayer.ai/privacy` | Live |
-| Account deletion URL | `https://datalayer.ai/settings/profile/danger` (the web's *Delete account*; the app has *Settings → Delete account*) | Needs IAM 1.1.82 deployed |
+| Support URL | `https://datalayer.ai/support` | Live for browsers; see the status note below |
+| Privacy policy URL | `https://datalayer.ai/privacy` | Live for browsers; see the status note below |
+| Account deletion URL | `https://datalayer.ai/settings/profile/danger` (the web's *Delete account*; the app has *Settings → Delete account*) | Live for browsers (IAM 1.1.82 on prod1 since 16 October 2026); see the status note below |
 | Marketing URL | `https://datalayer.ai` | Live |
+
+**The URLs' HTTP status (checked 16 October 2026).** datalayer.ai is a single-page site on S3 behind CloudFront. Its viewer-request function (`datalayer-ai-spa-navigation`, kept by the landing's `scripts/configure-social-cloudfront.mjs`) serves the page with **200** only to a request whose `Accept` names `text/html`, as browsers and Googlebot send. Any other request — `curl` with its `Accept: */*`, a link checker, a crawler without `text/html` — gets S3's **404** (`NoSuchKey`) for `/support`, `/privacy`, `/settings/profile/danger` and `/docs/mobile-app`. Google Play's privacy-policy check and App Review open the pages as browsers, but a check that reads the status code with `*/*` would fail the submission. Before submitting, either the function also serves the page to extensionless paths outside `/.well-known/` (which must keep serving `apple-app-site-association` and `assetlinks.json` as files), or each URL is confirmed 200 with the store's own checker. That change to the production distribution is a website deploy, the landing owner's (MOBILE M-052, M-057).
 
 ## Words
 

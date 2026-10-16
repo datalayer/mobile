@@ -9,6 +9,12 @@
 #
 # Needs the repository secret EXPO_TOKEN (an Expo robot token), and the
 # signing and submit credentials kept in EAS (`eas credentials`).
+#
+# Before anything is built, the tagged commit's Check run must have passed,
+# every job of it: check, doctor, manifests (the generated privacy manifest,
+# Info.plist and Android permissions), hermes and the Maestro flows (M-058).
+# The repository commits no lockfile (the monorepo's rule): the lockfile this
+# install resolved is kept as the release's artifact, its checksum in the notes.
 name: Release
 
 on:
@@ -22,6 +28,7 @@ concurrency:
 
 permissions:
   contents: write
+  actions: read
 
 jobs:
   release:
@@ -32,7 +39,28 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: The tagged commit's Check passed, every job of it
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          conclusion="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow check.yaml --commit "$GITHUB_SHA" \
+            --status completed --limit 1 --json conclusion --jq '.[0].conclusion // "none"')"
+          if [ "$conclusion" != "success" ]; then
+            echo "Check on ${GITHUB_SHA} is '${conclusion}': a release needs it green, doctor, manifests, hermes and the Maestro flows included (README, Release-owner checklist)." >&2
+            exit 1
+          fi
       - run: npm install
+        env:
+          ONNXRUNTIME_NODE_INSTALL: skip
+      - name: The lockfile this install resolved
+        run: sha256sum package-lock.json | tee package-lock.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-lockfile
+          path: |
+            package-lock.json
+            package-lock.sha256
+          retention-days: 90
       - name: The tag names the app's version
         run: |
           version="$(npx expo config --json --type public | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).version))')"
@@ -44,7 +72,7 @@ jobs:
       - run: npm run check:bundle
       - uses: expo/expo-github-action@v8
         with:
-          eas-version: latest
+          eas-version: 24.12.1
           token: ${{ secrets.EXPO_TOKEN }}
       - name: Build and submit to App Store Connect and Google Play
         run: eas build --platform all --profile production --non-interactive --auto-submit --wait --json > builds.json
@@ -60,4 +88,6 @@ jobs:
           ')"
           gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes "Submitted to TestFlight and Google Play internal testing.
 
-          ${notes}"
+          ${notes}
+
+          Lockfile (the release-lockfile artifact): sha256 $(cut -d' ' -f1 package-lock.sha256)"
