@@ -45,7 +45,26 @@ Apple's questionnaire is separate from `PrivacyInfo.xcprivacy`; both must agree.
 
 Treat transmission to Datalayer services and Expo Push Service as collection. In Play Console, map the same four rows to account management/app functionality, encrypted in transit, not sold, and not shared for advertising. Declare **App info and performance → Diagnostics** (conversation health: durations, counts, failure categories, never content) as collected, linked to the account, for **App functionality** and **Analytics**, not shared, encrypted in transit, required while signed in (decided 15 October 2026). Verify whether Google's current form classifies Expo as a service provider rather than a declared third-party share. State accurately whether each type is required or optional: the push installation/device identifier is optional because notifications are opt-in; authentication and ordinary service interactions are required for the signed-in app.
 
-The production manifest requests notification permission only. Inspect the merged Android manifest for every release and explain or remove any permission contributed by a dependency before submission.
+## Permissions and the generated manifests
+
+The only permission a person is asked for is notifications, and only when they turn them on in Settings. Every Check run generates the production app (`expo prebuild` without a variant, then Gradle's merge of the release Android manifest with every library's) and `scripts/release-manifests.js` holds what it generated to this document — the `manifests` job, its table in the run's summary and the files as the run's `release-manifests` artifact:
+
+- iOS `PrivacyInfo.xcprivacy`: tracking off, no tracking domain, exactly the five data types above, linked and not tracking, for their purposes;
+- iOS `Info.plist`: no usage description — the tokens are kept in the keychain without biometrics, so `expo-secure-store`'s Face ID text is turned off — and `ITSAppUsesNonExemptEncryption` `false`;
+- Android: every permission of the merged release manifest is one of these, anything else fails the run until it is explained here or removed with `android.blockedPermissions` in `app.config.ts`:
+
+| Permission | Why | Asked of the person? |
+| --- | --- | --- |
+| `android.permission.INTERNET` | Reaches Datalayer's services | No (normal) |
+| `android.permission.ACCESS_NETWORK_STATE` | Knows whether it is offline (React Native and Firebase Messaging) | No (normal) |
+| `android.permission.POST_NOTIFICATIONS` | Shows notifications (Android 13 and later) | Yes, only when notifications are turned on |
+| `android.permission.VIBRATE` | A notification may vibrate (`expo-notifications`) | No (normal) |
+| `android.permission.RECEIVE_BOOT_COMPLETED` | `expo-notifications` keeps its channels after a restart | No (normal) |
+| `android.permission.WAKE_LOCK` | Firebase Messaging wakes the app to deliver a push | No (normal) |
+| `com.google.android.c2dm.permission.RECEIVE` | Receives pushes through Firebase Cloud Messaging | No |
+| `<application id>.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` | AndroidX guards the app's own receivers; no other app holds it | No (signature) |
+
+Expo's template also asks for `READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE` and `SYSTEM_ALERT_WINDOW`; the app needs none of them and blocks all three (the development build's debug manifest keeps the overlay for React Native's developer menu). The store binary's own privacy report (Xcode's aggregation of every dependency's `PrivacyInfo.xcprivacy`, required-reason APIs included) comes with the first archive (M-058).
 
 ## Push credential incident runbook
 
@@ -61,8 +80,8 @@ Owner names and provider-console locations belong in the private release record,
 
 ## Release evidence still required
 
-- generated iOS privacy report and merged `PrivacyInfo.xcprivacy` from the production archive;
-- merged Android manifest and Play SDK Index/dependency review;
+- the iOS privacy report of the production archive (the app's own `PrivacyInfo.xcprivacy`, `Info.plist` and the merged release Android manifest are generated and checked on every Check run, above);
+- the Play SDK Index/dependency review;
 - screenshots/exports of completed Apple privacy and Google Data safety forms;
 - live support and privacy checks, and the deletion request asked, read and withdrawn on the deployed IAM with a test account;
 - who deletes the accounts whose grace period has ended, and how soon (or an automatic deletion, decided);

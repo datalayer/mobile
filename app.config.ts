@@ -135,6 +135,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       package: variant.id,
+      // Expo's template asks for storage and drawing over other apps; the app needs neither, and
+      // scripts/release-manifests.js holds the merged release manifest to docs/privacy-and-store.md (M-052).
+      blockedPermissions: [
+        'android.permission.READ_EXTERNAL_STORAGE',
+        'android.permission.WRITE_EXTERNAL_STORAGE',
+        'android.permission.SYSTEM_ALERT_WINDOW'
+      ],
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
         monochromeImage: './assets/adaptive-icon-monochrome.png',
@@ -160,7 +167,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     plugins: [
       'expo-router',
-      'expo-secure-store',
+      // The tokens are kept without biometrics, so no Face ID usage description (M-052).
+      ['expo-secure-store', { faceIDPermission: false }],
       'expo-localization',
       [
         'expo-splash-screen',
