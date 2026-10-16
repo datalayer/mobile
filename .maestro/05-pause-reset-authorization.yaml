@@ -9,9 +9,9 @@ name: Pause, reset and authorization
 - tapOn:
     id: "tab-agents"
 - extendedWaitUntil:
-    visible: ${E2E_LIFECYCLE_APP}
+    visible: ".*${E2E_LIFECYCLE_APP}.*"
     timeout: 30000
-- tapOn: ${E2E_LIFECYCLE_APP}
+- tapOn: ".*${E2E_LIFECYCLE_APP}.*"
 - scrollUntilVisible:
     element: "Pause hosted"
 - assertNotVisible: "Reset hosted…"
