@@ -194,7 +194,7 @@ Apple (`make publish-ios`):
 1. `eas build --platform ios --profile production --auto-submit` produces the store `.ipa` and uploads it to App Store Connect.
 2. Internal TestFlight testers first, external testers after Beta App Review when needed.
 3. Complete App Privacy, export compliance, sign-in and account-deletion answers as Apple requires on the submission date.
-4. Select the tested build for App Review. Release manually or phased; keep the server-side minimum-version switch ready to stop a defective client.
+4. Select the tested build for App Review. Release manually or phased; keep the minimum-version kill switch (below) ready to stop a defective client.
 
 Google (`make publish-android`):
 
@@ -222,13 +222,38 @@ After the workflow submits:
 - start the phased/staged rollout, watch auth, push, approval, crash and stream health, and record the checkpoints;
 - close the release record only after the store URLs, review results and rollback evidence are attached.
 
+### The minimum-version kill switch
+
+IAM serves the oldest version of the app still supported on each platform at
+`GET /api/iam/v1/oauth/clients/datalayer-mobile/minimum-version.json`
+(`{"success": true, "minimum": {"ios": "1.2.0", "android": "1.2.0"}}`, public,
+cached for a minute). The app reads it at launch and every time it comes back
+to the foreground (`src/release/`). Below its platform's minimum it stops at
+*Update Datalayer*, naming the version to install; an answer it cannot read — a
+503, a missing or malformed version, no network — stops it at *Datalayer could
+not be reached* with *Try again*: an unreadable switch is never taken as off.
+
+To stop an unsafe installed binary, the release owner raises the minimum in the
+control plane's rc and redeploys IAM (the values go through `up.sh`, never by
+hand into the cluster):
+
+```bash
+export DATALAYER_MOBILE_MINIMUM_VERSION_IOS=1.2.0
+export DATALAYER_MOBILE_MINIMUM_VERSION_ANDROID=1.2.0
+p reup datalayer-iam
+```
+
+Both are `major.minor.patch`, as `version` in `app.config.ts`; unset, `up.sh`
+serves `0.0.1`. Raise them only once the fixed build is live in both stores,
+or people are left with nothing to update to.
+
 ### Halt, rollback and recovery
 
 Halt a rollout for wrong-account data, incomplete or stale approval context,
 an authorization bypass, credential leakage, unusable sign-in, elevated crash
 rate or material push/stream failure. Stop the phased/staged rollout in both
-store consoles, disable the affected server capability and set the server's
-minimum-supported-version policy when an installed binary is unsafe.
+store consoles, disable the affected server capability and raise the minimum-supported-version
+policy (the kill switch above) when an installed binary is unsafe.
 
 An OTA rollback is allowed only to a previously staged update on the same
 `runtimeVersion`; native/config/permission faults require a new incremented

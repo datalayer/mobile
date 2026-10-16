@@ -11,6 +11,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { SessionProvider, useSession } from '../src/auth/SessionProvider';
 import { configureForegroundNotifications } from '../src/push/push';
+import { UpdateRequired } from '../src/release/UpdateRequired';
+import { useSupport } from '../src/release/useSupport';
 import { ThemeProvider, useTheme } from '../src/theme/ThemeProvider';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -19,7 +21,9 @@ configureForegroundNotifications();
 function Routes({ fontsReady }: { fontsReady: boolean }) {
   const session = useSession();
   const { theme } = useTheme();
-  const restoring = session.status === 'restoring' || !fontsReady;
+  // The kill switch (M-056): nothing is shown before this build is known to be supported.
+  const { support, retry } = useSupport();
+  const restoring = session.status === 'restoring' || !fontsReady || support === null;
 
   useEffect(() => {
     if (!restoring) {
@@ -27,8 +31,11 @@ function Routes({ fontsReady }: { fontsReady: boolean }) {
     }
   }, [restoring]);
 
-  if (restoring) {
+  if (restoring || support === null) {
     return null;
+  }
+  if (support.kind !== 'supported') {
+    return <UpdateRequired support={support} onRetry={retry} />;
   }
   const signedIn = session.status === 'signed-in';
   return (
