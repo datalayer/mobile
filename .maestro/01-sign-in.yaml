@@ -3,13 +3,17 @@ appId: ai.datalayer.mobile.preview
 name: Sign in
 ---
 - runFlow: common/sign-in.yaml
-- assertVisible: "Agents"
-- assertVisible: "Activity"
-- tapOn: "Agents"
+- assertVisible:
+    id: "tab-agents"
+- assertVisible:
+    id: "tab-activity"
+- tapOn:
+    id: "tab-agents"
 - extendedWaitUntil:
     visible: "Applications"
     timeout: 30000
-- tapOn: "Activity"
+- tapOn:
+    id: "tab-activity"
 - extendedWaitUntil:
     visible: "In progress"
     timeout: 30000

@@ -6,7 +6,8 @@ name: Pause, reset and authorization
 ---
 - runFlow: common/sign-in.yaml
 - runScript: scripts/second-account-refused.js
-- tapOn: "Agents"
+- tapOn:
+    id: "tab-agents"
 - extendedWaitUntil:
     visible: ${E2E_LIFECYCLE_APP}
     timeout: 30000

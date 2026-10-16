@@ -4,7 +4,8 @@ appId: ai.datalayer.mobile.preview
 name: Prompt, stream and stop
 ---
 - runFlow: common/sign-in.yaml
-- tapOn: "Agents"
+- tapOn:
+    id: "tab-agents"
 - extendedWaitUntil:
     visible: ${E2E_CHAT_APP}
     timeout: 30000

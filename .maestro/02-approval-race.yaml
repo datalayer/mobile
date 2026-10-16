@@ -8,6 +8,7 @@ name: Approval race
 - runFlow: common/sign-in.yaml
 - runScript: scripts/create-approval.js
 - openLink: "datalayer-preview://approvals/${output.approvalId}"
+- runFlow: common/open-link-ios.yaml
 - extendedWaitUntil:
     visible: "Waiting for your answer."
     timeout: 30000

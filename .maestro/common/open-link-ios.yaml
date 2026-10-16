@@ -1,0 +1,11 @@
+# iOS asks "Open in “Datalayer Preview”?" for a link opened from outside the app; the flow says Open.
+# Left unanswered, the dialog stays over the Simulator and every later flow fails (run 38919778519).
+appId: ai.datalayer.mobile.preview
+---
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - tapOn:
+          text: "Open"
+          optional: true

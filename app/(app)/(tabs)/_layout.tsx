@@ -35,9 +35,9 @@ export default function TabsLayout() {
         headerRight: () => <SettingsLink />
       }}
     >
-      <Tabs.Screen name="inbox" options={{ title: 'Inbox' }} />
-      <Tabs.Screen name="agents" options={{ title: 'Agents' }} />
-      <Tabs.Screen name="activity" options={{ title: 'Activity' }} />
+      <Tabs.Screen name="inbox" options={{ title: 'Inbox', tabBarButtonTestID: 'tab-inbox' }} />
+      <Tabs.Screen name="agents" options={{ title: 'Agents', tabBarButtonTestID: 'tab-agents' }} />
+      <Tabs.Screen name="activity" options={{ title: 'Activity', tabBarButtonTestID: 'tab-activity' }} />
     </Tabs>
   );
 }

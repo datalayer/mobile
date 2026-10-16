@@ -8,6 +8,7 @@ name: Notification deep link
 - runScript: scripts/create-approval.js
 - pressKey: Home
 - openLink: "datalayer-preview://approvals/${output.approvalId}"
+- runFlow: common/open-link-ios.yaml
 - extendedWaitUntil:
     visible: "Waiting for your answer."
     timeout: 30000
@@ -19,6 +20,7 @@ name: Notification deep link
     visible: "Rejected."
     timeout: 30000
 - openLink: "datalayer-preview://approvals/not-an-approval"
+- runFlow: common/open-link-ios.yaml
 - extendedWaitUntil:
     visible: "This item is no longer available."
     timeout: 30000
