@@ -87,6 +87,10 @@
     "jest-expo": "~57.0.6",
     "typescript": "~6.0.3"
   },
+  "overrides": {
+    "react": "$react",
+    "react-dom": "$react-dom"
+  },
   "jest": {
     "preset": "jest-expo",
     "moduleNameMapper": {
