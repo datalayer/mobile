@@ -6,7 +6,7 @@
 import { Stack, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { Screen } from '../../../../src/components/primitives';
 import { Field, ProblemView, QueryView, Row, SectionTitle } from '../../../../src/components/states';
-import { Problem } from '../../../../src/api/problems';
+import { Problem } from '@datalayer/core/lib/portable';
 import { actionOf } from '../../../../src/features/approvals/format';
 import { useAgentRuntimes, usePendingApprovals } from '../../../../src/features/queries';
 import { absoluteTime, relativeTime } from '../../../../src/i18n/time';

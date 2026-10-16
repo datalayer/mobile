@@ -16,11 +16,10 @@
  * deployment (`locateNew`), the person's own or one shared with them.
  */
 
-import { agentRuntimesUrlOf, askedOf } from '@datalayer/agent-runtimes/lib/portable';
+import { agentRuntimesUrlOf, askedOf, type AgentRuntime } from '@datalayer/agent-runtimes/lib/portable';
 import type { Client } from './client';
 import type { SessionAddress } from './deployments';
 import { count, type Raw, record, records, segment, text } from './fields';
-import type { AgentRuntime } from './runtimes';
 
 /** One of the person's conversations with an application. */
 export type ConversationThread = {

@@ -4,7 +4,7 @@
  */
 
 import { createClient } from '../api/client';
-import { PROBLEM_WORDS, Problem, kindOfStatus } from '../api/problems';
+import { PROBLEM_WORDS, Problem, kindOfStatus } from '@datalayer/core/lib/portable';
 import { environmentOf, runUrlProblem } from '../config/environment';
 import { personOf } from '../auth/iam';
 

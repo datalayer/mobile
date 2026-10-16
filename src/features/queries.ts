@@ -7,16 +7,17 @@
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { mergePages, readActivity } from '../api/activity';
+import { mergeActivityPages } from '@datalayer/agent-runtimes/lib/portable';
+import { readActivity } from '../api/activity';
 import { type Approval, getApproval, listPending, markRead, pendingCount } from '../api/approvals';
 import {
-  applicationsOf, changeDeploymentState, getResetCounts, listDeploymentEvents, listDeployments, resetDeployment,
+  applicationsOf, changeDeploymentState, getResetCounts, listCheckedDeployments, listDeploymentEvents, listDeployments, resetDeployment,
   type Deployment, type DeploymentState, type ResetCounts
 } from '../api/deployments';
 import { EMPTY_FACES, listFaces } from '../api/faces';
-import { isProblem } from '../api/problems';
+import { isProblem } from '@datalayer/core/lib/portable';
 import { disconnectProtocolConnection, listProtocolConnections } from '../api/protocolConnections';
-import { isAgentRuntime, listRuntimes } from '../api/runtimes';
+import { listAgentRuntimes } from '../api/runtimes';
 import { readProtocolActivity } from '../api/protocolActivity';
 import { readRunningPermissions } from '../api/appPermissions';
 import { useSession } from '../auth/SessionProvider';
@@ -69,12 +70,17 @@ export function useDeploymentEvents(uid: string) {
   return useQuery({ queryKey: KEYS.deploymentEvents(uid), queryFn: () => listDeploymentEvents(client, uid), enabled: Boolean(uid) });
 }
 
+/** One application's deployments with their identity checked now (Application → Protocols, M-045b). */
+export function useCheckedDeployments(appUid: string) {
+  const { client } = useSession();
+  return useQuery({ queryKey: KEYS.checkedDeployments(appUid), queryFn: () => listCheckedDeployments(client, appUid) });
+}
+
 export function useAgentRuntimes() {
   const { client } = useSession();
   return useQuery({
     queryKey: KEYS.runtimes,
-    queryFn: () => listRuntimes(client),
-    select: runtimes => runtimes.filter(isAgentRuntime)
+    queryFn: () => listAgentRuntimes(client)
   });
 }
 
@@ -121,7 +127,7 @@ export function useAllActivity() {
     queryFn: ({ pageParam }) => readActivity(client, undefined, pageParam),
     initialPageParam: 0,
     getNextPageParam: page => page.nextOffset ?? undefined,
-    select: data => mergePages(data.pages)
+    select: data => mergeActivityPages(data.pages)
   });
 }
 

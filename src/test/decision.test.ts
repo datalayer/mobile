@@ -5,7 +5,7 @@
 
 import { approvalOf, decide } from '../api/approvals';
 import { createClient } from '../api/client';
-import { Problem } from '../api/problems';
+import { Problem } from '@datalayer/core/lib/portable';
 import { confirmTitle, outcomeOf, outcomeSays, statusSays } from '../features/approvals/decision';
 
 const respond = (status: number, body: unknown): typeof fetch => {

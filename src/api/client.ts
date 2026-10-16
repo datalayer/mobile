@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { Problem, detailOf, kindOfStatus } from './problems';
+import { Problem, detailOf, kindOfStatus } from '@datalayer/core/lib/portable';
 
 export type ClientOptions = {
   baseUrl: string;

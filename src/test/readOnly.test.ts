@@ -3,10 +3,9 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { activityOf } from '../api/activity';
 import { approvalOf, waitingFirst } from '../api/approvals';
 import { applicationsOf, deploymentOf } from '../api/deployments';
-import { isAgentRuntime, runtimeOf } from '../api/runtimes';
+import { activityOf, isAgentRuntime, runtimeOf } from '@datalayer/agent-runtimes/lib/portable';
 import { environmentOf } from '../config/environment';
 import { actionOf, argumentsShown, messageOfApproval, rowSummary, whyAsked } from '../features/approvals/format';
 import { keysOfEvent, wsUrlOf } from '../realtime/events';

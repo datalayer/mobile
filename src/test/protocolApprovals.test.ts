@@ -5,7 +5,7 @@
 
 import { approvalOf } from '../api/approvals';
 import { isKnownProtocolApproval, papOperationOf, protocolPurchaseOf } from '../protocols/approvals';
-import { deploymentProtocolsOf, protocolLinesOf } from '../protocols/deployments';
+import { deploymentProtocolsOf, identityLinesOf, IDENTITY_UNREAD, protocolLinesOf } from '../protocols/deployments';
 
 describe('protocol approvals on mobile', () => {
   it('reads an exact PAP operation, its revision, session and changed terms', () => {
@@ -73,6 +73,10 @@ describe('an application’s protocol capabilities', () => {
   it('reads only safe deployment projection fields and HTTPS endpoints', () => {
     const protocols = deploymentProtocolsOf({
       known: true, protocols: ['pap', 'ag-ui'], companies: ['manzanita.example'], businesses: ['air.example'],
+      registry: [
+        { id: 'pap', name: 'Personal Agent Protocol', version: 'draft 0.1', status: 'shipped' },
+        { id: 'ag-ui', name: 'AG-UI', version: '0.0.1', status: 'shipped' }
+      ],
       company: true, signs_requests: true,
       endpoints: [
         { kind: 'identity', url: 'https://iam.example/agent.json' },
@@ -85,16 +89,46 @@ describe('an application’s protocol capabilities', () => {
       company: true, signsRequests: true,
       endpoints: [{ kind: 'identity', url: 'https://iam.example/agent.json' }]
     });
-    expect(protocolLinesOf(protocols)).toContain('PAP, AG-UI');
+    expect(protocolLinesOf(protocols)).toContain('PAP draft 0.1 (shipped), AG-UI 0.0.1 (shipped)');
+    expect(protocols?.identity).toBeUndefined();
     expect(protocolLinesOf(protocols)).toContain('Requests to companies and businesses are signed by Datalayer.');
   });
 
   it('does not guess when the projection is absent or malformed', () => {
     expect(deploymentProtocolsOf(undefined)).toBeNull();
     expect(deploymentProtocolsOf({ protocols: ['pap'] })).toBeNull();
+    // A projection without the registry's word, or with an entry the phone cannot read, is not guessed at.
+    expect(deploymentProtocolsOf({ known: true, protocols: ['pap'] })).toBeNull();
+    expect(deploymentProtocolsOf({ known: true, protocols: ['pap'], registry: [{ id: 'pap' }] })).toBeNull();
     expect(protocolLinesOf(null)).toEqual(['What this version speaks is not known.']);
     expect(
-      protocolLinesOf({ known: true, protocols: ['future'], companies: [], businesses: [], company: false, signsRequests: false, endpoints: [] })
-    ).toEqual(['future (unknown)']);
+      protocolLinesOf({
+        known: true, protocols: ['future', 'pap'], registry: [{ id: 'future', name: 'future', version: '', status: 'unregistered' }],
+        companies: [], businesses: [], company: false, signsRequests: false, endpoints: []
+      })
+    ).toEqual(['future (not in the registry), PAP (not said by the registry)']);
+  });
+
+  it('says the identity the server checked, what to do when it did not pass, and an unreadable check as unread (M-045b)', () => {
+    const base = { known: true, protocols: ['pact'], registry: [], endpoints: [] };
+    const passed = deploymentProtocolsOf({
+      ...base,
+      identity: { checked_at: '2026-10-16T08:00:00Z', passed: true, checks: [{ id: 'client-metadata', says: 'Its identity is published', passed: true, repair: '' }] }
+    });
+    expect(passed?.identity).toMatchObject({ passed: true, checkedAt: '2026-10-16T08:00:00Z' });
+    expect(identityLinesOf(passed!.identity!)).toEqual(['Its identity is published']);
+    const failed = deploymentProtocolsOf({
+      ...base,
+      identity: {
+        checked_at: '2026-10-16T08:00:00Z', passed: false,
+        checks: [
+          { id: 'client-metadata', says: 'Its identity is published', passed: true, repair: '' },
+          { id: 'jwks', says: 'Its keys are published', passed: false, repair: 'Its keys could not be read: try again in a moment.' }
+        ]
+      }
+    });
+    expect(identityLinesOf(failed!.identity!)).toEqual(['Its keys could not be read: try again in a moment.']);
+    expect(deploymentProtocolsOf({ ...base, identity: null })?.identity).toBeNull();
+    expect(deploymentProtocolsOf({ ...base, identity: { passed: 'yes' } })?.identity).toBe(IDENTITY_UNREAD);
   });
 });

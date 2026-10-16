@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { Alert, View } from 'react-native';
 import { Button, Screen, Text } from '../../../../src/components/primitives';
 import { Field, ProblemView, QueryView, Row, SectionTitle } from '../../../../src/components/states';
-import { Problem } from '../../../../src/api/problems';
+import { Problem } from '@datalayer/core/lib/portable';
 import { ActivitySections } from '../../../../src/features/activity/ActivitySections';
 import { ProtocolActivity } from '../../../../src/features/activity/ProtocolActivity';
 import { actionOf } from '../../../../src/features/approvals/format';
@@ -18,7 +18,8 @@ import {
 import { AppFace } from '../../../../src/identity/AppFace';
 import { relativeTime } from '../../../../src/i18n/time';
 import { protocolLinesOf } from '../../../../src/protocols/deployments';
-import { resetWords, stoppedWorkWords, type Deployment, type ResetCounts } from '../../../../src/api/deployments';
+import { resetLines, stoppedWorkLine } from '@datalayer/agent-runtimes/lib/portable';
+import type { Deployment, ResetCounts } from '../../../../src/api/deployments';
 import { SPACE } from '../../../../src/theme/tokens';
 import { LifecycleHistory } from '../../../../src/features/deployments/LifecycleHistory';
 import { RunningPermissions } from '../../../../src/features/apps/RunningPermissions';
@@ -63,7 +64,7 @@ export default function ApplicationDetail() {
           text: verb,
           style: next === 'paused' ? 'destructive' : 'default',
           onPress: () => changingState.mutate({ deployment, state: next }, {
-            onSuccess: result => setLifecycleSays(result.work ? stoppedWorkWords(result.work) : 'Resumed: it can accept work again.'),
+            onSuccess: result => setLifecycleSays(result.work ? stoppedWorkLine(result.work) : 'Resumed: it can accept work again.'),
             onError: () => setLifecycleSays('')
           })
         }
@@ -71,10 +72,10 @@ export default function ApplicationDetail() {
     );
   };
   const confirmReset = (deployment: Deployment, counts: ResetCounts) => {
-    const words = resetWords(counts);
+    const words = resetLines(counts);
     Alert.alert(
       `Reset this ${deployment.target} deployment?`,
-      `Deleted for good: ${words.deletes}. ${words.stays}`,
+      `Deleted for good: ${words.goes}. ${words.stays.join(' ')}`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -83,7 +84,7 @@ export default function ApplicationDetail() {
             onSuccess: result => {
               if (result.phase === 'done') {
                 const notes = result.notDeleted.map(item => item.why).filter(Boolean).join(' ');
-                setLifecycleSays(`Reset: ${words.deletes} deleted.${notes ? ` ${notes}` : ''}`);
+                setLifecycleSays(`Reset: ${words.goes} deleted.${notes ? ` ${notes}` : ''}`);
               }
             },
             onError: () => setLifecycleSays('')

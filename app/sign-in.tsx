@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
-import { isProblem } from '../src/api/problems';
+import { isProblem } from '@datalayer/core/lib/portable';
 import { useSession } from '../src/auth/SessionProvider';
 import { Button, Screen, Text } from '../src/components/primitives';
 import { LoopWordmark } from '../src/identity/LoopWordmark';

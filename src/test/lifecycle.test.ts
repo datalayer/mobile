@@ -5,9 +5,13 @@
 
 import { createClient } from '../api/client';
 import {
-  changeDeploymentState, deploymentEventOf, deploymentEventWords, deploymentOf, getResetCounts,
-  listDeploymentEvents, resetDeployment, resetWords, stoppedWorkOf, stoppedWorkWords
+  deploymentEventLine, deploymentEventOf, resetLines, stoppedWorkLine, stoppedWorkOf
+} from '@datalayer/agent-runtimes/lib/portable';
+import {
+  changeDeploymentState, deploymentOf, getResetCounts, listDeploymentEvents, resetDeployment
 } from '../api/deployments';
+
+// The lifecycle's words and bodies are Agent Runtimes' portable contract, as the Studio's (M-041b).
 
 describe('owner deployment lifecycle', () => {
   it('pauses the exact version and says everything that did and did not stop', async () => {
@@ -21,7 +25,7 @@ describe('owner deployment lifecycle', () => {
     const client = createClient({ baseUrl: 'https://run.test', getAccessToken: () => 'owner', fetch: fetcher });
     const result = await changeDeploymentState(client, deploymentOf({ uid: 'd1', version: 4 }), 'paused');
     expect(result.deployment.state).toBe('paused');
-    expect(stoppedWorkWords(result.work!)).toBe(
+    expect(stoppedWorkLine(result.work!)).toBe(
       'Paused: 1 session in progress stopped. Not stopped — Conversation two (r2): The runtime was unreachable.'
     );
     expect(fetcher).toHaveBeenCalledWith('https://run.test/api/ai-agents/v1/apps/deployments/d1', expect.objectContaining({
@@ -32,7 +36,7 @@ describe('owner deployment lifecycle', () => {
   it('says when pause found no work and parses missing lists safely', () => {
     const work = stoppedWorkOf({});
     expect(work).toEqual({ stopped: [], notStopped: [] });
-    expect(stoppedWorkWords(work)).toBe('Paused: nothing was running.');
+    expect(stoppedWorkLine(work)).toBe('Paused: nothing was running.');
   });
 
   it('reads reset counts, then posts those exact confirmed counts', async () => {
@@ -47,9 +51,9 @@ describe('owner deployment lifecycle', () => {
       paused: true,
       counts: { conversations: 3, entries: 27, schedules: 2, memoriesNote: 'Its memories stay.' }
     });
-    expect(resetWords(read.counts)).toEqual({
-      deletes: '3 conversations and 2 schedules',
-      stays: 'The deployment, its address and version stay. Its memories stay.'
+    expect(resetLines(read.counts)).toEqual({
+      goes: '3 conversations, 2 schedules',
+      stays: ['The deployment, its address and the version it runs stay.', 'Its memories stay.']
     });
     await expect(resetDeployment(client, 'd1', read.counts)).resolves.toEqual({
       notDeleted: [{ what: 'memories', why: 'Its memories stay.' }]
@@ -69,12 +73,12 @@ describe('owner deployment lifecycle', () => {
     const client = createClient({ baseUrl: 'https://run.test', getAccessToken: () => 'owner', fetch: fetcher });
     const listed = await listDeploymentEvents(client, 'd1');
     expect(listed).toHaveLength(2);
-    expect(deploymentEventWords(listed[0]!)).toContain('Paused by ana, an owner of your organization');
-    expect(deploymentEventWords(listed[1]!)).toContain('2 conversations and 1 schedule deleted');
+    expect(deploymentEventLine(listed[0]!)).toContain('Paused by ana, an owner of your organization');
+    expect(deploymentEventLine(listed[1]!)).toContain('2 conversations and 1 schedule deleted');
     expect(fetcher).toHaveBeenCalledWith(
       'https://run.test/api/ai-agents/v1/apps/deployments/d1/events?limit=20',
       expect.objectContaining({ method: 'GET' })
     );
-    expect(() => deploymentEventOf({ kind: 'invented' })).toThrow('Unknown deployment event');
+    expect(() => deploymentEventOf({ kind: 'invented' })).toThrow(/no known kind/);
   });
 });

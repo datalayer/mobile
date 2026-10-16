@@ -13,6 +13,7 @@ export const KEYS = {
   approval: (id: string) => ['approvals', id] as const,
   activity: (appUid: string) => ['activity', appUid] as const,
   deploymentEvents: (uid: string) => ['deployments', uid, 'events'] as const,
+  checkedDeployments: (appUid: string) => ['deployments', 'checked', appUid] as const,
   allActivity: ['activity', '*all'] as const,
   faces: ['faces'] as const,
   protocolConnections: ['protocol-connections'] as const,

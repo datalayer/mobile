@@ -10,7 +10,8 @@ import type { Decision } from '../../../src/api/approvals';
 import { DecisionSheet } from '../../../src/components/DecisionSheet';
 import { Button } from '../../../src/components/native';
 import { Screen, Text } from '../../../src/components/primitives';
-import { Field, problemOf, ProblemView, QueryView, SectionTitle } from '../../../src/components/states';
+import { problemOf } from '@datalayer/core/lib/portable';
+import { Field, ProblemView, QueryView, SectionTitle } from '../../../src/components/states';
 import { DECISION_WORDS, outcomeOf, outcomeSays, statusSays } from '../../../src/features/approvals/decision';
 import {
   actionOf,

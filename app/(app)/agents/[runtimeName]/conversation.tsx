@@ -15,7 +15,7 @@ import { useState } from 'react';
 import { Screen } from '../../../../src/components/primitives';
 import { ProblemView, QueryView, Row, SectionTitle } from '../../../../src/components/states';
 import { runtimeAgents } from '../../../../src/api/conversations';
-import { Problem } from '../../../../src/api/problems';
+import { Problem } from '@datalayer/core/lib/portable';
 import { useSession } from '../../../../src/auth/SessionProvider';
 import { ConversationView } from '../../../../src/features/conversations/ConversationView';
 import { useConversation } from '../../../../src/features/conversations/useConversation';

@@ -3,7 +3,8 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { activityOf, mergePages, readActivity } from '../api/activity';
+import { activityOf, mergeActivityPages } from '@datalayer/agent-runtimes/lib/portable';
+import { readActivity } from '../api/activity';
 
 const page = (body: Record<string, unknown>) => activityOf(body);
 
@@ -35,7 +36,7 @@ describe('the activity of every application (M-040)', () => {
       next_offset: 2
     });
     const second = page({ completed: [{ uid: 'b', session_uid: 'sb' }, { uid: 'c', session_uid: 'sc' }], next_offset: null });
-    const merged = mergePages([first, second]);
+    const merged = mergeActivityPages([first, second]);
     expect(merged.inProgress.map(e => e.uid)).toEqual(['r1']);
     expect(merged.scheduled).toHaveLength(1);
     expect(merged.completed.map(e => e.uid)).toEqual(['a', 'b', 'c']);

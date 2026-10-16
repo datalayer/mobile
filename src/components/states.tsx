@@ -7,15 +7,11 @@
 
 import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
-import { isProblem, Problem } from '../api/problems';
+import { problemOf, retries, STATE_WORDS } from '@datalayer/core/lib/portable';
 import { MIN_TOUCH, SPACE, useNativeTheme } from '../theme/tokens';
 import { Button, Text } from './primitives';
 
-/** A thrown value as a Problem: anything unknown is *unexpected*. */
-export const problemOf = (error: unknown): Problem =>
-  isProblem(error) ? error : new Problem('unexpected', error instanceof Error ? error.message : String(error));
-
-export function Loading({ label = 'Loading' }: { label?: string }) {
+export function Loading({ label = STATE_WORDS.loading }: { label?: string }) {
   const { colors } = useNativeTheme();
   return (
     <View style={styles.center} accessible accessibilityLabel={label} accessibilityState={{ busy: true }}>
@@ -31,17 +27,17 @@ export function ProblemView({ error, onRetry }: { error: unknown; onRetry?: () =
   return (
     <View style={styles.problem} accessibilityRole="alert">
       <Text size="heading">{problem.message}</Text>
-      {onRetry && problem.kind !== 'not-found' && problem.kind !== 'forbidden' ? (
-        <Button label="Try again" onPress={onRetry} tone="secondary" />
+      {onRetry && retries(problem) ? (
+        <Button label={STATE_WORDS.retry} onPress={onRetry} tone="secondary" />
       ) : null}
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={open ? 'Hide diagnostic details' : 'Show diagnostic details'}
+        accessibilityLabel={open ? STATE_WORDS.hideDetailsLabel : STATE_WORDS.showDetailsLabel}
         accessibilityState={{ expanded: open }}
         onPress={() => setOpen(value => !value)}
         style={styles.details}
       >
-        <Text tone="muted">{open ? 'Hide details' : 'Details'}</Text>
+        <Text tone="muted">{open ? STATE_WORDS.hideDetails : STATE_WORDS.details}</Text>
       </Pressable>
       {open ? (
         <Text selectable tone="muted" size="small" style={styles.mono}>

@@ -5,12 +5,25 @@
 
 /** Deployed LOOP applications, from ai-agents (`/api/ai-agents/v1/apps/deployments`). */
 
+import {
+  deploymentEventOf,
+  notDeletedOf,
+  resetBody,
+  resetCountsOf,
+  stateChangeBody,
+  stoppedWorkOf,
+  type DeploymentEvent,
+  type DeploymentState,
+  type ResetCounts,
+  type StoppedWork
+} from '@datalayer/agent-runtimes/lib/portable';
 import type { Client } from './client';
 import { count, type Raw, record, records, segment, text } from './fields';
 import { deploymentProtocolsOf, type DeploymentProtocols } from '../protocols/deployments';
 
 export type DeploymentTarget = 'hosted' | 'embedded' | 'preview';
-export type DeploymentState = 'live' | 'paused';
+// Pause, resume, reset and a deployment's events: Agent Runtimes' portable lifecycle, as the Studio's (M-041b).
+export type { DeploymentEvent, DeploymentState, ResetCounts, StoppedWork };
 
 export type Deployment = {
   uid: string;
@@ -30,26 +43,6 @@ export type Deployment = {
  * from a deployment and remembered.
  */
 export type SessionAddress = { baseUrl: string; agent: string };
-
-export type StoppedWork = {
-  stopped: { what: string; runtime: string }[];
-  notStopped: { what: string; runtime: string; why: string }[];
-};
-
-export type ResetCounts = {
-  conversations: number;
-  entries: number;
-  schedules: number;
-  memoriesNote: string;
-};
-
-export type DeploymentEvent = {
-  uid: string;
-  kind: 'promoted' | 'rolled_back' | 'paused' | 'resumed' | 'reset';
-  actor: string;
-  at: string;
-  details: Raw;
-};
 
 /** The same reading as the web `deploymentOf`, limited to what mobile shows. */
 export function deploymentOf(raw: Raw): Deployment {
@@ -113,28 +106,18 @@ export async function listDeployments(client: Client): Promise<Deployment[]> {
   return records(body.deployments).map(deploymentOf);
 }
 
+/**
+ * One application's deployments with the identity each acts under checked now
+ * by the server (`identity=true`, MOBILE M-045b): Application → Protocols.
+ */
+export async function listCheckedDeployments(client: Client, appUid: string): Promise<Deployment[]> {
+  const body = await client(`${BASE}?app_uid=${segment(appUid)}&identity=true`);
+  return records(body.deployments).map(deploymentOf);
+}
+
 export async function getDeployment(client: Client, uid: string): Promise<Deployment> {
   const body = await client(`${BASE}/${segment(uid)}`);
   return deploymentOf(record(body.deployment ?? body));
-}
-
-const workItems = (value: unknown): Raw[] => records(value);
-
-export function stoppedWorkOf(value: unknown): StoppedWork {
-  const raw = record(value);
-  return {
-    stopped: workItems(raw.stopped).map(item => ({ what: text(item.what), runtime: text(item.runtime) })),
-    notStopped: workItems(raw.not_stopped).map(item => ({
-      what: text(item.what), runtime: text(item.runtime), why: text(item.why)
-    }))
-  };
-}
-
-export function stoppedWorkWords(work: StoppedWork): string {
-  const stopped = work.stopped.length;
-  const first = stopped === 0 ? 'Paused: nothing was running.' : `Paused: ${stopped} ${stopped === 1 ? 'session' : 'sessions'} in progress stopped.`;
-  const missed = work.notStopped.map(item => `${item.what}${item.runtime ? ` (${item.runtime})` : ''}: ${item.why}`).join(' ');
-  return missed ? `${first} Not stopped — ${missed}` : first;
 }
 
 /** Owner-only on the server: pause/resume one exact deployment version. */
@@ -144,28 +127,17 @@ export async function changeDeploymentState(
   state: DeploymentState
 ): Promise<{ deployment: Deployment; work: StoppedWork | null }> {
   const body = await client(`${BASE}/${segment(deployment.uid)}`, {
-    method: 'PATCH', body: { version: deployment.version, state }
+    method: 'PATCH', body: stateChangeBody(deployment.version, state)
   });
   return {
     deployment: deploymentOf(record(body.deployment)),
-    work: body.work ? stoppedWorkOf(body.work) : null
-  };
-}
-
-export function resetCountsOf(value: unknown): ResetCounts {
-  const raw = record(value);
-  const safeCount = (item: unknown) => Math.max(0, Math.trunc(count(item)));
-  return {
-    conversations: safeCount(raw.conversations),
-    entries: safeCount(raw.entries),
-    schedules: safeCount(raw.schedules),
-    memoriesNote: text(raw.memories_note)
+    work: body.work ? stoppedWorkOf(record(body.work)) : null
   };
 }
 
 export async function getResetCounts(client: Client, uid: string): Promise<{ paused: boolean; counts: ResetCounts }> {
   const body = await client(`${BASE}/${segment(uid)}/reset`);
-  return { paused: body.paused === true, counts: resetCountsOf(body.reset) };
+  return { paused: body.paused === true, counts: resetCountsOf(record(body.reset)) };
 }
 
 export async function resetDeployment(
@@ -175,53 +147,14 @@ export async function resetDeployment(
 ): Promise<{ notDeleted: { what: string; why: string }[] }> {
   const body = await client(`${BASE}/${segment(uid)}/reset`, {
     method: 'POST',
-    body: { conversations: confirmed.conversations, schedules: confirmed.schedules }
+    body: resetBody(confirmed)
   });
-  return {
-    notDeleted: records(body.not_deleted).map(item => ({ what: text(item.what), why: text(item.why) }))
-  };
-}
-
-export function resetWords(counts: ResetCounts): { deletes: string; stays: string } {
-  const plural = (value: number, word: string) => `${value} ${word}${value === 1 ? '' : 's'}`;
-  return {
-    deletes: `${plural(counts.conversations, 'conversation')} and ${plural(counts.schedules, 'schedule')}`,
-    stays: `The deployment, its address and version stay.${counts.memoriesNote ? ` ${counts.memoriesNote}` : ''}`
-  };
-}
-
-const EVENT_KINDS = new Set<DeploymentEvent['kind']>(['promoted', 'rolled_back', 'paused', 'resumed', 'reset']);
-
-export function deploymentEventOf(value: unknown): DeploymentEvent {
-  const raw = record(value);
-  if (!EVENT_KINDS.has(raw.kind as DeploymentEvent['kind'])) throw new Error(`Unknown deployment event: ${String(raw.kind)}`);
-  return {
-    uid: text(raw.uid), kind: raw.kind as DeploymentEvent['kind'],
-    actor: text(raw.actor_handle) || text(raw.actor_uid), at: text(raw.at), details: record(raw.details)
-  };
+  return { notDeleted: notDeletedOf(body) };
 }
 
 export async function listDeploymentEvents(client: Client, uid: string): Promise<DeploymentEvent[]> {
   const body = await client(`${BASE}/${segment(uid)}/events?limit=20`);
   return records(body.events).map(deploymentEventOf);
-}
-
-export function deploymentEventWords(event: DeploymentEvent): string {
-  const from = Math.trunc(count(event.details.from));
-  const to = Math.trunc(count(event.details.to));
-  const moved = from > 0 && to > 0 ? ` from version ${from} to version ${to}` : '';
-  const verb = {
-    promoted: `Promoted${moved}`, rolled_back: `Rolled back${moved}`, paused: 'Paused', resumed: 'Resumed', reset: 'Reset'
-  }[event.kind];
-  const organization = event.kind === 'paused' && event.details.by === 'organization_owner' ? ', an owner of your organization' : '';
-  const deleted = record(event.details.deleted);
-  const deletedConversations = Math.trunc(count(deleted.conversations));
-  const deletedSchedules = Math.trunc(count(deleted.schedules));
-  const plural = (value: number, word: string) => `${value} ${word}${value === 1 ? '' : 's'}`;
-  const what = event.kind === 'reset' && Object.keys(deleted).length
-    ? ` — ${plural(deletedConversations, 'conversation')} and ${plural(deletedSchedules, 'schedule')} deleted`
-    : '';
-  return `${verb}${event.actor ? ` by ${event.actor}${organization}` : ''}${event.at ? `, ${new Date(event.at).toLocaleString()}` : ''}${what}`;
 }
 
 /** A deployment shared with the person (invited, not theirs), as ai-agents lists it. */

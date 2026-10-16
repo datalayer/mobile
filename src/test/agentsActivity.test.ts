@@ -3,8 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { scheduledSays } from '../api/activity';
-import { runtimeOf } from '../api/runtimes';
+import { runtimeOf, scheduledSays } from '@datalayer/agent-runtimes/lib/portable';
 import { absoluteTime, relativeTime } from '../i18n/time';
 
 describe('a standalone agent stays narrower than an application (M-014a)', () => {
@@ -40,6 +39,7 @@ describe('application activity wording (M-015a)', () => {
         deploymentUid: 'd1',
         appUid: 'a1',
         version: 3,
+        position: 0,
         cron: '0 9 * * 1',
         description: 'Weekly review',
         nextAt: '2026-10-15T09:00:00Z'

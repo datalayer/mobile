@@ -5,7 +5,7 @@
 
 import { useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
-import { ACTIVITY_WORDS, type AppActivity, scheduledSays } from '../../api/activity';
+import { ACTIVITY_WORDS, entrySaid, type AppActivity, scheduledSays } from '@datalayer/agent-runtimes/lib/portable';
 import { EmptyState } from '../../components/primitives';
 import { Field, Row, SectionTitle } from '../../components/states';
 import { absoluteTime, relativeTime } from '../../i18n/time';
@@ -50,7 +50,7 @@ export function ActivitySections({ work, owners }: { work: AppActivity; owners?:
         <Row
           key={entry.uid || entry.sessionUid}
           leading={owners?.faceOf(entry.appUid)}
-          title={titled(entry.appUid, entry.summary || 'A session')}
+          title={titled(entry.appUid, entrySaid(entry) || 'A session')}
           meta={`${absoluteTime(entry.createdAt)} (${relativeTime(entry.createdAt)})`}
           onPress={open(entry.appUid)}
         />

@@ -5,7 +5,7 @@
 
 import { getApproval, type Approval } from '../api/approvals';
 import { createClient } from '../api/client';
-import { Problem } from '../api/problems';
+import { Problem } from '@datalayer/core/lib/portable';
 import { decideShown, oneDecisionAtATime, outcomeOf, type DecisionInput } from '../features/approvals/decision';
 import { routeOfNotification } from '../push/routes';
 

@@ -12,7 +12,20 @@
  */
 
 import {
+  activityFixture,
+  activityOf,
+  agentRuntimesOf,
+  agentSummaryOfRuntime,
   approvalCardOf,
+  deploymentEventLine,
+  deploymentEventOf,
+  entrySaid,
+  isCreatingAgent,
+  resetCountsOf,
+  resetLines,
+  stateChangeBody,
+  stoppedWorkLine,
+  stoppedWorkOf,
   conversationFixture,
   displayLine,
   emptyConversation,
@@ -25,7 +38,7 @@ import {
   shieldDisplayFixtures,
   type AgUiEvent
 } from '@datalayer/agent-runtimes/lib/portable';
-import { personOf } from '@datalayer/core/lib/portable';
+import { kindOfStatus, personOf, Problem, problemOf, retries } from '@datalayer/core/lib/portable';
 import { EYES_VIEW, eyesGeometry, exportPortableTheme } from '@datalayer/primer-addons/lib/theme/portable';
 
 /** One check: its name and whether it held. */
@@ -69,6 +82,12 @@ export function proofLines(): ProofLine[] {
       }
       expect(personOf({ uid: 'u-1' }) === undefined, 'personOf accepted a person without a handle');
       return person.displayName;
+    }),
+    check('core: problem states', () => {
+      const problem = new Problem(kindOfStatus(429), 'GET /x → 429');
+      expect(problem instanceof Error && problemOf(problem) === problem, 'a Problem is not an Error under Hermes');
+      expect(retries(problem) && !retries(new Problem('forbidden', '')), 'retries says the wrong thing');
+      return problem.message;
     }),
     check('primer-addons: theme and eyes', () => {
       const theme = exportPortableTheme('loop');
@@ -116,6 +135,31 @@ export function proofLines(): ProofLine[] {
       const body = otlpMetricsOf([measure], 0, { 'service.name': 'proof' }, 1_700_000_000_000);
       expect(JSON.stringify(body).includes('1700000000000000000'), 'the OTLP body lost its nanosecond time (BigInt)');
       return `first token ${measure.firstTokenMs} ms`;
+    }),
+    check('agent-runtimes: activity on the shared fixture', () => {
+      const activity = activityOf(activityFixture());
+      const [done] = activity.completed;
+      expect(activity.inProgress.length === 1 && activity.nextOffset === 20, `the activity reads ${JSON.stringify(activity)}`);
+      if (!done) {
+        throw new Error('the fixture has no completed session');
+      }
+      return `completed: ${entrySaid(done)}`;
+    }),
+    check('agent-runtimes: lifecycle', () => {
+      expect(stateChangeBody(3, 'paused').version === 3, 'the pause body lost its version');
+      const paused = stoppedWorkLine(stoppedWorkOf({ stopped: [{ what: 'a session', runtime: 'r1' }] }));
+      const reset = resetLines(resetCountsOf({ conversations: 2, schedules: 1 })).goes;
+      const event = deploymentEventLine(deploymentEventOf({ kind: 'resumed', actor_handle: 'ada' }));
+      expect(event === 'Resumed by ada', `the event reads ${event}`);
+      return `${paused} | ${reset} | ${event}`;
+    }),
+    check('agent-runtimes: runtimes', () => {
+      const [runtime] = agentRuntimesOf({ runtimes: [{ runtime_name: 'r1', type: 'agent', state: 'starting' }, { runtime_name: 'n1', type: 'notebook' }] });
+      if (!runtime) {
+        throw new Error('no agent runtime was read');
+      }
+      expect(isCreatingAgent(agentSummaryOfRuntime(runtime)), 'a starting runtime is not being created');
+      return runtime.runtimeName;
     }),
     check('agent-runtimes: displays', () => {
       const { diff, terminal } = shieldDisplayFixtures();

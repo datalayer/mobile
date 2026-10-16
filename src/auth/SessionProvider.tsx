@@ -10,7 +10,7 @@ import type { ReactNode } from 'react';
 import { AppState, Platform } from 'react-native';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { createClient, type Client } from '../api/client';
-import { isProblem } from '../api/problems';
+import { isProblem } from '@datalayer/core/lib/portable';
 import { environment } from '../config/environment';
 import { browserSignIn } from './browserSignIn';
 import { logIn, whoIs, type Person } from './iam';

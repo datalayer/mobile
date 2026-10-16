@@ -7,8 +7,8 @@
 
 import { decide, getApproval, type Approval, type Decision } from '../../api/approvals';
 import type { Client } from '../../api/client';
-import type { Problem } from '../../api/problems';
-import { Problem as RequestProblem } from '../../api/problems';
+import type { Problem } from '@datalayer/core/lib/portable';
+import { Problem as RequestProblem } from '@datalayer/core/lib/portable';
 
 export const DECISION_WORDS = {
   approve: 'Approve',
