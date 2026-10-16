@@ -13,9 +13,11 @@ name: Prompt, stream and stop
 - tapOn:
     id: "conversation-new"
 - extendedWaitUntil:
-    visible: "Message"
+    visible:
+      id: "conversation-message"
     timeout: 60000
-- tapOn: "Message"
+- tapOn:
+    id: "conversation-message"
 - inputText: "Reply with one short greeting sentence only. Do not use any tool."
 - tapOn:
     id: "conversation-send"
@@ -23,7 +25,8 @@ name: Prompt, stream and stop
     visible:
       id: "conversation-send"
     timeout: 120000
-- tapOn: "Message"
+- tapOn:
+    id: "conversation-message"
 - inputText: "Count from 1 to 300, one number per line, without any tool."
 - tapOn:
     id: "conversation-send"

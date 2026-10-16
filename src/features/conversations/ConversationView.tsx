@@ -375,6 +375,7 @@ export function ConversationView({
           <>
             <TextInput
               accessibilityLabel="Message"
+              testID="conversation-message"
               value={draft}
               onChangeText={setDraft}
               editable={canType}
