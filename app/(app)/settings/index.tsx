@@ -93,6 +93,7 @@ export default function Settings() {
       <SectionTitle>Account and build</SectionTitle>
       {person ? <Row label="Signed in as" value={`${person.displayName} (@${person.handle})`} /> : null}
       <Row label="Services" value={env.runUrl} />
+      <Row label="Agents and runtimes" value={env.runtimesUrl} />
       <Row label="Build profile" value={env.profile} />
       <Row label="Variant" value={String(Constants.expoConfig?.extra?.variant ?? 'unknown')} />
       <Row label="Version" value={`${Application.nativeApplicationVersion ?? '?'} (${Application.nativeBuildVersion ?? '?'})`} />

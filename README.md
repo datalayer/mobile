@@ -64,7 +64,7 @@ make start-tunnel               # Metro over a tunnel, for a phone that cannot r
 
 Every `dev:*` and `start*` script sets `APP_VARIANT=development`, so the app installs as *Datalayer Dev* (`ai.datalayer.mobile.dev`, scheme `datalayer-dev`) beside a store build. Once Metro is up, press `a` or `i` to open the installed development build, `r` to reload, `j` to open the debugger, `m` for the dev menu. Shake the phone (or `Cmd+D` / `Cmd+M` in a simulator) for the same menu on the device.
 
-Against a local server: set `EXPO_PUBLIC_DATALAYER_RUN_URL=http://localhost:8080` (and `EXPO_PUBLIC_DATALAYER_MCP_URL` to the local MCP gateway) for the iOS Simulator or `http://10.0.2.2:8080` for the Android emulator; a phone needs an HTTPS URL or `npm run start:tunnel` plus a tunnel to the server. `EXPO_PUBLIC_*` values are read when Metro starts: restart it after changing `.env`.
+Against a local server: set `EXPO_PUBLIC_DATALAYER_RUN_URL=http://localhost:8080` and `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` to the same or the local runtimes plane (and `EXPO_PUBLIC_DATALAYER_MCP_URL` to the local MCP gateway) for the iOS Simulator or `http://10.0.2.2:8080` for the Android emulator; a phone needs an HTTPS URL or `npm run start:tunnel` plus a tunnel to the server. `EXPO_PUBLIC_*` values are read when Metro starts: restart it after changing `.env`.
 
 Without a local native toolchain, make the development build in the cloud and install it from the link:
 
@@ -101,7 +101,7 @@ Rebuild the development build (`npm run prebuild`, then `dev:*` or an EAS build)
 
 ### Environments
 
-`EXPO_PUBLIC_DATALAYER_RUN_URL` names the services, HTTPS except for `localhost`, `127.0.0.1` and `10.0.2.2` (the Android emulator's host). `EXPO_PUBLIC_DATALAYER_MCP_URL` names the MCP gateway, which is published on its own host (production `https://mcp.datalayer.run`; a trailing `/mcp` is accepted): the protocol audit, a sign-in under way and Direct Conversations are read there. Both are required, with the same HTTPS rule; a build without either is refused at start. A phone reaches a local server only through an HTTPS development URL or a tunnel. `EXPO_PUBLIC_BUILD_PROFILE` is one of `development`, `development-simulator`, `e2e`, `preview`, `staging`, `production`; it decides whether the interim sign-in is offered.
+`EXPO_PUBLIC_DATALAYER_RUN_URL` names the control plane (IAM, the spaces, telemetry; production `https://prod1.datalayer.run`) and `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` the runtimes plane (ai-agents, runtimes, the scheduler, contents, inference and the ai-agents WebSocket; production `https://r1.datalayer.run`), as Core's `config/planes` places each service — neither host serves the other's routes ([`docs/contracts.md`](docs/contracts.md)); both HTTPS except for `localhost`, `127.0.0.1` and `10.0.2.2` (the Android emulator's host). `EXPO_PUBLIC_DATALAYER_MCP_URL` names the MCP gateway, which is published on its own host (production `https://mcp.datalayer.run`; a trailing `/mcp` is accepted): the protocol audit, a sign-in under way and Direct Conversations are read there. All three are required, with the same HTTPS rule; a build without any of them is refused at start. A phone reaches a local server only through an HTTPS development URL or a tunnel. `EXPO_PUBLIC_BUILD_PROFILE` is one of `development`, `development-simulator`, `e2e`, `preview`, `staging`, `production`; it decides whether the interim sign-in is offered.
 
 Development, `e2e` and `preview` builds sign in with a handle and password or a Datalayer API token; store builds will sign in with Datalayer through the system browser.
 
@@ -147,10 +147,10 @@ credential files never belong in the repository.
 
 | Profile | EAS environment | Non-secret configuration | Credential source |
 |---|---|---|---|
-| `development`, `development-simulator`, `e2e` | `development` | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID`; profile and variant come from `eas.json` | EAS development signing credentials |
-| `preview` | `preview` | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID` | EAS internal-distribution credentials |
-| `staging` | `preview` | staging `EXPO_PUBLIC_DATALAYER_RUN_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID` | The production app's EAS/store signing credentials |
-| `production` | `production` | production `EXPO_PUBLIC_DATALAYER_RUN_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID` | The production app's EAS/store signing credentials |
+| `development`, `development-simulator`, `e2e` | `development` | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL`, `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID`; profile and variant come from `eas.json` | EAS development signing credentials |
+| `preview` | `preview` | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL`, `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID` | EAS internal-distribution credentials |
+| `staging` | `preview` | staging `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID` | The production app's EAS/store signing credentials |
+| `production` | `production` | production `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID` | The production app's EAS/store signing credentials |
 | GitHub release workflow | repository Actions secrets | none | `EXPO_TOKEN`, scoped to the Datalayer Expo project |
 
 EAS owns the iOS distribution/provisioning material and Android keystore.

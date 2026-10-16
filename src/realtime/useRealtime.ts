@@ -66,7 +66,7 @@ export function useRealtime() {
         return;
       }
       // The token travels as a header, not in the URL, so it never lands in access logs.
-      const opened = new (WebSocket as NativeWebSocket)(wsUrlOf(environment().runUrl), undefined, {
+      const opened = new (WebSocket as NativeWebSocket)(wsUrlOf(environment().runtimesUrl), undefined, {
         headers: { Authorization: `Bearer ${token}` }
       });
       socket = opened;

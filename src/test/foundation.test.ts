@@ -25,6 +25,7 @@ describe('the environment (MOBILE.md §5.4)', () => {
     const of = (profile: string) =>
       environmentOf({
         EXPO_PUBLIC_DATALAYER_RUN_URL: 'https://prod1.datalayer.run/',
+        EXPO_PUBLIC_DATALAYER_RUNTIMES_URL: 'https://r1.datalayer.run/',
         EXPO_PUBLIC_DATALAYER_MCP_URL: 'https://mcp.datalayer.run/mcp',
         EXPO_PUBLIC_BUILD_PROFILE: profile
       });
@@ -37,7 +38,17 @@ describe('the environment (MOBILE.md §5.4)', () => {
     expect(of('development').runUrl).toBe('https://prod1.datalayer.run');
     // The MCP gateway is published on its own host (M-038, M-039).
     expect(of('development').gatewayUrl).toBe('https://mcp.datalayer.run');
-    expect(() => environmentOf({ EXPO_PUBLIC_DATALAYER_RUN_URL: 'https://prod1.datalayer.run' })).toThrow(/EXPO_PUBLIC_DATALAYER_MCP_URL/);
+    expect(() => environmentOf({ EXPO_PUBLIC_DATALAYER_RUN_URL: 'https://prod1.datalayer.run' })).toThrow(/EXPO_PUBLIC_DATALAYER_RUNTIMES_URL/);
+    expect(() =>
+      environmentOf({ EXPO_PUBLIC_DATALAYER_RUN_URL: 'https://prod1.datalayer.run', EXPO_PUBLIC_DATALAYER_RUNTIMES_URL: 'https://r1.datalayer.run' })
+    ).toThrow(/EXPO_PUBLIC_DATALAYER_MCP_URL/);
+    expect(() =>
+      environmentOf({
+        EXPO_PUBLIC_DATALAYER_RUN_URL: 'https://prod1.datalayer.run',
+        EXPO_PUBLIC_DATALAYER_RUNTIMES_URL: 'http://r1.datalayer.run',
+        EXPO_PUBLIC_DATALAYER_MCP_URL: 'https://mcp.datalayer.run'
+      })
+    ).toThrow(/EXPO_PUBLIC_DATALAYER_RUNTIMES_URL.*HTTPS|HTTPS/);
   });
 });
 

@@ -65,7 +65,8 @@ describe('foreground reconciliation (M-017)', () => {
   it('connects with the token in a header, never in the URL', async () => {
     await mounted();
     const [socket] = FakeSocket.opened;
-    expect(socket!.url).toBe('wss://prod1.datalayer.run/api/ai-agents/v1/ws');
+    // ai-agents is on the runtimes plane (M-001).
+    expect(socket!.url).toBe('wss://r1.datalayer.run/api/ai-agents/v1/ws');
     expect(socket!.options.headers).toEqual({ Authorization: 'Bearer the-token' });
   });
 

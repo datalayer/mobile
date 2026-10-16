@@ -117,7 +117,7 @@ describe('activity', () => {
 
 describe('realtime', () => {
   it('derives the socket address from the services address', () => {
-    expect(wsUrlOf('https://prod1.datalayer.run')).toBe('wss://prod1.datalayer.run/api/ai-agents/v1/ws');
+    expect(wsUrlOf('https://r1.datalayer.run')).toBe('wss://r1.datalayer.run/api/ai-agents/v1/ws');
     expect(wsUrlOf('http://localhost:8888')).toBe('ws://localhost:8888/api/ai-agents/v1/ws');
   });
 
@@ -132,6 +132,7 @@ describe('interim sign-in (M-019)', () => {
   const of = (profile: string) =>
     environmentOf({
       EXPO_PUBLIC_DATALAYER_RUN_URL: 'https://prod1.datalayer.run',
+      EXPO_PUBLIC_DATALAYER_RUNTIMES_URL: 'https://r1.datalayer.run',
       EXPO_PUBLIC_DATALAYER_MCP_URL: 'https://mcp.datalayer.run',
       EXPO_PUBLIC_BUILD_PROFILE: profile
     });

@@ -6,7 +6,8 @@
 import { Problem, detailOf, kindOfStatus } from '@datalayer/core/lib/portable';
 
 export type ClientOptions = {
-  baseUrl: string;
+  /** One host for every route, or the host of each route (`serviceUrlOf`: the two planes). */
+  baseUrl: string | ((path: string) => string);
   getAccessToken: () => string | undefined;
   /** A fresh access token after a 401, or `undefined` when there is none to be had. */
   refreshAccessToken?: () => Promise<string | undefined>;
@@ -39,7 +40,7 @@ export function createClient({
 }: ClientOptions): Client {
   const send = async <T,>(path: string, options: RequestOptions, token: string | undefined, retried: boolean): Promise<T> => {
     const method = options.method ?? 'GET';
-    const url = `${baseUrl}${path}`;
+    const url = `${typeof baseUrl === 'function' ? baseUrl(path) : baseUrl}${path}`;
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (token) {
       headers.Authorization = `Bearer ${token}`;

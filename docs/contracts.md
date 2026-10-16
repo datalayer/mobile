@@ -26,6 +26,19 @@ image was built with (its pin commit in `k8s/services`).
 The phone's own client is `@datalayer/agent-runtimes` `^1.5.44` and
 `@datalayer/core` `^1.2.20` (`package.json`).
 
+## Two planes
+
+IAM, the spaces and telemetry are served by the control plane
+(`https://prod1.datalayer.run`); ai-agents, runtimes, the scheduler, contents,
+inference and the ai-agents WebSocket by the runtimes plane
+(`https://r1.datalayer.run`), as Core's `config/planes` places them. Neither
+host serves the other's routes — on 16 October 2026, `GET /api/iam/v1/me` was
+404 at r1 and `GET /api/ai-agents/v1/apps/deployments` and
+`GET /api/runtimes/v1/runtimes` 404 at prod1. The drill found the phone sending
+every route to one host; it now sends each route to its plane
+(`EXPO_PUBLIC_DATALAYER_RUNTIMES_URL`, `serviceUrlOf`, `src/test/planes.test.ts`,
+which also holds the phone's table to Core's).
+
 ## Contracts and results
 
 Every route is called with `Authorization: Bearer <token>` unless it says

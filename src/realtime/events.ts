@@ -8,8 +8,8 @@
 import type { QueryKey } from '@tanstack/react-query';
 import { KEYS } from '../features/queryKeys';
 
-/** `https://host` -> `wss://host/api/ai-agents/v1/ws`. */
-export const wsUrlOf = (runUrl: string): string => `${runUrl.replace(/^http/, 'ws')}/api/ai-agents/v1/ws`;
+/** The runtimes plane `https://host` -> `wss://host/api/ai-agents/v1/ws`. */
+export const wsUrlOf = (runtimesUrl: string): string => `${runtimesUrl.replace(/^http/, 'ws')}/api/ai-agents/v1/ws`;
 
 /** The queries one server broadcast (`{channel, event, data}`) makes stale. */
 export function keysOfEvent(raw: unknown): readonly QueryKey[] {
