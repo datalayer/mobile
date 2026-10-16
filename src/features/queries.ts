@@ -171,7 +171,13 @@ export function useChangeAccountDeletion() {
   const { client } = useSession();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (handle: string | null) => (handle === null ? (await cancelDeletion(client), null) : requestDeletion(client, handle)),
+    mutationFn: async (handle: string | null) => {
+      if (handle === null) {
+        await cancelDeletion(client);
+        return null;
+      }
+      return requestDeletion(client, handle);
+    },
     onSuccess: request => queryClient.setQueryData(KEYS.accountDeletion, request)
   });
 }

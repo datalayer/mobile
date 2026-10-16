@@ -62,7 +62,7 @@
       "extends": "base",
       "distribution": "store",
       "channel": "staging",
-      "environment": "preview",
+      "environment": "staging",
       "autoIncrement": true,
       "env": {
         "APP_VARIANT": "production",

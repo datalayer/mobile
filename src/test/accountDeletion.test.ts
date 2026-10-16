@@ -58,7 +58,7 @@ describe('the account deletion request (M-052)', () => {
 
     const reading = fakeClient({ success: true, request: null });
     await expect(readDeletion(reading.client)).resolves.toBeNull();
-    expect(reading.asked[0].options).toBeUndefined();
+    expect(reading.asked[0]?.options).toBeUndefined();
 
     const withdrawing = fakeClient({ success: true });
     await cancelDeletion(withdrawing.client);

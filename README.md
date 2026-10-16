@@ -6,7 +6,7 @@
 
 The running agents and LOOP applications of Datalayer, in your pocket: what needs you, the approvals to read in full before deciding, and the conversations to continue. Expo (SDK 57) and React Native, iOS and Android. The plan is `landings/datalayer/ui/plans/MOBILE.md`.
 
-The notification payload allowlist, event matrix and security-review/device gates are in [`docs/push-data-classification.md`](docs/push-data-classification.md). Privacy/store declarations and the push-credential incident procedure are in [`docs/privacy-and-store.md`](docs/privacy-and-store.md). Account ownership, identifiers and credential custody are in [`docs/release-prerequisites.md`](docs/release-prerequisites.md). The deployed server contracts, their versions and the dated result of exercising each are in [`docs/contracts.md`](docs/contracts.md). The public, person-facing guide is [datalayer.ai/docs/mobile-app](https://datalayer.ai/docs/mobile-app).
+The notification payload allowlist, event matrix and security-review/device gates are in [`docs/push-data-classification.md`](docs/push-data-classification.md). Privacy/store declarations and the push-credential incident procedure are in [`docs/privacy-and-store.md`](docs/privacy-and-store.md). The store listing's words, review notes and the Apple and Google review answers, drafted, are in [`docs/store-listing.md`](docs/store-listing.md). Account ownership, identifiers and credential custody are in [`docs/release-prerequisites.md`](docs/release-prerequisites.md). The deployed server contracts, their versions and the dated result of exercising each are in [`docs/contracts.md`](docs/contracts.md). The public, person-facing guide is [datalayer.ai/docs/mobile-app](https://datalayer.ai/docs/mobile-app).
 
 ## Develop
 
@@ -164,7 +164,7 @@ credential files never belong in the repository.
 |---|---|---|---|
 | `development`, `development-simulator`, `e2e` | `development` | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL`, `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID`; profile and variant come from `eas.json` | EAS development signing credentials |
 | `preview` | `preview` | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL`, `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID` | EAS internal-distribution credentials |
-| `staging` | `preview` | staging `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID` | The production app's EAS/store signing credentials |
+| `staging` | `staging` (its own, decided 16 October 2026: a custom EAS environment the account holders create with the project, M-007b) | staging `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID` | The production app's EAS/store signing credentials |
 | `production` | `production` | production `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID` | The production app's EAS/store signing credentials |
 | GitHub release workflow | repository Actions secrets | none | `EXPO_TOKEN`, scoped to the Datalayer Expo project |
 
