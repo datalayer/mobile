@@ -120,9 +120,16 @@ jobs:
           ONNXRUNTIME_NODE_INSTALL: skip
       - name: Prebuild the e2e app
         run: npx expo prebuild --platform android --no-install --clean
+      # The resources first, on their own: on 16 October 2026 their merge failed and the
+      # build then waited on its native tasks until the job's limit, without saying why.
+      - name: Merge the app's resources
+        working-directory: android
+        timeout-minutes: 15
+        run: ./gradlew :app:mergeReleaseResources -PreactNativeArchitectures=x86_64 --no-daemon --stacktrace --info | tail -200
       - name: Build the e2e APK (release, its JavaScript embedded; x86_64 for the emulator)
         working-directory: android
-        run: ./gradlew :app:assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon
+        timeout-minutes: 50
+        run: ./gradlew :app:assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon --max-workers=2
       - uses: actions/upload-artifact@v4
         with:
           name: e2e-android-apk
