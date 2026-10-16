@@ -124,16 +124,16 @@ jobs:
       - name: The test account
         id: account
         env:
-          E2E_TOKEN: ${{ secrets.MOBILE_E2E_TOKEN }}
-          E2E_SECOND_TOKEN: ${{ secrets.MOBILE_E2E_SECOND_TOKEN }}
-          E2E_CHAT_APP: ${{ vars.MOBILE_E2E_CHAT_APP }}
-          E2E_LIFECYCLE_APP: ${{ vars.MOBILE_E2E_LIFECYCLE_APP }}
+          E2E_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_TOKEN }}
+          E2E_SECOND_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_SECOND_TOKEN }}
+          E2E_CHAT_APP: ${{ secrets.DATALAYER_MOBILE_E2E_CHAT_APP }}
+          E2E_LIFECYCLE_APP: ${{ secrets.DATALAYER_MOBILE_E2E_LIFECYCLE_APP }}
         run: |
           missing=""
-          [ -n "$E2E_TOKEN" ] || missing="$missing secret MOBILE_E2E_TOKEN (the test account's API token);"
-          [ -n "$E2E_SECOND_TOKEN" ] || missing="$missing secret MOBILE_E2E_SECOND_TOKEN (a second account's API token);"
-          [ -n "$E2E_CHAT_APP" ] || missing="$missing variable MOBILE_E2E_CHAT_APP (an application of the test account kept running);"
-          [ -n "$E2E_LIFECYCLE_APP" ] || missing="$missing variable MOBILE_E2E_LIFECYCLE_APP (an application of the test account the flow pauses and resumes);"
+          [ -n "$E2E_TOKEN" ] || missing="$missing secret DATALAYER_MOBILE_E2E_TOKEN (the test account's API token);"
+          [ -n "$E2E_SECOND_TOKEN" ] || missing="$missing secret DATALAYER_MOBILE_E2E_SECOND_TOKEN (a second account's API token);"
+          [ -n "$E2E_CHAT_APP" ] || missing="$missing secret DATALAYER_MOBILE_E2E_CHAT_APP (an application of the test account kept running);"
+          [ -n "$E2E_LIFECYCLE_APP" ] || missing="$missing secret DATALAYER_MOBILE_E2E_LIFECYCLE_APP (an application of the test account the flow pauses and resumes);"
           if [ -n "$missing" ]; then
             echo "::notice title=Maestro smoke flows skipped::e2e-android and e2e-ios are skipped until the test account is set:$missing in the repository's settings (MOBILE M-054)."
             echo "ready=false" >> "$GITHUB_OUTPUT"
@@ -145,9 +145,9 @@ jobs:
   # EXPO_PUBLIC_BUILD_PROFILE=e2e: the token sign-in is offered) made here — prebuild,
   # then Gradle, never on a laptop — installed on an emulator and driven against
   # the r1 runtimes plane as the test account. The flows need the test account's
-  # API token (secret MOBILE_E2E_TOKEN), a second account's (MOBILE_E2E_SECOND_TOKEN)
-  # and the applications they use (variables MOBILE_E2E_CHAT_APP, kept running,
-  # and MOBILE_E2E_LIFECYCLE_APP, which the flow pauses and resumes); without
+  # API token (secret DATALAYER_MOBILE_E2E_TOKEN), a second account's (DATALAYER_MOBILE_E2E_SECOND_TOKEN)
+  # and the applications they use (secrets DATALAYER_MOBILE_E2E_CHAT_APP, kept running,
+  # and DATALAYER_MOBILE_E2E_LIFECYCLE_APP, which the flow pauses and resumes); without
   # them the job is skipped (e2e-account says which is missing).
   e2e-android:
     needs: e2e-account
@@ -202,10 +202,10 @@ jobs:
       - name: Run the flows on an emulator
         uses: reactivecircus/android-emulator-runner@v2
         env:
-          E2E_TOKEN: ${{ secrets.MOBILE_E2E_TOKEN }}
-          E2E_SECOND_TOKEN: ${{ secrets.MOBILE_E2E_SECOND_TOKEN }}
-          E2E_CHAT_APP: ${{ vars.MOBILE_E2E_CHAT_APP }}
-          E2E_LIFECYCLE_APP: ${{ vars.MOBILE_E2E_LIFECYCLE_APP }}
+          E2E_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_TOKEN }}
+          E2E_SECOND_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_SECOND_TOKEN }}
+          E2E_CHAT_APP: ${{ secrets.DATALAYER_MOBILE_E2E_CHAT_APP }}
+          E2E_LIFECYCLE_APP: ${{ secrets.DATALAYER_MOBILE_E2E_LIFECYCLE_APP }}
         with:
           api-level: 34
           arch: x86_64
@@ -263,10 +263,10 @@ jobs:
           echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
       - name: Run the flows on a Simulator
         env:
-          E2E_TOKEN: ${{ secrets.MOBILE_E2E_TOKEN }}
-          E2E_SECOND_TOKEN: ${{ secrets.MOBILE_E2E_SECOND_TOKEN }}
-          E2E_CHAT_APP: ${{ vars.MOBILE_E2E_CHAT_APP }}
-          E2E_LIFECYCLE_APP: ${{ vars.MOBILE_E2E_LIFECYCLE_APP }}
+          E2E_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_TOKEN }}
+          E2E_SECOND_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_SECOND_TOKEN }}
+          E2E_CHAT_APP: ${{ secrets.DATALAYER_MOBILE_E2E_CHAT_APP }}
+          E2E_LIFECYCLE_APP: ${{ secrets.DATALAYER_MOBILE_E2E_LIFECYCLE_APP }}
         run: |
           device=$(xcrun simctl list devices available | grep -m1 -oE 'iPhone [0-9]+[^(]*\(([0-9A-F-]+)\)' | grep -oE '[0-9A-F-]{36}')
           xcrun simctl boot "$device"
