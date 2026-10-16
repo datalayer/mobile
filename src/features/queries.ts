@@ -9,6 +9,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import { useMemo } from 'react';
 import { mergeActivityPages } from '@datalayer/agent-runtimes/lib/portable';
 import { readActivity } from '../api/activity';
+import { cancelDeletion, readDeletion, requestDeletion } from '../api/accountDeletion';
 import { type Approval, getApproval, listPending, markRead, pendingCount } from '../api/approvals';
 import {
   applicationsOf, changeDeploymentState, getResetCounts, listCheckedDeployments, listDeploymentEvents, listDeployments, resetDeployment,
@@ -156,6 +157,22 @@ export function useRunningPermissions(appUid: string, version: number) {
     queryFn: () => readRunningPermissions(client, appUid, version),
     enabled: Boolean(appUid && version > 0),
     staleTime: 5 * 60_000
+  });
+}
+
+/** The person's pending account deletion (M-052): null when none is asked. */
+export function useAccountDeletion() {
+  const { client } = useSession();
+  return useQuery({ queryKey: KEYS.accountDeletion, queryFn: () => readDeletion(client) });
+}
+
+/** Ask for the account to be deleted (`handle` typed to confirm), or, with null, withdraw the request. */
+export function useChangeAccountDeletion() {
+  const { client } = useSession();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (handle: string | null) => (handle === null ? (await cancelDeletion(client), null) : requestDeletion(client, handle)),
+    onSuccess: request => queryClient.setQueryData(KEYS.accountDeletion, request)
   });
 }
 

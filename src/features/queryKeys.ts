@@ -18,6 +18,7 @@ export const KEYS = {
   faces: ['faces'] as const,
   protocolConnections: ['protocol-connections'] as const,
   protocolActivity: ['activity', 'protocols'] as const,
+  accountDeletion: ['account', 'deletion'] as const,
   runningPermissions: (appUid: string, version: number) => ['apps', appUid, 'versions', version, 'permissions'] as const
 };
 

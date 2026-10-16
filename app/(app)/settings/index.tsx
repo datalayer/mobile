@@ -112,10 +112,9 @@ export default function Settings() {
         accessibilityHint="Opens in your browser"
       />
       <LinkRow
-        title="Request account deletion"
-        detail="Ask Datalayer to delete your account and associated data"
-        onPress={() => void WebBrowser.openBrowserAsync(STORE_LINKS.accountDeletion)}
-        accessibilityHint="Opens the signed-in support path in your browser"
+        title="Delete account"
+        detail="Ask for your account and its data to be deleted, or cancel a request"
+        onPress={() => router.push('/settings/delete-account' as Href)}
       />
       <Button tone="secondary" label="Sign out" busy={busy} onPress={signOut} />
     </Screen>

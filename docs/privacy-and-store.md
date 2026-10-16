@@ -4,13 +4,13 @@ This is the review source for MOBILE M-052. It describes the current application
 
 ## Public destinations
 
-| Purpose          | URL                            | Current behavior                                                      |
-| ---------------- | ------------------------------ | --------------------------------------------------------------------- |
-| Privacy policy   | `https://datalayer.ai/privacy` | Public policy                                                         |
-| Support          | `https://datalayer.ai/support` | Public support entry; a signed-in request may follow                  |
-| Account deletion | `https://datalayer.ai/support` | Request path only; the current web profile delete control is disabled |
+| Purpose          | URL                                              | Current behavior                                                         |
+| ---------------- | ------------------------------------------------ | ------------------------------------------------------------------------ |
+| Privacy policy   | `https://datalayer.ai/privacy`                   | Public policy                                                            |
+| Support          | `https://datalayer.ai/support`                   | Public support entry; a signed-in request may follow                     |
+| Account deletion | `https://datalayer.ai/settings/profile/danger`   | The web's *Delete account*, the same request as the app's (sign-in first) |
 
-All three are visible in mobile Settings and open in the system browser. Account deletion must not be described in store metadata as self-service until the web/IAM flow actually deletes an account. Before review, confirm that support can authenticate the requester, explain subscription consequences, delete or retain each data class under policy, and report completion.
+Privacy and support open in the system browser from mobile Settings. Account deletion is in the app itself: Settings → *Delete account* (decided by the user, 16 October 2026). The person types their handle to confirm and IAM records the request (`POST /api/iam/v1/me/deletion`); a 30-day grace period runs, during which the account works as before and the request can be withdrawn in the app or on the web (`DELETE /api/iam/v1/me/deletion`); an email names the date. A request whose email cannot be sent is not kept. When the grace period ends the account is deleted with what it holds; until an automatic deletion is decided, a platform administrator runs it from the list IAM gives (`GET /api/iam/v1/users/deletions/due`). The web URL above is the one the Google Play record gives for deletion outside the app.
 
 ## Data inventory
 
@@ -64,7 +64,8 @@ Owner names and provider-console locations belong in the private release record,
 - generated iOS privacy report and merged `PrivacyInfo.xcprivacy` from the production archive;
 - merged Android manifest and Play SDK Index/dependency review;
 - screenshots/exports of completed Apple privacy and Google Data safety forms;
-- live support, privacy and authenticated deletion-request checks;
+- live support and privacy checks, and the deletion request asked, read and withdrawn on the deployed IAM with a test account;
+- who deletes the accounts whose grace period has ended, and how soon (or an automatic deletion, decided);
 - named private owners for store records, support response and push credential recovery;
 - a tabletop rotation of the production-like push credential and a physical-device canary.
 

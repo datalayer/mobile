@@ -7,5 +7,6 @@
 export const STORE_LINKS = {
   privacy: 'https://datalayer.ai/privacy',
   support: 'https://datalayer.ai/support',
-  accountDeletion: 'https://datalayer.ai/support'
+  /** The web's control, the same as the app's Settings → Delete account (M-052): the store records' deletion URL. */
+  accountDeletion: 'https://datalayer.ai/settings/profile/danger'
 } as const;

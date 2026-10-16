@@ -35,6 +35,7 @@ export default function AppLayout() {
       <Stack.Screen name="settings/index" options={{ title: 'Settings' }} />
       <Stack.Screen name="settings/in-your-name" options={{ title: 'In your name' }} />
       <Stack.Screen name="settings/notifications" options={{ title: 'Notifications' }} />
+      <Stack.Screen name="settings/delete-account" options={{ title: 'Delete account' }} />
     </Stack>
   );
 }
