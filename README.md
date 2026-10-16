@@ -124,6 +124,21 @@ Expo API. The installed mobile versions still match `expo install --check`.
 MOBILE.md M-010b tracks making Doctor clean; CI and release gates intentionally
 use `npm run check` and `npm run check:bundle` until that issue is resolved.
 
+### Maestro smoke flows
+
+`.maestro/` holds the smoke flows of M-054 — sign-in, an approval answered
+elsewhere while it is open, the route a tapped notification opens, a prompt
+streamed and stopped, and pause/reset with a second account refused. CI runs
+them (`e2e-android` on every run, `e2e-ios` on main, on `macos-15`) on an `e2e`
+build it makes itself: `expo prebuild`, then Gradle or `xcodebuild`; nothing is
+built on a laptop. They act as a test account on the r1 runtimes plane and need
+the repository secrets `MOBILE_E2E_TOKEN` (the test account's API token) and
+`MOBILE_E2E_SECOND_TOKEN` (a second account's), and the variables
+`MOBILE_E2E_CHAT_APP` (an application of the test account kept running; the
+prompt flow makes two model requests) and `MOBILE_E2E_LIFECYCLE_APP` (one the
+flow pauses and resumes). Without them the jobs stop after the build and say
+which is missing.
+
 ## Build
 
 `eas.json` has six profiles: `development`, `development-simulator`, `e2e`, `preview`, `staging` and `production`. `APP_VARIANT` gives development and preview builds their own name and identifier (`ai.datalayer.mobile.dev`, `.preview`) so they install beside the store app.

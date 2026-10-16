@@ -1,0 +1,40 @@
+# Prompt, stream and stop (M-030): a new conversation with the kept-running application E2E_CHAT_APP,
+# a streamed answer, then a long answer stopped while it streams, and the conversation ended. Two model requests.
+appId: ai.datalayer.mobile.preview
+name: Prompt, stream and stop
+---
+- runFlow: common/sign-in.yaml
+- tapOn: "Agents"
+- extendedWaitUntil:
+    visible: ${E2E_CHAT_APP}
+    timeout: 30000
+- tapOn: ${E2E_CHAT_APP}
+- tapOn:
+    id: "conversation-new"
+- extendedWaitUntil:
+    visible: "Message"
+    timeout: 60000
+- tapOn: "Message"
+- inputText: "Reply with one short greeting sentence only. Do not use any tool."
+- tapOn:
+    id: "conversation-send"
+- extendedWaitUntil:
+    visible:
+      id: "conversation-send"
+    timeout: 120000
+- tapOn: "Message"
+- inputText: "Count from 1 to 300, one number per line, without any tool."
+- tapOn:
+    id: "conversation-send"
+- extendedWaitUntil:
+    visible:
+      id: "conversation-stop"
+    timeout: 60000
+- tapOn:
+    id: "conversation-stop"
+- extendedWaitUntil:
+    notVisible:
+      id: "conversation-stop"
+    timeout: 60000
+- tapOn: "End"
+- tapOn: "End"

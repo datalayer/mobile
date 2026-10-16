@@ -1,0 +1,21 @@
+# Approval race and stale state (M-020, M-026): answered elsewhere while it is open, the phone says so and does not decide again.
+appId: ai.datalayer.mobile.preview
+name: Approval race
+---
+- runFlow: common/sign-in.yaml
+- runScript: scripts/create-approval.js
+- openLink: "datalayer-preview://approvals/${output.approvalId}"
+- extendedWaitUntil:
+    visible: "Waiting for your answer."
+    timeout: 30000
+- runScript: scripts/reject-elsewhere.js
+- tapOn:
+    id: "approve"
+- tapOn:
+    id: "decision-confirm"
+- extendedWaitUntil:
+    visible: "It was answered somewhere else, or the run waiting on it is over. This is its current state."
+    timeout: 30000
+- assertVisible: "Rejected."
+- assertNotVisible:
+    id: "approve"

@@ -1,0 +1,17 @@
+# Signs in with the test account's API token: the development sign-in an e2e build offers (MOBILE.md §5.5).
+appId: ai.datalayer.mobile.preview
+---
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- extendedWaitUntil:
+    visible: "Sign in to Datalayer"
+    timeout: 120000
+- tapOn: "Use an API token instead"
+- tapOn: "Datalayer API token"
+- inputText: ${E2E_TOKEN}
+- hideKeyboard
+- tapOn: "Sign in"
+- extendedWaitUntil:
+    visible: "Inbox"
+    timeout: 60000

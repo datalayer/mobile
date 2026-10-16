@@ -2,13 +2,16 @@
 # Distributed under the terms of the Modified BSD License.
 
 # The pull-request gate of MOBILE.md (M-006, M-054): types, lint, the import
-# gate on the sources, the tests, and the import gate on what Metro resolved.
+# gate on the sources, the tests, and the import gate on what Metro resolved;
+# the Expo/Hermes proof; and the Maestro smoke flows (.maestro/) on an e2e
+# build, Android on every run, iOS on main.
 name: Check
 
 on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   check:
@@ -84,3 +87,168 @@ jobs:
             ./hermes-vm/hermes dist/hermes/$platform/proof.hbc | tee dist/hermes/$platform/proof.txt
             grep -qx 'HERMES PROOF HELD' dist/hermes/$platform/proof.txt
           done
+
+  # The Maestro smoke flows of M-054 on Android: an e2e build (APP_VARIANT=preview,
+  # EXPO_PUBLIC_BUILD_PROFILE=e2e: the token sign-in is offered) made here — prebuild,
+  # then Gradle, never on a laptop — installed on an emulator and driven against
+  # the r1 runtimes plane as the test account. The flows need the test account's
+  # API token (secret MOBILE_E2E_TOKEN), a second account's (MOBILE_E2E_SECOND_TOKEN)
+  # and the applications they use (variables MOBILE_E2E_CHAT_APP, kept running,
+  # and MOBILE_E2E_LIFECYCLE_APP, which the flow pauses and resumes); without
+  # them the job stops after the build and says which is missing.
+  e2e-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      APP_VARIANT: preview
+      EXPO_PUBLIC_BUILD_PROFILE: e2e
+      EXPO_PUBLIC_DATALAYER_RUN_URL: https://prod1.datalayer.run
+      EXPO_PUBLIC_DATALAYER_RUNTIMES_URL: https://r1.datalayer.run
+      EXPO_PUBLIC_DATALAYER_MCP_URL: https://mcp.datalayer.run
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm install
+        env:
+          ONNXRUNTIME_NODE_INSTALL: skip
+      - name: Prebuild the e2e app
+        run: npx expo prebuild --platform android --no-install --clean
+      - name: Build the e2e APK (release, its JavaScript embedded; x86_64 for the emulator)
+        working-directory: android
+        run: ./gradlew :app:assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e2e-android-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 7
+      - name: The test account
+        env:
+          E2E_TOKEN: ${{ secrets.MOBILE_E2E_TOKEN }}
+          E2E_SECOND_TOKEN: ${{ secrets.MOBILE_E2E_SECOND_TOKEN }}
+          E2E_CHAT_APP: ${{ vars.MOBILE_E2E_CHAT_APP }}
+          E2E_LIFECYCLE_APP: ${{ vars.MOBILE_E2E_LIFECYCLE_APP }}
+        run: |
+          missing=""
+          [ -n "$E2E_TOKEN" ] || missing="$missing secret MOBILE_E2E_TOKEN (the test account's API token);"
+          [ -n "$E2E_SECOND_TOKEN" ] || missing="$missing secret MOBILE_E2E_SECOND_TOKEN (a second account's API token);"
+          [ -n "$E2E_CHAT_APP" ] || missing="$missing variable MOBILE_E2E_CHAT_APP (an application of the test account kept running);"
+          [ -n "$E2E_LIFECYCLE_APP" ] || missing="$missing variable MOBILE_E2E_LIFECYCLE_APP (an application of the test account the flow pauses and resumes);"
+          if [ -n "$missing" ]; then
+            echo "::error title=Maestro smoke flows not run::The APK is built; the flows need$missing set them in the repository's settings (MOBILE M-054)."
+            exit 1
+          fi
+      - name: Install Maestro
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run the flows on an emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          E2E_TOKEN: ${{ secrets.MOBILE_E2E_TOKEN }}
+          E2E_SECOND_TOKEN: ${{ secrets.MOBILE_E2E_SECOND_TOKEN }}
+          E2E_CHAT_APP: ${{ vars.MOBILE_E2E_CHAT_APP }}
+          E2E_LIFECYCLE_APP: ${{ vars.MOBILE_E2E_LIFECYCLE_APP }}
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: >-
+            adb install -r android/app/build/outputs/apk/release/app-release.apk &&
+            maestro test .maestro --format junit --output maestro-android.xml
+            -e E2E_TOKEN="$E2E_TOKEN" -e E2E_SECOND_TOKEN="$E2E_SECOND_TOKEN"
+            -e E2E_RUN_URL="$EXPO_PUBLIC_DATALAYER_RUN_URL" -e E2E_RUNTIMES_URL="$EXPO_PUBLIC_DATALAYER_RUNTIMES_URL"
+            -e E2E_CHAT_APP="$E2E_CHAT_APP" -e E2E_LIFECYCLE_APP="$E2E_LIFECYCLE_APP"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: maestro-android
+          path: |
+            maestro-android.xml
+            ~/.maestro/tests
+          if-no-files-found: ignore
+
+  # The same flows on an iOS Simulator build (macos-15: macos-13 is retired), on main only.
+  e2e-ios:
+    if: github.event_name != 'pull_request'
+    runs-on: macos-15
+    timeout-minutes: 120
+    env:
+      APP_VARIANT: preview
+      EXPO_PUBLIC_BUILD_PROFILE: e2e
+      EXPO_PUBLIC_DATALAYER_RUN_URL: https://prod1.datalayer.run
+      EXPO_PUBLIC_DATALAYER_RUNTIMES_URL: https://r1.datalayer.run
+      EXPO_PUBLIC_DATALAYER_MCP_URL: https://mcp.datalayer.run
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+        env:
+          ONNXRUNTIME_NODE_INSTALL: skip
+      - name: Prebuild the e2e app
+        run: npx expo prebuild --platform ios --clean
+      - name: Build for the iOS Simulator (Release, its JavaScript embedded)
+        run: |
+          workspace=$(ls -d ios/*.xcworkspace | head -1)
+          scheme=$(basename "$workspace" .xcworkspace)
+          xcodebuild -workspace "$workspace" -scheme "$scheme" -configuration Release \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath ios/build CODE_SIGNING_ALLOWED=NO build | tail -40
+          app=$(ls -d ios/build/Build/Products/Release-iphonesimulator/*.app | head -1)
+          echo "APP_PATH=$app" >> "$GITHUB_ENV"
+      - name: The test account
+        env:
+          E2E_TOKEN: ${{ secrets.MOBILE_E2E_TOKEN }}
+          E2E_SECOND_TOKEN: ${{ secrets.MOBILE_E2E_SECOND_TOKEN }}
+          E2E_CHAT_APP: ${{ vars.MOBILE_E2E_CHAT_APP }}
+          E2E_LIFECYCLE_APP: ${{ vars.MOBILE_E2E_LIFECYCLE_APP }}
+        run: |
+          missing=""
+          [ -n "$E2E_TOKEN" ] || missing="$missing secret MOBILE_E2E_TOKEN;"
+          [ -n "$E2E_SECOND_TOKEN" ] || missing="$missing secret MOBILE_E2E_SECOND_TOKEN;"
+          [ -n "$E2E_CHAT_APP" ] || missing="$missing variable MOBILE_E2E_CHAT_APP;"
+          [ -n "$E2E_LIFECYCLE_APP" ] || missing="$missing variable MOBILE_E2E_LIFECYCLE_APP;"
+          if [ -n "$missing" ]; then
+            echo "::error title=Maestro smoke flows not run::The Simulator app is built; the flows need$missing set them in the repository's settings (MOBILE M-054)."
+            exit 1
+          fi
+      - name: Install Maestro
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+      - name: Run the flows on a Simulator
+        env:
+          E2E_TOKEN: ${{ secrets.MOBILE_E2E_TOKEN }}
+          E2E_SECOND_TOKEN: ${{ secrets.MOBILE_E2E_SECOND_TOKEN }}
+          E2E_CHAT_APP: ${{ vars.MOBILE_E2E_CHAT_APP }}
+          E2E_LIFECYCLE_APP: ${{ vars.MOBILE_E2E_LIFECYCLE_APP }}
+        run: |
+          device=$(xcrun simctl list devices available | grep -m1 -oE 'iPhone [0-9]+[^(]*\(([0-9A-F-]+)\)' | grep -oE '[0-9A-F-]{36}')
+          xcrun simctl boot "$device"
+          xcrun simctl install "$device" "$APP_PATH"
+          maestro --device "$device" test .maestro --format junit --output maestro-ios.xml \
+            -e E2E_TOKEN="$E2E_TOKEN" -e E2E_SECOND_TOKEN="$E2E_SECOND_TOKEN" \
+            -e E2E_RUN_URL="$EXPO_PUBLIC_DATALAYER_RUN_URL" -e E2E_RUNTIMES_URL="$EXPO_PUBLIC_DATALAYER_RUNTIMES_URL" \
+            -e E2E_CHAT_APP="$E2E_CHAT_APP" -e E2E_LIFECYCLE_APP="$E2E_LIFECYCLE_APP"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: maestro-ios
+          path: |
+            maestro-ios.xml
+            ~/.maestro/tests
+          if-no-files-found: ignore

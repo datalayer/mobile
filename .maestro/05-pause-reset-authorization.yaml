@@ -1,0 +1,37 @@
+# Pause, reset and authorization (M-037, M-039): the owner pauses E2E_LIFECYCLE_APP's hosted deployment, is
+# offered Reset only while it is paused (and cancels it), resumes it; a second account calling the same
+# controls is refused.
+appId: ai.datalayer.mobile.preview
+name: Pause, reset and authorization
+---
+- runFlow: common/sign-in.yaml
+- runScript: scripts/second-account-refused.js
+- tapOn: "Agents"
+- extendedWaitUntil:
+    visible: ${E2E_LIFECYCLE_APP}
+    timeout: 30000
+- tapOn: ${E2E_LIFECYCLE_APP}
+- scrollUntilVisible:
+    element: "Pause hosted"
+- assertNotVisible: "Reset hosted…"
+- tapOn: "Pause hosted"
+- extendedWaitUntil:
+    visible: "Pause this hosted deployment?"
+    timeout: 10000
+- tapOn: "Pause"
+- extendedWaitUntil:
+    visible: "Resume hosted"
+    timeout: 60000
+- tapOn: "Reset hosted…"
+- extendedWaitUntil:
+    visible: "Reset this hosted deployment?"
+    timeout: 30000
+- tapOn: "Cancel"
+- tapOn: "Resume hosted"
+- extendedWaitUntil:
+    visible: "Resume this hosted deployment?"
+    timeout: 10000
+- tapOn: "Resume"
+- extendedWaitUntil:
+    visible: "Pause hosted"
+    timeout: 60000
