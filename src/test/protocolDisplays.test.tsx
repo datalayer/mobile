@@ -7,12 +7,13 @@
  * Protocol displays drawn natively (MOBILE M-037), from Agent Runtimes'
  * strict reading of the stream: sign-ins, an operation (a purchase too) to
  * confirm in Approvals, outcomes, replies with who wrote them, a handoff,
- * and an unknown display shown by its text only.
+ * and an unknown display shown by its text only; a coding agent's diff and
+ * terminal (SHIELD SH-16) from Agent Runtimes' shared `shieldDisplayFixtures`.
  */
 
-import { emptyConversation, protocolDisplayOf, reduceConversation, type AgUiEvent, type ProtocolDisplay } from '@datalayer/agent-runtimes/lib/portable';
+import { emptyConversation, protocolDisplayOf, reduceConversation, shieldDisplayFixtures, type AgUiEvent, type ProtocolDisplay } from '@datalayer/agent-runtimes/lib/portable';
 import { fireEvent, render } from '@testing-library/react-native';
-import { ProtocolDisplayCard } from '../features/conversations/ProtocolDisplayCard';
+import { PHONE_LINES, ProtocolDisplayCard, moreLines } from '../features/conversations/ProtocolDisplayCard';
 import { DEFAULT_PREFERENCE, ThemeProvider } from '../theme/ThemeProvider';
 
 const store = { read: async () => DEFAULT_PREFERENCE, write: async () => undefined };
@@ -71,5 +72,47 @@ describe('protocol displays on the phone (M-037)', () => {
     ];
     const [tool] = events.reduce(reduceConversation, emptyConversation()).items;
     expect(tool).toMatchObject({ kind: 'tool', display: { kind: 'handoff', handed: true, responder: 'human' } });
+  });
+
+  it('draws a coding agent’s diff line by line, each line said as kept, added or removed (SH-16)', async () => {
+    const display = protocolDisplayOf(shieldDisplayFixtures().diff as never)!;
+    expect(display.kind).toBe('diff');
+    const { drawn } = await draw(display);
+    expect(drawn.getByText('Changed hello.py (+2 −1 lines)')).toBeTruthy();
+    expect(drawn.getByText('-print("hi")')).toBeTruthy();
+    expect(drawn.getByText('+def hello():')).toBeTruthy();
+    expect(drawn.getByLabelText('Added:     print("hi, shield")')).toBeTruthy();
+    expect(drawn.getByLabelText('Removed: print("hi")')).toBeTruthy();
+  });
+
+  it('cuts a long diff on the phone and says how many lines the web shows besides', async () => {
+    const fixture = shieldDisplayFixtures().diff as { data: Record<string, unknown> } & Record<string, unknown>;
+    const long = Array.from({ length: PHONE_LINES + 5 }, (_, n) => `line ${n}`).join('\n') + '\n';
+    const display = protocolDisplayOf({ ...fixture, data: { ...fixture.data, old_text: null, new_text: long } } as never)!;
+    const { drawn } = await draw(display);
+    expect(drawn.getByText('+line 0')).toBeTruthy();
+    expect(drawn.queryByText(`+line ${PHONE_LINES}`)).toBeNull();
+    expect(drawn.getByText(moreLines(5))).toBeTruthy();
+  });
+
+  it('draws a terminal: its command, its output and how it ended (SH-16)', async () => {
+    const display = protocolDisplayOf(shieldDisplayFixtures().terminal as never)!;
+    expect(display.kind).toBe('terminal');
+    const { drawn } = await draw(display);
+    expect(drawn.getByText('Ran `pytest -q`: exit 0')).toBeTruthy();
+    expect(drawn.getByText('$ pytest -q')).toBeTruthy();
+    expect(drawn.getByTestId('display-terminal-output').props.children).toBe('3 passed in 0.12s');
+    expect(drawn.getByText('It finished.')).toBeTruthy();
+  });
+
+  it('draws a terminal still running, and a failed one in its exit code', async () => {
+    const fixture = shieldDisplayFixtures().terminal as { data: Record<string, unknown> } & Record<string, unknown>;
+    const running = protocolDisplayOf({ ...fixture, data: { ...fixture.data, output: 'collecting…\n', exit_code: null, released: false } } as never)!;
+    const first = await draw(running);
+    expect(first.drawn.getByText('Ran `pytest -q`: running')).toBeTruthy();
+    expect(first.drawn.getByText('Still running: its output is shown as it comes.')).toBeTruthy();
+    const failed = protocolDisplayOf({ ...fixture, data: { ...fixture.data, output: '1 failed\n', exit_code: 1 } } as never)!;
+    const second = await draw(failed);
+    expect(second.drawn.getByText('It failed, exit 1.')).toBeTruthy();
   });
 });

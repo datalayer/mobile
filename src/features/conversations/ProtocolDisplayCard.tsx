@@ -9,7 +9,10 @@
  * own, read strictly by `protocolDisplayOf`; what the person does goes out
  * through the host — a sign-in page in the system browser after its address
  * is named, an operation answered in Approvals, *I have signed in* as their
- * next message. An unknown display shows its text and type, nothing of its data.
+ * next message. A coding agent's diff and terminal (SHIELD SH-16) are drawn
+ * as the web draws them: the unified diff line by line, the command and its
+ * output as it stands. An unknown display shows its text and type, nothing of
+ * its data.
  */
 
 import {
@@ -18,10 +21,12 @@ import {
   displayLine,
   PAP_SIGN_IN_WORDS,
   replyAuthor,
+  unifiedDiffLines,
+  type DiffLine,
   type ProtocolDisplay,
   type ProtocolDisplayProps
 } from '@datalayer/agent-runtimes/lib/portable';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { Button, Text } from '../../components/primitives';
 import { SPACE, useNativeTheme } from '../../theme/tokens';
 import { MediatedForm, type ProtectedInput } from './MediatedForm';
@@ -46,6 +51,25 @@ const STATUS: Record<string, string> = {
   queued: 'Waiting for one of the company’s people.',
   closed: 'The conversation is closed.'
 };
+
+/** Over this many lines a diff or an output is cut on the phone, and says how much more the web shows. */
+export const PHONE_LINES = 200;
+
+const MONO = Platform.select({ ios: 'Menlo', default: 'monospace' });
+
+const SIGN: Record<DiffLine['kind'], string> = { context: ' ', add: '+', remove: '-' };
+const LINE_WORDS: Record<DiffLine['kind'], string> = { context: 'Kept', add: 'Added', remove: 'Removed' };
+const LINE_TONE: Record<DiffLine['kind'], 'default' | 'accent' | 'danger'> = { context: 'default', add: 'accent', remove: 'danger' };
+
+/** The lines past the phone's, said rather than drawn. */
+export const moreLines = (count: number): string => `${count} more ${count === 1 ? 'line' : 'lines'}: open it on the web to see them all.`;
+
+/** The last lines of an output, which are what a command ended on. */
+function tail(output: string): { shown: string; more: number } {
+  const lines = output.replace(/\n$/, '').split('\n');
+  if (lines.length <= PHONE_LINES) return { shown: lines.join('\n'), more: 0 };
+  return { shown: lines.slice(-PHONE_LINES).join('\n'), more: lines.length - PHONE_LINES };
+}
 
 /** The contract's props, and how a sign-in shown is watched on this phone (M-039). */
 export type NativeDisplayProps = ProtocolDisplayProps & {
@@ -137,6 +161,51 @@ function Body({ display, onOpenSignIn, onOpenApproval, onSignedIn, onOpenDirect,
           ) : null}
         </>
       );
+    case 'diff': {
+      const lines = unifiedDiffLines(display.oldText, display.newText);
+      return (
+        <>
+          <Text weight="semibold">{displayLine(display)}</Text>
+          <View testID="display-diff">
+            {lines.slice(0, PHONE_LINES).map((line, index) => (
+              <Text
+                key={index}
+                size="small"
+                selectable
+                tone={LINE_TONE[line.kind]}
+                style={{ fontFamily: MONO }}
+                accessibilityLabel={`${LINE_WORDS[line.kind]}: ${line.text}`}
+              >
+                {`${SIGN[line.kind]}${line.text}`}
+              </Text>
+            ))}
+          </View>
+          {lines.length > PHONE_LINES ? <Text size="small" tone="muted">{moreLines(lines.length - PHONE_LINES)}</Text> : null}
+        </>
+      );
+    }
+    case 'terminal': {
+      const { shown, more } = tail(display.output);
+      return (
+        <>
+          <Text weight="semibold">{displayLine(display)}</Text>
+          {display.command ? (
+            <Text size="small" selectable style={{ fontFamily: MONO }} accessibilityLabel={`The command: ${display.command}`}>
+              {`$ ${display.command}`}
+            </Text>
+          ) : null}
+          {more ? <Text size="small" tone="muted">{moreLines(more)}</Text> : null}
+          {shown ? (
+            <Text size="small" selectable style={{ fontFamily: MONO }} testID="display-terminal-output">
+              {shown}
+            </Text>
+          ) : null}
+          <Text size="small" tone={display.exitCode ? 'danger' : 'muted'} accessibilityLiveRegion="polite">
+            {display.exitCode === null ? 'Still running: its output is shown as it comes.' : display.exitCode === 0 ? 'It finished.' : `It failed, exit ${display.exitCode}.`}
+          </Text>
+        </>
+      );
+    }
     case 'unknown':
       return (
         <>
