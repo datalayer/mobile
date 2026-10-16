@@ -12,7 +12,8 @@ var paused = http.request(E2E_RUNTIMES_URL + '/api/ai-agents/v1/apps/deployments
 });
 if (paused.status !== 403 && paused.status !== 404) throw new Error('A second account paused the owner\'s deployment: ' + paused.status);
 var reset = http.post(E2E_RUNTIMES_URL + '/api/ai-agents/v1/apps/deployments/' + deployment.uid + '/reset', {
-  headers: headers, body: JSON.stringify({})
+  // A valid body (nothing confirmed), so that only ownership can refuse it: {} was a 422.
+  headers: headers, body: JSON.stringify({ conversations: 0, schedules: 0 })
 });
 if (reset.status !== 403 && reset.status !== 404) throw new Error('A second account reset the owner\'s deployment: ' + reset.status);
 output.refused = paused.status + ' ' + reset.status;

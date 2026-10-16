@@ -1,4 +1,7 @@
 # Approval race and stale state (M-020, M-026): answered elsewhere while it is open, the phone says so and does not decide again.
+# The open approval follows the answer live, so the phone may show "Rejected." before Approve can be tapped
+# (Android, 16 October 2026); when Approve is still there, tapping it must end on the stale-state message.
+# Either way the approval stays rejected.
 appId: ai.datalayer.mobile.preview
 name: Approval race
 ---
@@ -9,13 +12,27 @@ name: Approval race
     visible: "Waiting for your answer."
     timeout: 30000
 - runScript: scripts/reject-elsewhere.js
-- tapOn:
-    id: "approve"
-- tapOn:
-    id: "decision-confirm"
+- runFlow:
+    when:
+      visible:
+        id: "approve"
+    commands:
+      - tapOn:
+          id: "approve"
+          optional: true
+      - runFlow:
+          when:
+            visible:
+              id: "decision-confirm"
+          commands:
+            - tapOn:
+                id: "decision-confirm"
+            - extendedWaitUntil:
+                visible: "It was answered somewhere else, or the run waiting on it is over. This is its current state."
+                timeout: 30000
 - extendedWaitUntil:
-    visible: "It was answered somewhere else, or the run waiting on it is over. This is its current state."
+    visible: "Rejected."
     timeout: 30000
-- assertVisible: "Rejected."
 - assertNotVisible:
     id: "approve"
+- runScript: scripts/still-rejected.js

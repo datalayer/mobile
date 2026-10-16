@@ -327,7 +327,9 @@ export function ConversationView({
   };
 
   return (
-    <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={96}>
+    // Padding on Android too: the app is edge-to-edge there, so the window no longer resizes
+    // for the keyboard and the composer sat under it (the Maestro flow, 16 October 2026).
+    <KeyboardAvoidingView style={styles.fill} behavior="padding" keyboardVerticalOffset={96}>
       <ScrollView
         ref={scroll}
         style={[styles.fill, { backgroundColor: colors.background }]}

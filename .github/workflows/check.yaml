@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Datalayer, Inc.
 # Distributed under the terms of the Modified BSD License.
 
-# The pull-request gate of MOBILE.md (M-006, M-054): types, lint, the import
+# The pull-request gate (M-006, M-054): types, lint, the import
 # gate on the sources, the tests, and the import gate on what Metro resolved;
 # the Expo/Hermes proof; and the Maestro smoke flows (.maestro/) on an e2e
 # build, Android on every run, iOS on main, once the test account is set
@@ -256,6 +256,15 @@ jobs:
             -e E2E_TOKEN="$E2E_TOKEN" -e E2E_SECOND_TOKEN="$E2E_SECOND_TOKEN"
             -e E2E_RUN_URL="$EXPO_PUBLIC_DATALAYER_RUN_URL" -e E2E_RUNTIMES_URL="$EXPO_PUBLIC_DATALAYER_RUNTIMES_URL"
             -e E2E_CHAT_APP="$E2E_CHAT_APP" -e E2E_LIFECYCLE_APP="$E2E_LIFECYCLE_APP"
+      # Maestro's commands.json and maestro.log hold every -e value, the tokens among them, and
+      # the screen hierarchies hold what was typed: this repository's artifacts are public. Those
+      # files are dropped, any other holding a token too, and the step fails if one is left.
+      - name: Keep the tokens out of the results
+        if: always()
+        env:
+          E2E_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_TOKEN }}
+          E2E_SECOND_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_SECOND_TOKEN }}
+        run: scripts/scrub-e2e-results.sh "$HOME/.maestro/tests" maestro-android.xml
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -338,6 +347,15 @@ jobs:
             -e E2E_TOKEN="$E2E_TOKEN" -e E2E_SECOND_TOKEN="$E2E_SECOND_TOKEN" \
             -e E2E_RUN_URL="$EXPO_PUBLIC_DATALAYER_RUN_URL" -e E2E_RUNTIMES_URL="$EXPO_PUBLIC_DATALAYER_RUNTIMES_URL" \
             -e E2E_CHAT_APP="$E2E_CHAT_APP" -e E2E_LIFECYCLE_APP="$E2E_LIFECYCLE_APP"
+      # Maestro's commands.json and maestro.log hold every -e value, the tokens among them, and
+      # the screen hierarchies hold what was typed: this repository's artifacts are public. Those
+      # files are dropped, any other holding a token too, and the step fails if one is left.
+      - name: Keep the tokens out of the results
+        if: always()
+        env:
+          E2E_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_TOKEN }}
+          E2E_SECOND_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_SECOND_TOKEN }}
+        run: scripts/scrub-e2e-results.sh "$HOME/.maestro/tests" maestro-ios.xml
       - uses: actions/upload-artifact@v4
         if: always()
         with:
