@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-/** Small values kept on the device, in the platform keychain/keystore only (MOBILE.md §2.9). */
+/** Small values kept on the device, in the platform keychain/keystore only. */
 
 import * as SecureStore from 'expo-secure-store';
 

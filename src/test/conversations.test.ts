@@ -62,7 +62,7 @@ describe('threads and where they are reached (M-031)', () => {
     ]);
   });
 
-  it('continues a thread where ai-agents says it continues now, whoever the application is (§4.4.7)', async () => {
+  it('continues a thread where ai-agents says it continues now, whoever the application is', async () => {
     const place = { session_uid: 's1', app_uid: 'a1', app_name: 'Desk', deployment_uid: 'd1', version: 4, owner: false };
     expect(threadReachOf({ ...place, reach: 'kept', url: 'https://r1.datalayer.run/agent-runtimes/rt-9/', agent_id: 'desk' })).toEqual({
       kind: 'reachable', on: 'kept', address: { baseUrl: 'https://r1.datalayer.run/agent-runtimes/rt-9', agent: 'desk' },

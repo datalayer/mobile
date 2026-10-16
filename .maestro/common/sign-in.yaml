@@ -1,4 +1,4 @@
-# Signs in with the test account's API token: the development sign-in an e2e build offers (MOBILE.md §5.5).
+# Signs in with the test account's API token: the development sign-in an e2e build offers.
 appId: ai.datalayer.mobile.preview
 ---
 - launchApp:

@@ -46,7 +46,7 @@ export function useShared() {
 /** The query of where a thread continues: asked again each time, never kept. */
 export const threadReachKey = (sessionUid: string) => ['conversations', 'reach', sessionUid] as const;
 
-/** Where a thread continues now (MOBILE §4.4.7): read on every open, not cached past the screen. */
+/** Where a thread continues now: read on every open, not cached past the screen. */
 export function useThreadReach(sessionUid: string | null) {
   const { client } = useSession();
   return useQuery({

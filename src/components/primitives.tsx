@@ -74,7 +74,7 @@ export function Screen({
   );
 }
 
-/** An empty place, with the one next step it offers (LOOP §4). */
+/** An empty place, with the one next step it offers. */
 export function EmptyState({ title, detail }: { title: string; detail: string }) {
   return (
     <View style={styles.empty} accessible accessibilityRole="summary">

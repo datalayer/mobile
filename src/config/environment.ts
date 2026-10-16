@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-/** The build profiles of `eas.json` (MOBILE.md §5.1). */
+/** The build profiles of `eas.json`. */
 export const BUILD_PROFILES = [
   'development',
   'development-simulator',
@@ -34,7 +34,7 @@ export type Environment = {
    */
   gatewayUrl: string;
   profile: BuildProfile;
-  /** Whether the interim sign-in of MOBILE.md §5.5 may be offered. */
+  /** Whether the interim sign-in (handle and password) may be offered. */
   allowsInterimSignIn: boolean;
 };
 

@@ -9,7 +9,7 @@
  * *Your conversations* reads them, and where each one can be reached now.
  *
  * A thread names its deployment, never a runtime: where it is continued is
- * asked of ai-agents each time it is opened (`locateThread`, MOBILE §4.4.7) —
+ * asked of ai-agents each time it is opened (`locateThread`) —
  * the runtime its deployment is kept on, a runtime of the person's own, one to
  * start, or why not — whoever's the application, so an old runtime address is
  * never trusted. A new conversation is located the same way from its

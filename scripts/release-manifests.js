@@ -4,7 +4,7 @@
  */
 
 /*
- * The release manifests of MOBILE.md M-052, read from what the production
+ * The release manifests (M-052), read from what the production
  * build generates (Check's `manifests` job: `expo prebuild` without a variant,
  * then Gradle's merge of the release Android manifest, libraries included).
  * It holds them to docs/privacy-and-store.md:

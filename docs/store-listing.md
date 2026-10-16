@@ -15,7 +15,7 @@ Drafted 16 October 2026.
 
 | Field | Value | Status |
 |---|---|---|
-| Name | Datalayer | Check availability before registering (§13) |
+| Name | Datalayer | Check availability before registering |
 | iOS bundle id / Android package | `ai.datalayer.mobile` | Decided in `app.config.ts`; not registered yet |
 | Category | Productivity (Apple and Google) | Draft |
 | Age rating | 4+ (Apple), Everyone / PEGI 3 (Google, from the questionnaire below) | Draft |
@@ -68,7 +68,7 @@ Review account: **to be created by the account holders** (handle and password en
 | Question | Draft answer | Why |
 |---|---|---|
 | Export compliance: does the app use encryption? | It uses only encryption exempt from export documentation (HTTPS through the operating system); `ITSAppUsesNonExemptEncryption` is `false` | `app.config.ts`: `ios.config.usesNonExemptEncryption: false`; the app implements no cryptography of its own |
-| Sign-in (Guideline 4.8) | **Open — needs a decision** | The app signs in through Datalayer's own web sign-in, which also offers third-party providers (GitHub, Google, LinkedIn and others). Guideline 4.8 asks for an equivalent privacy-preserving login option when an app's primary account uses a third-party login. Either IAM offers *Sign in with Apple* (or an equivalent meeting 4.8), or the phone's sign-in is shown as the Datalayer account only. Added to MOBILE.md §13 |
+| Sign-in (Guideline 4.8) | **Open — needs a decision** | The app signs in through Datalayer's own web sign-in, which also offers third-party providers (GitHub, Google, LinkedIn and others). Guideline 4.8 asks for an equivalent privacy-preserving login option when an app's primary account uses a third-party login. Either IAM offers *Sign in with Apple* (or an equivalent meeting 4.8), or the phone's sign-in is shown as the Datalayer account only. Added to the open decisions. |
 | Account deletion (Guideline 5.1.1(v)) | In the app: *Settings → Delete account*, a request to IAM with a 30-day grace period, also on the web | Decided by the user 16 October 2026 |
 | User-generated content (Guideline 1.2) | No public content; a person's applications and conversations are private to their account and the people it is shared with | — |
 | Content rights | No third-party content is shown outside what the person's own applications produce | — |

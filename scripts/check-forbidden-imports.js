@@ -4,7 +4,7 @@
  */
 
 /*
- * The forbidden-import gate of MOBILE.md §4.1 (M-006), on source files.
+ * The forbidden-import gate (M-006), on source files.
  * Usage: node scripts/check-forbidden-imports.js [dir ...]   (default: app src)
  */
 
@@ -105,7 +105,7 @@ if (require.main === module) {
     console.error(`${path.relative(root, file)}: ${specifier} — ${why}`);
   }
   if (violations.length) {
-    console.error(`\n${violations.length} forbidden import(s): see MOBILE.md §4.1.`);
+    console.error(`\n${violations.length} forbidden import(s).`);
     process.exit(1);
   }
   console.log(`No forbidden import in ${targets.map(target => path.relative(root, target)).join(', ')}.`);

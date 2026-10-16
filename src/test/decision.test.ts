@@ -49,7 +49,7 @@ describe('a decision (M-020)', () => {
     [404, 'gone'],
     [503, 'retry'],
     [500, 'retry']
-  ])('a %i replaces the controls as the plan says: %s', async (status, outcome) => {
+  ])('a %i replaces the controls: %s', async (status, outcome) => {
     const fetcher = respond(status, { detail: 'no' });
     const client = createClient({ baseUrl: 'https://run.test', getAccessToken: () => 't', fetch: fetcher });
     const failure = await decide(client, 'a1', 'approve').catch(error => error);

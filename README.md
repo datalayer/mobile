@@ -4,7 +4,7 @@
 
 # ☰ 📱 Datalayer Mobile
 
-The running agents and LOOP applications of Datalayer, in your pocket: what needs you, the approvals to read in full before deciding, and the conversations to continue. Expo (SDK 57) and React Native, iOS and Android. The plan is `landings/datalayer/ui/plans/MOBILE.md`.
+The running agents and LOOP applications of Datalayer, in your pocket: what needs you, the approvals to read in full before deciding, and the conversations to continue. Expo (SDK 57) and React Native, iOS and Android. The person-facing guide is [datalayer.ai/docs/mobile-app](https://datalayer.ai/docs/mobile-app).
 
 The notification payload allowlist, event matrix and security-review/device gates are in [`docs/push-data-classification.md`](docs/push-data-classification.md). Privacy/store declarations and the push-credential incident procedure are in [`docs/privacy-and-store.md`](docs/privacy-and-store.md). The store listing's words, review notes and the Apple and Google review answers, drafted, are in [`docs/store-listing.md`](docs/store-listing.md). Account ownership, identifiers and credential custody are in [`docs/release-prerequisites.md`](docs/release-prerequisites.md). The deployed server contracts, their versions and the dated result of exercising each are in [`docs/contracts.md`](docs/contracts.md). The public, person-facing guide is [datalayer.ai/docs/mobile-app](https://datalayer.ai/docs/mobile-app).
 
@@ -124,7 +124,7 @@ so the app has one React, and all 21 checks pass (online ones included). Inside
 the monorepo, npm ignores a member's `overrides` and the root keeps the web's
 React beside Expo's: `metro.config.js` and Jest's `moduleNameMapper` hold the
 app's own, and Doctor there reports that duplicate; read CI's run instead
-(MOBILE.md M-010b).
+(M-010b).
 
 ### Maestro smoke flows
 

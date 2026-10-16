@@ -11,7 +11,7 @@ const workspaceRoot = path.resolve(projectRoot, '../../..');
 
 const config = getDefaultConfig(projectRoot);
 
-// The package's own node_modules first: React must be the one the React Native renderer was built with (MOBILE.md §5.3).
+// The package's own node_modules first: React must be the one the React Native renderer was built with.
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules')

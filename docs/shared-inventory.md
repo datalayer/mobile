@@ -1,11 +1,11 @@
-# Shared inventory (MOBILE.md M-002)
+# Shared inventory (M-002)
 
 Every v1 screen against what Datalayer Core, Agent Runtimes and Primer Addons
-already own, classified as MOBILE.md §4.1 asks: **reuse unchanged** (a portable
+already own, classified as: **reuse unchanged** (a portable
 export the phone and the web both read), **split** (one controller or contract
 in the owning repository, a native renderer here and the web's there) or
-**mobile-only** (navigation, device and push concerns, or a strict projection
-adapter §4.5 allows). Jupyter/web-only surfaces are listed last: the phone never
+**mobile-only** (navigation, device and push concerns, or a strict projection adapter).
+Jupyter/web-only surfaces are listed last: the phone never
 imports them.
 
 ## The approved boundary
@@ -48,17 +48,17 @@ How each is held there:
 |---|---|---|---|---|
 | Sign-in (`app/sign-in.tsx`) | **reuse**: `personOf` (IAM's `me`), `isProblem` | — | **reuse**: theme, LOOP eyes | OAuth PKCE (`src/auth`), secure token store, the private-scheme redirect |
 | Inbox (`(tabs)/inbox.tsx`) | **reuse**: states | **reuse**: `actionOf`, `messageOfApproval`, `whyAsked`; **split**: approval card (`approvalCardOf` / `ApprovalCardProps`, a native renderer) | **reuse**: theme | the realtime socket's query invalidation, badge |
-| Approval detail (`approvals/[approvalId].tsx`) | **reuse**: `Problem`, `problemOf` | **split**: approval card; **reuse**: `argumentsShown` (raw fallback) | — | the refetch-before-decision flow (`features/approvals/decision.ts`), typed PAP/UCP/ACP proposal codecs (`src/protocols`, §4.5) |
+| Approval detail (`approvals/[approvalId].tsx`) | **reuse**: `Problem`, `problemOf` | **split**: approval card; **reuse**: `argumentsShown` (raw fallback) | — | the refetch-before-decision flow (`features/approvals/decision.ts`), typed PAP/UCP/ACP proposal codecs (`src/protocols`) |
 | Agents (`(tabs)/agents.tsx`) | **reuse**: states | **reuse**: `agentRuntimesOf`, `runtimeOf`, `isAgentRuntime`, `AgentRuntime`; `AgentSummaryData`/`isCreatingAgent` as the web's `AgentSummary` reads them | **reuse**: theme | applications grouped from ai-agents' deployments (`applicationsOf`), *Shared with you* |
 | Application detail (`apps/[appUid]/index.tsx`) | **reuse**: `Problem` | **reuse**: lifecycle (`stateChangeBody`, `stoppedWorkLine`, `resetCountsOf`, `resetLines`, `resetBody`, `notDeletedOf`, `deploymentEventOf`/`Line`); the person's threads (`askedOf`) | **reuse**: eyes (`AppFace`) | the confirmation sheets; Rules and Permissions of the exact Appspec (`api/appPermissions.ts`, a strict projection) |
-| Application → Protocols (`apps/[appUid]/protocols.tsx`) | **reuse**: `Problem` | — | — | strict codec of ai-agents' `speaks` (registry entries and the identity check are the server's, M-045b), protocol connections and activity projections (§4.5) |
+| Application → Protocols (`apps/[appUid]/protocols.tsx`) | **reuse**: `Problem` | — | — | strict codec of ai-agents' `speaks` (registry entries and the identity check are the server's, M-045b), protocol connections and activity projections |
 | Activity (`(tabs)/activity.tsx`) | **reuse**: states | **reuse**: `activityOf`, `mergeActivityPages`, `entrySaid`, `scheduledSays`, `ACTIVITY_WORDS`, `activityFixture` | — | localised time (`src/i18n/time.ts`), the faces of the applications listed |
 | A thread reopened (`apps/[appUid]/sessions/[sessionUid].tsx`) | **reuse**: states | **reuse**: the thread projection (`askedOf`, `RUN_END_WORDS`) and the conversation below | — | where the thread continues, as ai-agents locates it (`/reach`), never a remembered runtime |
 | Conversation (`agents/[runtimeName]/conversation.tsx`, app threads) | **reuse**: `Problem` | **reuse**: `reduceConversation`, `emptyConversation`, `readRunStream`, `agentRunClient`, `appSessionsClient`, `agentRuntimesUrlOf`, `RunMeter`, `otlpMetricsOf`; **split**: views (`composerOf`, `messageLabel`, `toolLabel`, `presenceLine`, `ConversationViewProps` and the row props, rendered natively; `conversationFixture` shared), protocol displays (`protocolDisplayOf`, `displayLine`, `unifiedDiffLines`), Direct Conversations (`directClient`), sign-in status and protected input | **reuse**: theme | the in-memory conversation registry, app-state pause/resume, the Markdown subset, QR rendering, mediated form inputs |
-| Settings, notifications, In your name (`settings/*`) | **reuse**: states | — | **reuse**: theme | push registration, categories and quiet hours over the ai-agents WebSocket, privacy links; In your name is a strict IAM projection (§4.5) |
+| Settings, notifications, In your name (`settings/*`) | **reuse**: states | — | **reuse**: theme | push registration, categories and quiet hours over the ai-agents WebSocket, privacy links; In your name is a strict IAM projection |
 
 The web reads the same contracts: the Studio's Activity, the record and a
-deployment's pause, reset and events (`landings/datalayer/ui` `appRecords.ts`,
+deployment's pause, reset and events (the landing's `appRecords.ts`,
 `appDeployments.ts`), Agent Runtimes' `ChatBase`, `useChat` and `ChatInline`
 (`reduceConversation`), `AgentSummary` (`isCreatingAgent`) and the approval
 helpers.

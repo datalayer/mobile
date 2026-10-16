@@ -28,7 +28,7 @@ export function credentialFromKept(kept: string | null): Credential | null {
   return { accessToken: kept };
 }
 
-/** The session's credential, in the platform keychain/keystore only (MOBILE.md §2.9). */
+/** The session's credential, in the platform keychain/keystore only. */
 export const tokenStore = {
   read: async (): Promise<Credential | null> => credentialFromKept(await deviceStore.get(TOKEN_KEY)),
   write: (credential: Credential): Promise<void> => deviceStore.set(TOKEN_KEY, JSON.stringify(credential)),

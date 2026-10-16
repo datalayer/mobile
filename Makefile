@@ -148,7 +148,7 @@ promote-update: publish-check ## the update group verified on staging, republish
 	@[[ -n "$(GROUP)" ]] || { echo "Name the staged update group: make promote-update GROUP=<id> (eas update:list --branch staging)."; exit 1; }
 	eas update:republish --group $(GROUP) --destination-channel production
 
-##@ Publish (README, Publish; MOBILE.md §5.2) — from a clean, pushed commit only
+##@ Publish (README, Publish) — from a clean, pushed commit only
 
 publish-check: ## refuse to publish from a dirty or unpushed tree
 	@git diff --quiet && git diff --cached --quiet || { echo "Commit or stash your changes first."; exit 1; }

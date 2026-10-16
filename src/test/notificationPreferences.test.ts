@@ -31,7 +31,7 @@ describe('the notification preference, per application and with quiet hours (M-0
       approvalsInQuiet: false,
       appCategories: { 'app-1': ['failures'], 'app-2': [] }
     });
-    // Approvals pass quiet hours unless said otherwise (MOBILE §13).
+    // Approvals pass quiet hours unless said otherwise.
     expect(pushPreferenceOf(JSON.stringify({ enabled: true })).approvalsInQuiet).toBe(true);
     for (const wrong of [{ ...QUIET, end: '22:00' }, { ...QUIET, start: '7:00' }, { ...QUIET, tz: '' }, 'night', null]) {
       expect(quietHoursOf(wrong)).toBeNull();

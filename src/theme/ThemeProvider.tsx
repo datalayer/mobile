@@ -124,5 +124,5 @@ export function useTheme(): ThemeContextValue {
 
 export const SPACE = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 } as const;
 
-/** The smallest touch target, in points (MOBILE.md M-050). */
+/** The smallest touch target, in points (M-050). */
 export const MIN_TOUCH = 48;

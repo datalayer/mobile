@@ -4,7 +4,7 @@
  */
 
 /*
- * The bundle-size budget of MOBILE.md M-051: the Hermes bytecode bundle each
+ * The bundle-size budget (M-051): the Hermes bytecode bundle each
  * platform's export ships, and the assets beside it, measured on every Check
  * run from the same exports the resolved-bundle gate reads. The budget comes
  * from the Phase 1 measurement (Check run 38876694406, 16 October 2026:

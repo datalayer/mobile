@@ -96,7 +96,7 @@ export function usePendingCount() {
   return useQuery({ queryKey: KEYS.approvalCount, queryFn: () => pendingCount(client) });
 }
 
-/** Fetched on every open: `staleTime: 0` (MOBILE §3.2). */
+/** Fetched on every open: `staleTime: 0`. */
 export function useApproval(id: string) {
   const { client } = useSession();
   return useQuery({ queryKey: KEYS.approval(id), queryFn: () => getApproval(client, id), staleTime: 0 });

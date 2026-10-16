@@ -2,7 +2,7 @@
 
 The server contracts the phone calls, as deployed on **r1** (IAM is shared and
 served from prod1's address), with the versions running when they were
-exercised and the result of each exercise (plans/MOBILE.md, M-001).
+exercised and the result of each exercise (M-001).
 
 Exercised on **16 October 2026** as `@datalayer-demo`, a non-production
 account, by `~/.cache/mobile-m001/drill.py` (each step records its status code

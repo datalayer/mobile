@@ -11,7 +11,7 @@ import { actionOf } from '../../../../src/features/approvals/format';
 import { useAgentRuntimes, usePendingApprovals } from '../../../../src/features/queries';
 import { absoluteTime, relativeTime } from '../../../../src/i18n/time';
 
-/** A standalone agent runtime: no Appspec, activity, rules or reset (MOBILE §3.3). */
+/** A standalone agent runtime: no Appspec, activity, rules or reset. */
 export default function AgentDetail() {
   const { runtimeName = '' } = useLocalSearchParams<{ runtimeName: string }>();
   const router = useRouter();

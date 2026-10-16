@@ -4,7 +4,7 @@
  */
 
 /*
- * The resolved-bundle gate of MOBILE.md §4.1 (M-006): what Metro actually put
+ * The resolved-bundle gate (M-006): what Metro actually put
  * in the iOS and Android bundles, read from their source maps. The source
  * gate (check-forbidden-imports.js) reads what the app imports; this reads
  * what those imports resolved to, transitively.
@@ -93,7 +93,7 @@ if (require.main === module) {
     console.log(`${path.relative(dir, map)}: ${sources.length} modules, ${violations.length} forbidden.`);
   }
   if (total) {
-    console.error(`\n${total} forbidden module(s) in the bundles: see MOBILE.md §4.1.`);
+    console.error(`\n${total} forbidden module(s) in the bundles.`);
     process.exit(1);
   }
 }

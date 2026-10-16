@@ -4,9 +4,9 @@
  */
 
 /**
- * A conversation with an application (MOBILE §3.4, M-031, M-033). A thread
- * is continued where ai-agents says it continues now, asked on every open
- * (§4.4.7): the runtime its deployment is kept on, a runtime of the person's
+ * A conversation with an application (M-031, M-033). A thread
+ * is continued where ai-agents says it continues now, asked on every open:
+ * the runtime its deployment is kept on, a runtime of the person's
  * own — started here first, after they agree, when nothing runs it for them —
  * or nowhere, in ai-agents' sentence. That holds for an application somebody
  * shared with them as for their own. `new` starts a conversation with the

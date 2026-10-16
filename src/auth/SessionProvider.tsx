@@ -286,7 +286,7 @@ export function SessionProvider({
     if (!current) {
       return;
     }
-    // Best effort: the local session is gone whether or not IAM hears it (MOBILE.md §6.1).
+    // Best effort: the local session is gone whether or not IAM hears it.
     if (current.refreshToken) {
       const refreshToken = current.refreshToken;
       config()

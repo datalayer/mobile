@@ -11,7 +11,7 @@ import { personOf } from '../auth/iam';
 const respond = (status: number, body: unknown): typeof fetch =>
   jest.fn(async () => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }));
 
-describe('the environment (MOBILE.md §5.4)', () => {
+describe('the environment', () => {
   it('takes HTTPS, and plain HTTP only for a local simulator or emulator', () => {
     expect(runUrlProblem('https://prod1.datalayer.run')).toBe('');
     expect(runUrlProblem('http://localhost:8888')).toBe('');

@@ -59,7 +59,7 @@ export type PushPreference = {
   categories: PushCategory[];
   /** Quiet hours: what can wait is held until they end; `null` for none. */
   quietHours: QuietHours | null;
-  /** Approvals are pushed through quiet hours (MOBILE §13: yes unless turned off). */
+  /** Approvals are pushed through quiet hours (yes unless turned off). */
   approvalsInQuiet: boolean;
   /** An application told otherwise than the rest: its categories; `[]` sends nothing of it. */
   appCategories: Record<string, PushCategory[]>;

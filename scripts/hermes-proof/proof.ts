@@ -4,7 +4,7 @@
  */
 
 /*
- * The Expo/Hermes proof of MOBILE.md M-002: every shared portable entry the
+ * The Expo/Hermes proof (M-002): every shared portable entry the
  * phone imports, evaluated and called in a bundle Metro made, compiled by the
  * hermesc React Native ships and run by the Hermes VM alone — no React Native
  * runtime, no DOM, no Jupyter, no Lumino, no shim. `index.ts` is the bundle's

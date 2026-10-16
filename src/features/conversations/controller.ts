@@ -61,7 +61,7 @@ export type ConversationView = {
 
 /** Said when a second prompt is sent while a turn runs. */
 export const ONE_TURN_AT_A_TIME = 'Wait for this answer, or stop it, before sending another message.';
-/** Said for a file question: the phone answers none (MOBILE §3.4). */
+/** Said for a file question: the phone answers none. */
 export const FILE_ON_THE_WEB =
   'This question asks for a file. Files are answered on the web in this release: open the conversation there to answer it.';
 

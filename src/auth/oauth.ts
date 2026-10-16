@@ -4,7 +4,7 @@
  */
 
 /**
- * Datalayer Mobile's OAuth contract with IAM (MOBILE.md §6.1, M-004): a public
+ * Datalayer Mobile's OAuth contract with IAM (M-004): a public
  * client, Authorization Code with PKCE S256, refresh rotation, RFC 7009
  * revocation. Pure: the browser step lives in `browserSignIn`.
  */

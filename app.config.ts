@@ -7,7 +7,7 @@ import { existsSync } from 'fs';
 import { join } from 'path';
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
-/** The build variants that are installed side by side (MOBILE.md §5.1). */
+/** The build variants that are installed side by side. */
 type Variant = 'development' | 'preview' | 'production';
 
 const VARIANT: Variant =

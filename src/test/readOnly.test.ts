@@ -13,7 +13,7 @@ import { keysOfEvent, wsUrlOf } from '../realtime/events';
 const approval = (raw: Record<string, unknown>) =>
   approvalOf({ id: 'a1', tool_name: 'send', status: 'pending', created_at: '2026-01-01T00:00:00Z', ...raw });
 
-// Same fixtures as the web `appApprovals.spec.ts` (MOBILE §3.2).
+// Same fixtures as the web `appApprovals.spec.ts`.
 describe('a message it asks to send', () => {
   const body = 'Hello,\n\n' + 'We are correcting invoice 2026-114 today. '.repeat(40) + '\n\nEric';
 

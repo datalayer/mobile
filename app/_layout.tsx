@@ -62,7 +62,7 @@ function Routes({ fontsReady }: { fontsReady: boolean }) {
 }
 
 export default function RootLayout() {
-  // No persistence: conversation bodies and approval arguments stay in memory (MOBILE.md §2.9).
+  // No persistence: conversation bodies and approval arguments stay in memory.
   const [queryClient] = useState(
     () => new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 15_000 }, mutations: { retry: false } } })
   );

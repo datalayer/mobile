@@ -6,8 +6,7 @@
 /**
  * Foreground reconciliation over the ai-agents WebSocket (M-017). The socket
  * only accelerates server truth: every (re)connect refetches approvals,
- * deployments and visible activity, since the stream has no resume cursor yet
- * (MOBILE §4.4, item 8).
+ * deployments and visible activity, since the stream has no resume cursor yet.
  */
 
 import { useQueryClient, type QueryKey } from '@tanstack/react-query';
