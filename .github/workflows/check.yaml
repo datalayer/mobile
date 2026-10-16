@@ -50,7 +50,8 @@ jobs:
       - run: npm install
         env:
           ONNXRUNTIME_NODE_INSTALL: skip
-      - run: npm ls react react-native --all | grep -E ' react(-native)?@' | sort | uniq -c
+      - name: The copies of React installed (Metro and Jest resolve the app's own)
+        run: find node_modules -path '*/node_modules/react/package.json' -exec node -p "require('./{}').version + '  {}'" \; | sort
       - run: npm run doctor
 
   # The Expo/Hermes proof of M-002: the shared portable entries, bundled by

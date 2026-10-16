@@ -15,10 +15,25 @@
  */
 
 const { spawnSync } = require('child_process');
+const fs = require('fs');
 const path = require('path');
 
-const doctor = require.resolve('expo-doctor/bin/expo-doctor.js');
+// The package's own `bin`, found on disk: newer expo-doctor releases export no subpath to require.resolve.
+function doctorBin(from) {
+  for (let dir = from; ; dir = path.dirname(dir)) {
+    const manifest = path.join(dir, 'node_modules', 'expo-doctor', 'package.json');
+    if (fs.existsSync(manifest)) {
+      const { bin } = JSON.parse(fs.readFileSync(manifest, 'utf8'));
+      return path.join(path.dirname(manifest), typeof bin === 'string' ? bin : bin['expo-doctor']);
+    }
+    if (path.dirname(dir) === dir) {
+      throw new Error('expo-doctor is not installed');
+    }
+  }
+}
+
 const projectDirectory = process.cwd();
+const doctor = doctorBin(projectDirectory);
 const bridgeDirectory = path.join(projectDirectory, 'scripts', 'doctor-bin');
 const result = spawnSync(process.execPath, [doctor], {
   cwd: projectDirectory,
