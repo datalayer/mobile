@@ -24,6 +24,7 @@
 
 import {
   emptyConversation,
+  endsRun,
   reduceConversation,
   RunMeter,
   RuntimeRefusal,
@@ -71,6 +72,15 @@ export class ConversationController {
   private view: ConversationView;
   private readonly listeners = new Set<() => void>();
   private abort: AbortController | null = null;
+  /**
+   * Streams whose run already said how it ended, still open until the
+   * runtime closes them. The turn is over at RUN_FINISHED or RUN_ERROR, not
+   * when the response closes: on Android expo/fetch did not report the end
+   * of a stream the runtime had closed, and the turn stayed running with its
+   * answer shown (the Maestro flow, 16 October 2026). They are not cut here
+   * (the runtime settles the turn's record before closing), only on dispose.
+   */
+  private readonly told = new Set<AbortController>();
   /** A turn's stream was lost (the app went away, the network dropped): read back, never resent. */
   private lost = false;
   /** The turn streaming now, measured without its words (M-036). */
@@ -105,6 +115,13 @@ export class ConversationController {
 
   private apply = (event: AgUiEvent): void => {
     this.meter?.event(event);
+    if (endsRun(event) && this.abort) {
+      this.told.add(this.abort);
+      this.abort = null;
+      const meter = this.meter;
+      this.meter = null;
+      if (meter) this.measures.turn(meter.read());
+    }
     const conversation = reduceConversation(this.view.conversation, event);
     const session = conversation.session;
     const uid = this.view.uid ?? (session && typeof session.uid === 'string' ? session.uid : null);
@@ -270,6 +287,8 @@ export class ConversationController {
   dispose(): void {
     this.abort?.abort();
     this.abort = null;
+    for (const lingering of this.told) lingering.abort();
+    this.told.clear();
     this.listeners.clear();
   }
 
@@ -281,7 +300,8 @@ export class ConversationController {
     try {
       await run(abort.signal);
     } catch (error) {
-      if (abort.signal.aborted || isAbort(error)) {
+      // A run already ended is not failed by what happens to its stream afterwards.
+      if (abort.signal.aborted || isAbort(error) || this.told.has(abort)) {
         return;
       }
       meter.failure(error);
@@ -294,6 +314,7 @@ export class ConversationController {
       this.lost = this.target.kind === 'app';
       this.set({ conversation: withError(this.view.conversation, error instanceof Error ? error.message : String(error)) });
     } finally {
+      this.told.delete(abort);
       if (this.abort === abort) {
         this.abort = null;
       }

@@ -10,7 +10,7 @@
  * and what survives navigation and the background.
  */
 
-import { RUN_CUT_SHORT, RuntimeRefusal, type AgUiEvent, type AppSessionsClient, type AgentRunClient, type StreamOptions } from '@datalayer/agent-runtimes/lib/portable';
+import { RUN_CUT_SHORT, RuntimeRefusal, type AgUiEvent, type AppSessionsClient, type AgentRunClient, type RunMeasure, type StreamOptions } from '@datalayer/agent-runtimes/lib/portable';
 import {
   locateNew, locateThread, REACH_UNREAD, runtimeAgents, startNewRuntime, startThreadRuntime, threadOf, threadReachOf, threadTitle
 } from '../api/conversations';
@@ -206,6 +206,28 @@ describe('prompt, stream, stop and resume (M-033)', () => {
     release();
     await first;
     expect(calls.filter(call => call[0] === 'message')).toEqual([['message', 's1', 'One']]);
+  });
+
+  it('ends the turn at RUN_FINISHED though its stream is not seen to close, and cuts that stream only when let go', async () => {
+    let lingering: AbortSignal | undefined;
+    const measured: RunMeasure[] = [];
+    const { sessions } = fakeSessions([
+      options => new Promise<void>(() => {
+        lingering = options.signal;
+        for (const event of turn(...words('a', 'Hello'))) options.onEvent(event);
+      }),
+      turn(...words('b', 'Again'))
+    ]);
+    const controller = new ConversationController(appTarget(sessions), 's1', newId, { turn: m => measured.push(m), recovered: () => undefined });
+    void controller.send('Hi');
+    await Promise.resolve();
+    expect(controller.running).toBe(false);
+    expect(measured).toHaveLength(1);
+    expect(lingering?.aborted).toBe(false);
+    expect(await controller.send('More')).toBe(true);
+    expect(texts(controller).slice(-1)).toEqual(['message:Again']);
+    controller.dispose();
+    expect(lingering?.aborted).toBe(true);
   });
 
   it('stops the turn: the stream is cancelled here and on the runtime, and the conversation stays open', async () => {
