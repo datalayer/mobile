@@ -112,17 +112,19 @@ npm run check            # typecheck, lint, forbidden imports, tests
 npm run test:watch       # tests while editing
 npm run check:imports    # no Jupyter, JupyterLab, Lumino, React DOM, Primer web or browser global
 npm run check:bundle     # the same, on what Metro resolved into the iOS and Android bundles (source maps)
-npm run doctor           # diagnostic only; known monorepo/tooling issue below
+npm run doctor           # Expo Doctor: required in CI, outside the monorepo (below)
 npm run export           # both bundles into dist/, to prove the Metro graph resolves
 ```
 
-`expo-doctor` is temporarily diagnostic rather than a required check. Its
-package-version check sees the monorepo root's web React/Expo packages beside
-the SDK 57 packages nested for mobile; this Node/npm combination also exposes
-child-output and `npm explain` incompatibilities, while two checks require the
-Expo API. The installed mobile versions still match `expo install --check`.
-MOBILE.md M-010b tracks making Doctor clean; CI and release gates intentionally
-use `npm run check` and `npm run check:bundle` until that issue is resolved.
+Expo Doctor is a required check in CI (the `doctor` job of Check), where the
+repository installs on its own: there `package.json`'s `overrides` hold every
+dependency's `react` and `react-dom` to the app's own (Core, Agent Runtimes,
+Jupyter UI and Loro depend on 19.2.8 exactly, the Jupyter packages on 18.3.1),
+so the app has one React, and all 21 checks pass (online ones included). Inside
+the monorepo, npm ignores a member's `overrides` and the root keeps the web's
+React beside Expo's: `metro.config.js` and Jest's `moduleNameMapper` hold the
+app's own, and Doctor there reports that duplicate; read CI's run instead
+(MOBILE.md M-010b).
 
 ### Maestro smoke flows
 
@@ -209,7 +211,7 @@ Google (`make publish-android`):
 Before tagging:
 
 - confirm the release commit is reviewed, clean, pushed and green in CI;
-- run `npm run check` and `npm run check:bundle` with the committed lockfile; Doctor remains the explicitly deferred M-010b diagnostic;
+- run `npm run check` and `npm run check:bundle` with the committed lockfile, and see the release commit's Check green, its `doctor` job included;
 - bump `version`, verify the remote iOS build number and Android version code will increase, and check `runtimeVersion` equals the app version;
 - verify staging against the same backend contract and run the sign-in, approval race/stale state, notification tap, stream/stop and pause/reset smoke journeys;
 - verify store copy, screenshots, privacy/data-safety answers, support/privacy/deletion links and the non-customer review account;
