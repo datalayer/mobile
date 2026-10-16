@@ -33,7 +33,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "check:imports": "node scripts/check-forbidden-imports.js",
-    "check:bundle": "rm -rf dist/bundle && expo export --platform ios --source-maps --output-dir dist/bundle/ios && expo export --platform android --source-maps --output-dir dist/bundle/android && node scripts/check-bundle.js dist/bundle",
+    "check:bundle": "rm -rf dist/bundle && expo export --platform ios --source-maps --output-dir dist/bundle/ios && expo export --platform android --source-maps --output-dir dist/bundle/android && node scripts/check-bundle.js dist/bundle && node scripts/bundle-size.js dist/bundle",
     "doctor": "node scripts/run-expo-doctor.cjs",
     "check": "npm run typecheck && npm run lint && npm run check:imports && npm test -- --ci"
   },

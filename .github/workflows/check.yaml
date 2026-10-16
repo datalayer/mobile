@@ -4,7 +4,8 @@
 # The pull-request gate of MOBILE.md (M-006, M-054): types, lint, the import
 # gate on the sources, the tests, and the import gate on what Metro resolved;
 # the Expo/Hermes proof; and the Maestro smoke flows (.maestro/) on an e2e
-# build, Android on every run, iOS on main.
+# build, Android on every run, iOS on main, once the test account is set
+# (e2e-account); the bundle-size budget of M-051 (scripts/bundle-size.js).
 name: Check
 
 on:
@@ -31,6 +32,26 @@ jobs:
           ONNXRUNTIME_NODE_INSTALL: skip
       - run: npm run check
       - run: npm run check:bundle
+
+  # Expo Doctor (M-010b) on the repository as it installs outside the monorepo,
+  # where the React the app ships is the only one (the workspace's root React
+  # 19.2.8 beside Expo's 19.2.3 exists only in the monorepo, held apart by
+  # metro.config.js and Jest's moduleNameMapper). Diagnostic until it has
+  # passed here: continue-on-error, so its findings show without failing Check.
+  doctor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+        env:
+          ONNXRUNTIME_NODE_INSTALL: skip
+      - run: npm ls react react-native --all | grep -E ' react(-native)?@' | sort | uniq -c
+      - run: npm run doctor
 
   # The Expo/Hermes proof of M-002: the shared portable entries, bundled by
   # this app's Metro from an entry that imports nothing else, compiled by the
@@ -88,6 +109,37 @@ jobs:
             grep -qx 'HERMES PROOF HELD' dist/hermes/$platform/proof.txt
           done
 
+  # The Maestro flows need the test account (MOBILE M-054). Until an account holder
+  # adds it (decided by the user, 16 October 2026), the e2e jobs skip cleanly and
+  # say so here, so main stays green; the flows and both e2e builds stay ready.
+  # Job conditions cannot read secrets, so this job reads them and says whether
+  # all four are set.
+  e2e-account:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      ready: ${{ steps.account.outputs.ready }}
+    steps:
+      - name: The test account
+        id: account
+        env:
+          E2E_TOKEN: ${{ secrets.MOBILE_E2E_TOKEN }}
+          E2E_SECOND_TOKEN: ${{ secrets.MOBILE_E2E_SECOND_TOKEN }}
+          E2E_CHAT_APP: ${{ vars.MOBILE_E2E_CHAT_APP }}
+          E2E_LIFECYCLE_APP: ${{ vars.MOBILE_E2E_LIFECYCLE_APP }}
+        run: |
+          missing=""
+          [ -n "$E2E_TOKEN" ] || missing="$missing secret MOBILE_E2E_TOKEN (the test account's API token);"
+          [ -n "$E2E_SECOND_TOKEN" ] || missing="$missing secret MOBILE_E2E_SECOND_TOKEN (a second account's API token);"
+          [ -n "$E2E_CHAT_APP" ] || missing="$missing variable MOBILE_E2E_CHAT_APP (an application of the test account kept running);"
+          [ -n "$E2E_LIFECYCLE_APP" ] || missing="$missing variable MOBILE_E2E_LIFECYCLE_APP (an application of the test account the flow pauses and resumes);"
+          if [ -n "$missing" ]; then
+            echo "::notice title=Maestro smoke flows skipped::e2e-android and e2e-ios are skipped until the test account is set:$missing in the repository's settings (MOBILE M-054)."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
   # The Maestro smoke flows of M-054 on Android: an e2e build (APP_VARIANT=preview,
   # EXPO_PUBLIC_BUILD_PROFILE=e2e: the token sign-in is offered) made here — prebuild,
   # then Gradle, never on a laptop — installed on an emulator and driven against
@@ -95,8 +147,10 @@ jobs:
   # API token (secret MOBILE_E2E_TOKEN), a second account's (MOBILE_E2E_SECOND_TOKEN)
   # and the applications they use (variables MOBILE_E2E_CHAT_APP, kept running,
   # and MOBILE_E2E_LIFECYCLE_APP, which the flow pauses and resumes); without
-  # them the job stops after the build and says which is missing.
+  # them the job is skipped (e2e-account says which is missing).
   e2e-android:
+    needs: e2e-account
+    if: needs.e2e-account.outputs.ready == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
@@ -135,22 +189,6 @@ jobs:
           name: e2e-android-apk
           path: android/app/build/outputs/apk/release/app-release.apk
           retention-days: 7
-      - name: The test account
-        env:
-          E2E_TOKEN: ${{ secrets.MOBILE_E2E_TOKEN }}
-          E2E_SECOND_TOKEN: ${{ secrets.MOBILE_E2E_SECOND_TOKEN }}
-          E2E_CHAT_APP: ${{ vars.MOBILE_E2E_CHAT_APP }}
-          E2E_LIFECYCLE_APP: ${{ vars.MOBILE_E2E_LIFECYCLE_APP }}
-        run: |
-          missing=""
-          [ -n "$E2E_TOKEN" ] || missing="$missing secret MOBILE_E2E_TOKEN (the test account's API token);"
-          [ -n "$E2E_SECOND_TOKEN" ] || missing="$missing secret MOBILE_E2E_SECOND_TOKEN (a second account's API token);"
-          [ -n "$E2E_CHAT_APP" ] || missing="$missing variable MOBILE_E2E_CHAT_APP (an application of the test account kept running);"
-          [ -n "$E2E_LIFECYCLE_APP" ] || missing="$missing variable MOBILE_E2E_LIFECYCLE_APP (an application of the test account the flow pauses and resumes);"
-          if [ -n "$missing" ]; then
-            echo "::error title=Maestro smoke flows not run::The APK is built; the flows need$missing set them in the repository's settings (MOBILE M-054)."
-            exit 1
-          fi
       - name: Install Maestro
         run: |
           curl -fsSL "https://get.maestro.mobile.dev" | bash
@@ -189,7 +227,8 @@ jobs:
 
   # The same flows on an iOS Simulator build (macos-15: macos-13 is retired), on main only.
   e2e-ios:
-    if: github.event_name != 'pull_request'
+    needs: e2e-account
+    if: github.event_name != 'pull_request' && needs.e2e-account.outputs.ready == 'true'
     runs-on: macos-15
     timeout-minutes: 120
     env:
@@ -217,22 +256,6 @@ jobs:
             -derivedDataPath ios/build CODE_SIGNING_ALLOWED=NO build | tail -40
           app=$(ls -d ios/build/Build/Products/Release-iphonesimulator/*.app | head -1)
           echo "APP_PATH=$app" >> "$GITHUB_ENV"
-      - name: The test account
-        env:
-          E2E_TOKEN: ${{ secrets.MOBILE_E2E_TOKEN }}
-          E2E_SECOND_TOKEN: ${{ secrets.MOBILE_E2E_SECOND_TOKEN }}
-          E2E_CHAT_APP: ${{ vars.MOBILE_E2E_CHAT_APP }}
-          E2E_LIFECYCLE_APP: ${{ vars.MOBILE_E2E_LIFECYCLE_APP }}
-        run: |
-          missing=""
-          [ -n "$E2E_TOKEN" ] || missing="$missing secret MOBILE_E2E_TOKEN;"
-          [ -n "$E2E_SECOND_TOKEN" ] || missing="$missing secret MOBILE_E2E_SECOND_TOKEN;"
-          [ -n "$E2E_CHAT_APP" ] || missing="$missing variable MOBILE_E2E_CHAT_APP;"
-          [ -n "$E2E_LIFECYCLE_APP" ] || missing="$missing variable MOBILE_E2E_LIFECYCLE_APP;"
-          if [ -n "$missing" ]; then
-            echo "::error title=Maestro smoke flows not run::The Simulator app is built; the flows need$missing set them in the repository's settings (MOBILE M-054)."
-            exit 1
-          fi
       - name: Install Maestro
         run: |
           curl -fsSL "https://get.maestro.mobile.dev" | bash
