@@ -148,9 +148,9 @@ jobs:
             grep -qx 'HERMES PROOF HELD' dist/hermes/$platform/proof.txt
           done
 
-  # The Maestro flows need the test account (MOBILE M-054). Until an account holder
-  # adds it (decided by the user, 16 October 2026), the e2e jobs skip cleanly and
-  # say so here, so main stays green; the flows and both e2e builds stay ready.
+  # The Maestro flows need the test account (MOBILE M-054): all four secrets are set
+  # since 16 October 2026 12:37 UTC (the first flows ran in run 38901889765). A fork's
+  # pull request, which gets no secrets, skips the e2e jobs cleanly and says so here.
   # Job conditions cannot read secrets, so this job reads them and says whether
   # all four are set.
   e2e-account:
@@ -284,17 +284,41 @@ jobs:
       - run: npm install
         env:
           ONNXRUNTIME_NODE_INSTALL: skip
+      # The newest Xcode on the image: on 16 October 2026 the default one failed
+      # expo-modules-jsi's "Build ExpoModulesJSI xcframework" phase (run 38901889765).
+      - name: The newest Xcode
+        run: |
+          xcode=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$xcode"
+          xcodebuild -version
+          xcrun swiftc --version
       - name: Prebuild the e2e app
         run: npx expo prebuild --platform ios --clean
+      # The whole log kept, its errors printed, and the step failing with xcodebuild:
+      # `| tail -40` hid both in run 38901889765, which went on to install an app
+      # without an Info.plist ("Missing bundle ID").
       - name: Build for the iOS Simulator (Release, its JavaScript embedded)
         run: |
+          set -o pipefail
           workspace=$(ls -d ios/*.xcworkspace | head -1)
           scheme=$(basename "$workspace" .xcworkspace)
-          xcodebuild -workspace "$workspace" -scheme "$scheme" -configuration Release \
+          if ! xcodebuild -workspace "$workspace" -scheme "$scheme" -configuration Release \
             -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath ios/build CODE_SIGNING_ALLOWED=NO build | tail -40
+            -derivedDataPath ios/build CODE_SIGNING_ALLOWED=NO build > xcodebuild.log 2>&1; then
+            grep -nE "error:|\[ExpoModulesJSI\]|BUILD FAILED|The following build commands failed" -A3 xcodebuild.log | tail -150
+            exit 1
+          fi
+          tail -20 xcodebuild.log
           app=$(ls -d ios/build/Build/Products/Release-iphonesimulator/*.app | head -1)
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app/Info.plist"
           echo "APP_PATH=$app" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-ios-xcodebuild-log
+          path: xcodebuild.log
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Install Maestro
         run: |
           curl -fsSL "https://get.maestro.mobile.dev" | bash

@@ -46,7 +46,13 @@ describe('application activity wording (M-015a)', () => {
       })
     ).toBe('Weekly review (0 9 * * 1) · version 3');
     expect(absoluteTime('2026-10-15T09:00:00Z', 'en-GB')).toMatch(/15 Oct 2026/);
-    expect(relativeTime('2026-10-15T09:00:00Z', Date.parse('2026-10-15T08:00:00Z'), 'en')).toBe('in 1 hour');
+    const at = Date.parse('2026-10-15T08:00:00Z');
+    expect(relativeTime('2026-10-15T09:00:00Z', at)).toBe('in 1 hour');
+    expect(relativeTime('2026-10-15T05:00:00Z', at)).toBe('3 hours ago');
+    expect(relativeTime('2026-10-14T08:00:00Z', at)).toBe('yesterday');
+    expect(relativeTime('2026-10-16T08:00:00Z', at)).toBe('tomorrow');
+    expect(relativeTime('2026-10-15T08:00:00Z', at)).toBe('now');
+    expect(relativeTime('2026-10-12T08:00:00Z', at)).toBe('3 days ago');
     expect(relativeTime('not-a-date')).toBe('');
   });
 });

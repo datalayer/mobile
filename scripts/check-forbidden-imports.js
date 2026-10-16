@@ -33,6 +33,11 @@ const FORBIDDEN = [
 
 const BROWSER_GLOBALS = /\b(window|document|localStorage|sessionStorage)\s*\??\./;
 
+// Hermes implements Intl.Collator, DateTimeFormat and NumberFormat only: any other Intl
+// constructor is undefined in the app, and `new` on it throws "undefined cannot be used as
+// a constructor" (the Inbox went blank in the first Maestro run, 16 October 2026).
+const HERMES_MISSING_INTL = /\bIntl\.(RelativeTimeFormat|PluralRules|ListFormat|DisplayNames|Segmenter|Locale|DurationFormat)\b/;
+
 // Metro resolves `x.web.ts` only for the web preview, never for iOS or Android.
 const WEB_ONLY = /\.web\.[cm]?[jt]sx?$/;
 
@@ -76,6 +81,10 @@ function violationsIn(file, text) {
   const global = WEB_ONLY.test(file) ? null : BROWSER_GLOBALS.exec(code);
   if (global) {
     found.push({ file, specifier: global[1], why: 'a browser global' });
+  }
+  const intl = HERMES_MISSING_INTL.exec(code);
+  if (intl) {
+    found.push({ file, specifier: intl[0], why: 'an Intl API Hermes does not have' });
   }
   return found;
 }

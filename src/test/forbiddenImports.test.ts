@@ -57,6 +57,16 @@ describe('the forbidden-import gate (M-006)', () => {
     expect(violationsIn('store.web.ts', `import { createRoot } from '${dom}';`)).toHaveLength(1);
   });
 
+  it('refuses the Intl constructors Hermes lacks, keeps the ones it has', () => {
+    const missing = ['Relative', 'TimeFormat'].join('');
+    const text = `export const f = new Intl.${missing}('en', { numeric: 'auto' });`;
+    expect(violationsIn('time.ts', text).map((v: { specifier: string }) => v.specifier)).toEqual([`Intl.${missing}`]);
+    expect(violationsIn('time.ts', `export const p = new Intl.${'Plural'}Rules('en');`)).toHaveLength(1);
+    const kept = "export const n = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'EUR' });";
+    expect(violationsIn('money.ts', kept)).toEqual([]);
+    expect(violationsIn('time.ts', 'export const d = new Intl.DateTimeFormat();')).toEqual([]);
+  });
+
   it('finds nothing in the app itself', () => {
     expect(findViolations([path.join(root, 'app'), path.join(root, 'src')])).toEqual([]);
   });
