@@ -1,12 +1,17 @@
 # Signs in with the test account's API token: the development sign-in an e2e build offers.
 appId: ai.datalayer.mobile.preview
 ---
-- launchApp:
-    clearState: true
-    clearKeychain: true
-- extendedWaitUntil:
-    visible: "Sign in to Datalayer"
-    timeout: 120000
+# Launched again once when it does not come up: on the emulator the old task's late removal once
+# killed the new process, which stayed on the splash screen (run 38923345444).
+- retry:
+    maxRetries: 1
+    commands:
+      - launchApp:
+          clearState: true
+          clearKeychain: true
+      - extendedWaitUntil:
+          visible: "Sign in to Datalayer"
+          timeout: 60000
 - tapOn: "Use an API token instead"
 - tapOn: "Datalayer API token"
 - inputText: ${E2E_TOKEN}
