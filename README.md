@@ -51,6 +51,7 @@ The first time, and after every native change, build and install the development
 ```bash
 cp .env.example .env            # done by every dev and start target when .env is missing
 
+make dev-simulator              # no phone: Android Emulator on Linux, iOS Simulator on macOS
 make dev-android                # boot the first emulator (or AVD=<name>), build the dev app on it, start Metro
 make dev-ios                    # boot the Simulator (SIMULATOR="iPhone 16"), build the dev app on it, start Metro (macOS)
 make dev-device-android         # same, on a plugged Android phone with USB debugging on
@@ -61,6 +62,33 @@ make start                      # Metro only, for a development build already in
 npm run start:clear             # Metro with its cache cleared
 make start-tunnel               # Metro over a tunnel, for a phone that cannot reach this machine
 ```
+
+#### Simulator-only development, without a phone
+
+On Linux, the supported native loop is the Android Emulator. On macOS it is
+the iOS Simulator. One target selects the available platform:
+
+```bash
+make setup                                      # first time: SDK, emulator and default virtual device
+make dev-simulator                              # build, install and start Metro
+make dev-simulator AVD=Pixel_8_API_36           # Linux: choose an Android virtual device
+make dev-simulator SIMULATOR="iPhone 16 Pro"    # macOS: choose an iOS Simulator
+```
+
+No Expo, Apple or Google account and no physical phone are needed for this
+local development loop. On Linux, `make setup` creates an Android virtual
+device and `make dev-simulator` checks `/dev/kvm`, boots it, installs the
+development build and starts Metro. On macOS the same target boots the named
+iOS Simulator and builds with local Xcode. The first native build takes the
+longest; while it remains installed, `make start` is enough for TypeScript and
+asset changes. Re-run `make dev-simulator` after changing a native dependency,
+config plugin, identifier, permission or scheme.
+
+The simulator is suitable for screens, navigation, API contracts, streaming,
+approval races and the automated Maestro journeys. It is not release evidence
+for APNs/FCM delivery, secure hardware/keychain behavior, background networking,
+VoiceOver/TalkBack on representative phones, thermals or device memory. Those
+physical-device gates remain `[-]` in the MOBILE implementation plan.
 
 Every `dev:*` and `start*` script sets `APP_VARIANT=development`, so the app installs as *Datalayer Dev* (`ai.datalayer.mobile.dev`, scheme `datalayer-dev`) beside a store build. Once Metro is up, press `a` or `i` to open the installed development build, `r` to reload, `j` to open the debugger, `m` for the dev menu. Shake the phone (or `Cmd+D` / `Cmd+M` in a simulator) for the same menu on the device.
 

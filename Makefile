@@ -58,6 +58,13 @@ clean: ## remove bundles, Metro cache and the generated native folders
 	cp .env.example .env
 	@echo "Created .env from .env.example (development profile, prod1.datalayer.run). Edit it to point elsewhere."
 
+dev-simulator: .env ## develop without a phone: Android Emulator on Linux, iOS Simulator on macOS
+	@case "$$(uname -s)" in \
+	  Linux) echo "Linux: using the Android Emulator."; $(MAKE) --no-print-directory dev-android ;; \
+	  Darwin) echo "macOS: using the iOS Simulator."; $(MAKE) --no-print-directory dev-ios ;; \
+	  *) echo "No supported native simulator for $$(uname -s). Use make dev-web."; exit 1 ;; \
+	esac
+
 dev-android: .env ## boot the first Android emulator (or AVD=<name>), build the dev app on it, start Metro
 	@command -v adb >/dev/null || { echo "adb not found: run 'make setup' first."; exit 1; }
 	@if [[ "$$(uname -s)" == "Linux" && ! -w /dev/kvm ]]; then \
@@ -165,6 +172,6 @@ publish-android: publish-check check ## production .aab with EAS, submitted as a
 
 publish: publish-ios publish-android ## both stores
 
-.PHONY: help setup tools check doctor export clean dev-android dev-ios dev-device-android dev-device-ios dev-web start start-tunnel \
+.PHONY: help setup tools check doctor export clean dev-simulator dev-android dev-ios dev-device-android dev-device-ios dev-web start start-tunnel \
 	build-dev-android build-dev-ios build-dev-simulator build-preview build-staging submit-staging update-staging promote-update \
 	publish-check publish-ios publish-android publish
