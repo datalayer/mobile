@@ -2,7 +2,9 @@
 appId: ai.datalayer.mobile.preview
 ---
 # Launched again once when it does not come up: on the emulator the old task's late removal once
-# killed the new process, which stayed on the splash screen (run 38923345444).
+# killed the new process, which stayed on the splash screen (run 38923345444). iOS SecureStore can
+# retain the E2E grant even when Maestro clears application state, so this setup accepts the already
+# authenticated Inbox as well as the sign-in screen. Every flow remains runnable by itself.
 - retry:
     maxRetries: 1
     commands:
@@ -10,13 +12,17 @@ appId: ai.datalayer.mobile.preview
           clearState: true
           clearKeychain: true
       - extendedWaitUntil:
-          visible: "Sign in to Datalayer"
+          visible: "Sign in to Datalayer|Inbox"
           timeout: 60000
-- tapOn: "Use an API token instead"
-- tapOn: "Datalayer API token"
-- inputText: ${E2E_TOKEN}
-- hideKeyboard
-- tapOn: "Sign in"
+- runFlow:
+    when:
+      visible: "Sign in to Datalayer"
+    commands:
+      - tapOn: "Use an API token instead"
+      - tapOn: "Datalayer API token"
+      - inputText: ${E2E_TOKEN}
+      - hideKeyboard
+      - tapOn: "Sign in"
 - extendedWaitUntil:
     visible: "Inbox"
     timeout: 60000

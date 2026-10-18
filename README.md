@@ -21,23 +21,23 @@ Expo Go is not supported: sign-in storage, notifications, links and the native c
 - Node 20.19, 22.13 or 24.3 and later (`engines` in `package.json`); npm 10.
 - Android: what `make setup` installs, or Android Studio with the same SDK components. A device needs USB debugging on.
 - iOS (macOS only): Xcode 16 or later installed from the App Store and opened once (`make setup` cannot do that), with an iOS Simulator runtime. A physical iPhone needs Developer Mode on and, for EAS development builds, its UDID registered (`eas device:create`).
-- EAS: see *Accounts* below.
+- EAS: see _Accounts_ below.
 - A physical iPhone and an Android phone for anything about push, links, background behaviour or the keychain; simulators do not establish them.
 
 ### Accounts
 
 What each way of running the app needs:
 
-| You want to | Expo account | Apple Developer Program ($99/year) | Google Play Console ($25 once) | Mac with Xcode |
-|---|---|---|---|---|
-| `make dev-web` in a browser | no | no | no | no |
-| `make dev-android` / `make dev-device-android`, built on this machine | no | no | no | no |
-| `make dev-ios` / `make dev-device-ios`, built on this machine | no | free Apple ID on your own iPhone, re-signed every 7 days; the program otherwise | no | **yes** |
-| `make build-dev-android`, built by EAS, installed from a link | **yes** | no | no | no |
-| `make build-dev-simulator`, built by EAS | **yes** | no | no | to run the Simulator |
-| `make build-dev-ios`, built by EAS for a real iPhone | **yes** | **yes** (the iPhone registered with `eas device:create`) | no | no |
-| `make build-preview` / `build-staging` | **yes** | **yes** for iOS | for the staging track | no |
-| `make publish-ios` / `publish-android` | **yes** | **yes** | **yes** | no |
+| You want to                                                           | Expo account | Apple Developer Program ($99/year)                                              | Google Play Console ($25 once) | Mac with Xcode       |
+| --------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------- | ------------------------------ | -------------------- |
+| `make dev-web` in a browser                                           | no           | no                                                                              | no                             | no                   |
+| `make dev-android` / `make dev-device-android`, built on this machine | no           | no                                                                              | no                             | no                   |
+| `make dev-ios` / `make dev-device-ios`, built on this machine         | no           | free Apple ID on your own iPhone, re-signed every 7 days; the program otherwise | no                             | **yes**              |
+| `make build-dev-android`, built by EAS, installed from a link         | **yes**      | no                                                                              | no                             | no                   |
+| `make build-dev-simulator`, built by EAS                              | **yes**      | no                                                                              | no                             | to run the Simulator |
+| `make build-dev-ios`, built by EAS for a real iPhone                  | **yes**      | **yes** (the iPhone registered with `eas device:create`)                        | no                             | no                   |
+| `make build-preview` / `build-staging`                                | **yes**      | **yes** for iOS                                                                 | for the staging track          | no                   |
+| `make publish-ios` / `publish-android`                                | **yes**      | **yes**                                                                         | **yes**                        | no                   |
 
 - **Expo account**: free at expo.dev. The free plan gives a limited number of cloud builds a month in a slower queue; paid plans give more and faster ones (see expo.dev/pricing). Then `eas login`.
 - **This project on Expo**: `app.config.ts` names the owner `datalayer`, so your account must be a member of the Datalayer organization on Expo, or build under your own account with `EXPO_OWNER=<your-username>`. Run `eas init` once; it creates the project and gives its id, which `app.config.ts` reads from `EAS_PROJECT_ID` (put it in `.env`).
@@ -90,7 +90,7 @@ for APNs/FCM delivery, secure hardware/keychain behavior, background networking,
 VoiceOver/TalkBack on representative phones, thermals or device memory. Those
 physical-device gates remain `[-]` in the MOBILE implementation plan.
 
-Every `dev:*` and `start*` script sets `APP_VARIANT=development`, so the app installs as *Datalayer Dev* (`ai.datalayer.mobile.dev`, scheme `datalayer-dev`) beside a store build. Once Metro is up, press `a` or `i` to open the installed development build, `r` to reload, `j` to open the debugger, `m` for the dev menu. Shake the phone (or `Cmd+D` / `Cmd+M` in a simulator) for the same menu on the device.
+Every `dev:*` and `start*` script sets `APP_VARIANT=development`, so the app installs as _Datalayer Dev_ (`ai.datalayer.mobile.dev`, scheme `datalayer-dev`) beside a store build. Once Metro is up, press `a` or `i` to open the installed development build, `r` to reload, `j` to open the debugger, `m` for the dev menu. Shake the phone (or `Cmd+D` / `Cmd+M` in a simulator) for the same menu on the device.
 
 Against a local server: set `EXPO_PUBLIC_DATALAYER_RUN_URL=http://localhost:8080` and `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` to the same or the local runtimes plane (and `EXPO_PUBLIC_DATALAYER_MCP_URL` to the local MCP gateway) for the iOS Simulator or `http://10.0.2.2:8080` for the Android emulator; a phone needs an HTTPS URL or `npm run start:tunnel` plus a tunnel to the server. `EXPO_PUBLIC_*` values are read when Metro starts: restart it after changing `.env`.
 
@@ -161,7 +161,10 @@ elsewhere while it is open, the route a tapped notification opens, a prompt
 streamed and stopped, and pause/reset with a second account refused. CI runs
 them (`e2e-android` on every run, `e2e-ios` on main, on `macos-15`) on an `e2e`
 build it makes itself: `expo prebuild`, then Gradle or `xcodebuild`; nothing is
-built on a laptop. They act as a test account on the r1 runtimes plane and need
+built on a laptop. The five flows run in an explicit order on the one shared
+emulator or simulator, and each flow's sign-in setup also accepts an existing
+authenticated E2E session because the iOS keychain can outlive cleared app
+state. They act as a test account on the r1 runtimes plane and need
 the repository secrets `DATALAYER_MOBILE_E2E_TOKEN` (the test account's API token) and
 `DATALAYER_MOBILE_E2E_SECOND_TOKEN` (a second account's), and the secrets
 `DATALAYER_MOBILE_E2E_CHAT_APP` (an application of the test account kept running; the
@@ -272,13 +275,13 @@ and [EAS Submit](https://docs.expo.dev/deploy/submit-to-app-stores/).
 The names below are the interface between Git, EAS and the stores. Values and
 credential files never belong in the repository.
 
-| Profile | EAS environment | Non-secret configuration | Credential source |
-|---|---|---|---|
-| `development`, `development-simulator`, `e2e` | `development` | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL`, `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID`; profile and variant come from `eas.json` | EAS development signing credentials |
-| `preview` | `preview` | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL`, `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID` | EAS internal-distribution credentials |
-| `staging` | `staging` (its own, decided 16 October 2026: a custom EAS environment the account holders create with the project, M-007b) | staging `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID` | The production app's EAS/store signing credentials |
-| `production` | `production` | production `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID` | The production app's EAS/store signing credentials |
-| GitHub release workflow | repository Actions secrets | none | `EXPO_TOKEN`, scoped to the Datalayer Expo project |
+| Profile                                       | EAS environment                                                                                                            | Non-secret configuration                                                                                                                                           | Credential source                                  |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
+| `development`, `development-simulator`, `e2e` | `development`                                                                                                              | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL`, `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID`; profile and variant come from `eas.json` | EAS development signing credentials                |
+| `preview`                                     | `preview`                                                                                                                  | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL`, `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID`                                           | EAS internal-distribution credentials              |
+| `staging`                                     | `staging` (its own, decided 16 October 2026: a custom EAS environment the account holders create with the project, M-007b) | staging `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID`                                | The production app's EAS/store signing credentials |
+| `production`                                  | `production`                                                                                                               | production `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID`                             | The production app's EAS/store signing credentials |
+| GitHub release workflow                       | repository Actions secrets                                                                                                 | none                                                                                                                                                               | `EXPO_TOKEN`, scoped to the Datalayer Expo project |
 
 EAS owns the iOS distribution/provisioning material and Android keystore.
 EAS Submit owns the App Store Connect API key and Google Play service-account
@@ -341,9 +344,9 @@ IAM serves the oldest version of the app still supported on each platform at
 (`{"success": true, "minimum": {"ios": "1.2.0", "android": "1.2.0"}}`, public,
 cached for a minute). The app reads it at launch and every time it comes back
 to the foreground (`src/release/`). Below its platform's minimum it stops at
-*Update Datalayer*, naming the version to install; an answer it cannot read — a
-503, a missing or malformed version, no network — stops it at *Datalayer could
-not be reached* with *Try again*: an unreadable switch is never taken as off.
+_Update Datalayer_, naming the version to install; an answer it cannot read — a
+503, a missing or malformed version, no network — stops it at _Datalayer could
+not be reached_ with _Try again_: an unreadable switch is never taken as off.
 
 To stop an unsafe installed binary, the release owner raises the minimum in the
 control plane's rc and redeploys IAM (the values go through `up.sh`, never by

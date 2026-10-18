@@ -7,3 +7,12 @@ flows:
   - "*"
 executionOrder:
   continueOnFailure: true
+  # A single local emulator/simulator is shared by the suite. Keep sign-in
+  # first, then run every independently prepared journey in a deterministic
+  # order so a long conversation cannot overlap another flow's app reset.
+  flowsOrder:
+    - 01-sign-in
+    - 02-approval-race
+    - 03-notification-deep-link
+    - 04-prompt-stream-stop
+    - 05-pause-reset-authorization
