@@ -28,7 +28,7 @@ name: Prompt, stream and stop
     id: "conversation-send"
 - tapOn:
     id: "conversation-message"
-- inputText: "Count upward indefinitely, one number per line, until I stop you. Do not use any tool."
+- inputText: "Call runtime_echo exactly once with a text argument made of 12000 lowercase x characters. Do not answer or summarize before the tool completes."
 - tapOn:
     id: "conversation-send"
     # A streaming view never becomes still. Continue immediately so the next
