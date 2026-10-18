@@ -307,8 +307,9 @@ jobs:
       # Signed to run locally (identity "-"), not unsigned: without a signature the app has no
       # keychain-access-groups entitlement and expo-secure-store cannot keep the session
       # ("A required entitlement isn't present", every flow in run 38913462098).
-      # The whole log kept, its errors printed, and the step failing with xcodebuild:
-      # `| tail -40` hid both in run 38901889765, which went on to install an app
+      # Stream the complete build to Actions while retaining the same output as
+      # an artifact on failure. `pipefail` preserves xcodebuild's exit status;
+      # `| tail -40` hid it in run 38901889765, which went on to install an app
       # without an Info.plist ("Missing bundle ID").
       - name: Build for the iOS Simulator (Release, its JavaScript embedded)
         run: |
@@ -317,11 +318,10 @@ jobs:
           scheme=$(basename "$workspace" .xcworkspace)
           if ! xcodebuild -workspace "$workspace" -scheme "$scheme" -configuration Release \
             -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath ios/build CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= build > xcodebuild.log 2>&1; then
+            -derivedDataPath ios/build CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= build 2>&1 | tee xcodebuild.log; then
             grep -nE "error:|\[ExpoModulesJSI\]|BUILD FAILED|The following build commands failed" -A3 xcodebuild.log | tail -150
             exit 1
           fi
-          tail -20 xcodebuild.log
           app=$(ls -d ios/build/Build/Products/Release-iphonesimulator/*.app | head -1)
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app/Info.plist"
           codesign -dv "$app" 2>&1 | grep -E "Identifier|Signature"
