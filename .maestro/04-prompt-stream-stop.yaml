@@ -31,8 +31,11 @@ name: Prompt, stream and stop
 - inputText: "Count upward indefinitely, one number per line, until I stop you. Do not use any tool."
 - tapOn:
     id: "conversation-send"
+    # A streaming view never becomes still. Continue immediately so the next
+    # command can press Stop while the real server turn is still in flight.
+    waitToSettleTimeoutMs: 0
 # `tapOn` waits for the control and acts as soon as React exposes it. Do not
-# poll first: a fast model can finish a bounded count between the poll and tap.
+# poll first: the plain E2E agent may otherwise finish between the poll and tap.
 - tapOn:
     id: "conversation-stop"
 - extendedWaitUntil:
