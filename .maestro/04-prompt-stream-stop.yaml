@@ -18,13 +18,14 @@ name: Prompt, stream and stop
     timeout: 60000
 - tapOn:
     id: "conversation-message"
-- inputText: "Reply with one short greeting sentence only. Do not use any tool."
+- inputText: "Reply with exactly PAP MOBILE STREAM OK and nothing else. Do not use any tool."
 - tapOn:
     id: "conversation-send"
 - extendedWaitUntil:
-    visible:
-      id: "conversation-send"
+    visible: ".*PAP MOBILE STREAM OK.*"
     timeout: 120000
+- assertVisible:
+    id: "conversation-send"
 - tapOn:
     id: "conversation-message"
 - inputText: "Count from 1 to 300, one number per line, without any tool."
@@ -37,8 +38,10 @@ name: Prompt, stream and stop
 - tapOn:
     id: "conversation-stop"
 - extendedWaitUntil:
-    notVisible:
-      id: "conversation-stop"
+    visible:
+      id: "turn-end-stopped"
     timeout: 60000
+- assertNotVisible:
+    id: "conversation-stop"
 - tapOn: "End"
 - tapOn: "End"

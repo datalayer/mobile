@@ -157,6 +157,88 @@ git tag v0.1.0 && git push origin v0.1.0
 
 `.github/workflows/release.yaml` checks that the tag names that version, runs `npm run check` and `npm run check:bundle`, has EAS build the `.ipa` and `.aab` and submit them (TestFlight, Google Play internal track as a draft), and creates the GitHub release with the build ids. It needs the repository secret `EXPO_TOKEN` (an Expo robot token) and the signing and submit credentials kept in EAS (`eas credentials`: the App Store Connect API key, the Google Play service account). `.github/workflows/check.yaml` runs the checks on every pull request and push to `main`. A failed job turns Check red; it does not block merging, as `main` has no branch protection yet (a repository administrator may require the Check jobs). A release does require it: `release.yaml` refuses a tag whose commit's Check run is not green, every job included. The repository commits no lockfile; `release.yaml` keeps the `package-lock.json` its install resolved as the `release-lockfile` artifact and writes its checksum into the GitHub release. It pins the EAS CLI (`eas-version`); raise it deliberately.
 
+### What is needed to publish
+
+Development happens on Linux. That is enough to create and submit both store
+artifacts with EAS: the iOS build runs on EAS's macOS workers, and EAS Submit
+works from Linux. Local iOS builds, Simulator runs, Xcode archives and the
+Transporter fallback still require macOS. Store publication does not replace
+testing on physical iOS and Android phones; those release gates are currently
+postponed and marked `[-]` in the MOBILE implementation plan until the devices and testers
+are available.
+
+Common preparation:
+
+1. Create the Datalayer Expo project, put its real `EAS_PROJECT_ID` in the
+   development, preview, staging and production EAS environments, and give a
+   primary and recovery owner access. Add a least-privilege `EXPO_TOKEN` to
+   GitHub Actions.
+2. Keep the final application identity: **Datalayer**, Expo slug
+   `datalayer-mobile`, iOS bundle id and Android package
+   `ai.datalayer.mobile`. Store identifiers cannot be casually replaced after
+   publication.
+3. Complete [`docs/store-listing.md`](docs/store-listing.md) and verify every
+   answer against the release binary and the live store forms. Supply current
+   icons, phone/tablet screenshots, description, category, support and privacy
+   contacts, privacy policy, account-deletion URL and a review account that
+   contains no customer data.
+4. Name the release, incident and recovery owners in the private release
+   register. Keep signing keys, API keys, service-account JSON and tester
+   credentials out of Git. Run the credential-recovery drill before tagging.
+5. Obtain the physical-device evidence postponed in M-003, M-027, M-050b and
+   M-051 before any external rollout. Simulator CI is useful evidence, but is
+   not evidence for APNs/FCM delivery, keychain/keystore behavior, background
+   networking, accessibility services, thermal behavior or device memory.
+
+Apple App Store:
+
+1. Enrol the organization in the [Apple Developer
+   Program](https://developer.apple.com/programs/) and accept the current
+   agreements. In Certificates, Identifiers & Profiles, register
+   `ai.datalayer.mobile` and its associated-domain and push capabilities.
+2. In [App Store Connect](https://appstoreconnect.apple.com/), create the app
+   record before the first upload, assign least-privilege Account Holder/Admin,
+   App Manager and Developer roles, and complete any applicable agreements,
+   tax and banking setup.
+3. Let `eas credentials --platform ios` manage the distribution certificate,
+   provisioning profile and APNs key. Add an App Store Connect API key to EAS
+   for non-interactive submission; keep a recovery owner for every credential.
+4. Complete the product page, age rating, App Privacy, accessibility,
+   encryption/export, content-rights, sign-in and account-deletion answers.
+   Put working demo credentials and the exact review journey in App Review
+   Information. The draft answers live in `docs/store-listing.md`.
+5. Build and submit the production `.ipa`, wait for processing, exercise that
+   exact build with internal TestFlight and then any required external Beta App
+   Review. Select the tested build in the version record, add it for review,
+   submit it, and use manual or phased release only after the release gate.
+
+Google Play:
+
+1. Register and verify the organization in [Play
+   Console](https://play.google.com/console/), accept the Developer
+   Distribution Agreement and pay the registration fee. Create the app with
+   package `ai.datalayer.mobile`, accept Play App Signing and keep the package
+   name and signing ownership in the private register.
+2. Create a least-privilege Google service account for this app, link it in
+   Play Console and upload its JSON key to EAS with
+   `eas credentials --platform android`. EAS stores the submit key; it is never
+   committed. Confirm the upload keystore and Play App Signing recovery path.
+3. Complete the main store listing and App content: contact details, privacy
+   policy, Data safety, ads, content rating, target audience, app access and
+   review credentials, account deletion and every declaration currently shown
+   by Play Console. Confirm the release meets the live target-API requirement.
+4. Build a production `.aab` (not the preview APK) and submit it as a draft to
+   internal testing. Test the exact bundle, then meet any closed-testing or
+   production-access requirement Play Console shows for this organization and
+   account type. Promote the same artifact through a staged production rollout.
+
+The store consoles and policies change. At every submission, reconcile this
+runbook with the live [App Store Connect workflow](https://developer.apple.com/help/app-store-connect/get-started/app-store-connect-workflow),
+[Apple submission steps](https://developer.apple.com/help/app-store-connect/manage-submissions-to-app-review/submit-an-app),
+[Google app setup](https://support.google.com/googleplay/android-developer/answer/9859152),
+[Google review declarations](https://support.google.com/googleplay/android-developer/answer/9859455),
+and [EAS Submit](https://docs.expo.dev/deploy/submit-to-app-stores/).
+
 ### Environments and credentials
 
 The names below are the interface between Git, EAS and the stores. Values and

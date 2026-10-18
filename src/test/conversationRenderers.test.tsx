@@ -63,6 +63,7 @@ describe('native renderers behind the shared conversation contract', () => {
     expect(step.getByText(stepLine(nth('step')))).toBeTruthy();
     const end = await draw(<TurnEndRow item={nth('end')} />);
     expect(end.getByText(nth('end').words)).toBeTruthy();
+    expect(end.getByTestId(`turn-end-${nth('end').end}`)).toBeTruthy();
     const failure = await draw(<ErrorRow item={nth('error')} />);
     expect(failure.getByText(nth('error').text)).toBeTruthy();
     const state = presenceOfConversation(fixture);

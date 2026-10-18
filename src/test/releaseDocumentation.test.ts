@@ -30,13 +30,20 @@ describe('the mobile release runbook (M-007 and M-059)', () => {
     const readme = read('README.md');
     for (const required of [
       '### Environments and credentials',
+      '### What is needed to publish',
       '### Release-owner checklist',
       '### Halt, rollback and recovery',
       'Transporter',
       'Play Console',
       'minimum-supported-version',
       'artifact checksums',
-      'second person'
+      'second person',
+      'Apple Developer Program',
+      'App Store Connect',
+      'Play App Signing',
+      'Data safety',
+      'works from Linux',
+      'physical iOS and Android phones'
     ]) {
       expect(readme).toContain(required);
     }

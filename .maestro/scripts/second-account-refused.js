@@ -4,7 +4,7 @@ var listed = http.get(E2E_RUNTIMES_URL + '/api/ai-agents/v1/apps/deployments', {
 });
 if (listed.status !== 200) throw new Error('The owner could not list deployments: ' + listed.status);
 var mine = json(listed.body).deployments.filter(function (d) { return d.app_name === E2E_LIFECYCLE_APP || d.name === E2E_LIFECYCLE_APP; });
-if (!mine.length) mine = json(listed.body).deployments;
+if (!mine.length) throw new Error('The lifecycle test deployment was not found: ' + E2E_LIFECYCLE_APP);
 var deployment = mine[0];
 var headers = { Authorization: 'Bearer ' + E2E_SECOND_TOKEN, 'Content-Type': 'application/json' };
 var paused = http.request(E2E_RUNTIMES_URL + '/api/ai-agents/v1/apps/deployments/' + deployment.uid, {

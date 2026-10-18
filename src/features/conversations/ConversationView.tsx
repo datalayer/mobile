@@ -92,7 +92,7 @@ export function StepRow({ item }: StepRowProps) {
 }
 
 export function TurnEndRow({ item }: TurnEndRowProps) {
-  return <Text tone="muted" size="small">{item.words}</Text>;
+  return <Text tone="muted" size="small" testID={`turn-end-${item.end}`}>{item.words}</Text>;
 }
 
 export function ErrorRow({ item }: ErrorRowProps) {
