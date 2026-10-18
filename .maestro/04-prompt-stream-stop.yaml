@@ -28,13 +28,11 @@ name: Prompt, stream and stop
     id: "conversation-send"
 - tapOn:
     id: "conversation-message"
-- inputText: "Count from 1 to 300, one number per line, without any tool."
+- inputText: "Count upward indefinitely, one number per line, until I stop you. Do not use any tool."
 - tapOn:
     id: "conversation-send"
-- extendedWaitUntil:
-    visible:
-      id: "conversation-stop"
-    timeout: 60000
+# `tapOn` waits for the control and acts as soon as React exposes it. Do not
+# poll first: a fast model can finish a bounded count between the poll and tap.
 - tapOn:
     id: "conversation-stop"
 - extendedWaitUntil:
