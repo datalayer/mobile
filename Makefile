@@ -148,13 +148,6 @@ submit-staging: ## upload the latest staging builds to TestFlight and the Play i
 	eas submit --platform ios --profile staging --latest
 	eas submit --platform android --profile staging --latest
 
-update-staging: publish-check ## a signed over-the-air update on the staging channel, for the staging builds of this app version
-	eas update --channel staging --environment staging --message "$$(git log -1 --format=%s)"
-
-promote-update: publish-check ## the update group verified on staging, republished to production on the same runtime: GROUP=<id>
-	@[[ -n "$(GROUP)" ]] || { echo "Name the staged update group: make promote-update GROUP=<id> (eas update:list --branch staging)."; exit 1; }
-	eas update:republish --group $(GROUP) --destination-channel production
-
 ##@ Publish (README, Publish) — from a clean, pushed commit only
 
 publish-check: ## refuse to publish from a dirty or unpushed tree
@@ -173,5 +166,5 @@ publish-android: publish-check check ## production .aab with EAS, submitted as a
 publish: publish-ios publish-android ## both stores
 
 .PHONY: help setup tools check doctor export clean dev-simulator dev-android dev-ios dev-device-android dev-device-ios dev-web start start-tunnel \
-	build-dev-android build-dev-ios build-dev-simulator build-preview build-staging submit-staging update-staging promote-update \
+	build-dev-android build-dev-ios build-dev-simulator build-preview build-staging submit-staging \
 	publish-check publish-ios publish-android publish

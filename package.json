@@ -1,7 +1,7 @@
 {
   "name": "@datalayer/mobile",
   "version": "0.0.1",
-  "description": "Datalayer Agents - the agents and applications you run on Datalayer, in your pocket",
+  "description": "Datalayer - the agents and applications you run on Datalayer, in your pocket",
   "author": "Datalayer",
   "license": "BSD-3-Clause",
   "private": true,

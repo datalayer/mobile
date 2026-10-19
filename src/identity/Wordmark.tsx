@@ -7,8 +7,8 @@ import { StyleSheet, View } from 'react-native';
 import { Text } from '../components/primitives';
 import { Eyes } from './Eyes';
 
-/** The app's name, Datalayer Agents, after the eyes; a screen reader says the name. */
-export const APP_NAME = 'Datalayer Agents';
+/** The app's name, Datalayer, after the eyes; a screen reader says the name. */
+export const APP_NAME = 'Datalayer';
 
 export function Wordmark({ size = 28 }: { size?: number }) {
   return (

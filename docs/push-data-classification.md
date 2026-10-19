@@ -1,6 +1,6 @@
 # Mobile push data classification and event matrix
 
-This is the data contract for Datalayer Agents push notifications, ordinary and protocol events alike. It is intentionally narrower than an Inbox item. A push is an unreliable hint carrying an opaque id and a safe route; the authenticated destination fetches current server truth and checks access again.
+This is the data contract for Datalayer push notifications, ordinary and protocol events alike. It is intentionally narrower than an Inbox item. A push is an unreliable hint carrying an opaque id and a safe route; the authenticated destination fetches current server truth and checks access again.
 
 Status: implementation contract awaiting security review and physical-device drill. It does not authorize a production push credential.
 

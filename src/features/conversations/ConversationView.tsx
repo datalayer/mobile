@@ -279,7 +279,7 @@ export function ConversationView({
   const actions: DisplayActions = {
     // A sign-in page opens in the system browser, after its address is named.
     onOpenSignIn: url =>
-      Alert.alert('Open the sign-in page?', `It opens ${linkHost(url)} in your browser, outside Datalayer Agents.`, [
+      Alert.alert('Open the sign-in page?', `It opens ${linkHost(url)} in your browser, outside Datalayer.`, [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Open', onPress: () => void WebBrowser.openBrowserAsync(url) }
       ]),

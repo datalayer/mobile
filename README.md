@@ -2,9 +2,9 @@
 
 [![Become a Sponsor](https://img.shields.io/static/v1?label=Become%20a%20Sponsor&message=%E2%9D%A4&logo=GitHub&style=flat&color=1ABC9C)](https://github.com/sponsors/datalayer)
 
-# ☰ 📱 Datalayer Agents
+# ☰ 📱 Datalayer
 
-**Datalayer Agents** is the mobile app for the agents and applications you run on Datalayer, in your pocket: what needs you, the approvals to read in full before deciding, and the conversations to continue. Expo (SDK 57) and React Native, iOS and Android. The person-facing guide is [datalayer.ai/docs/mobile-app](https://datalayer.ai/docs/mobile-app).
+**Datalayer** is the mobile app for the agents and applications you run on Datalayer, in your pocket: what needs you, the approvals to read in full before deciding, and the conversations to continue. Expo (SDK 57) and React Native, iOS and Android. The person-facing guide is [datalayer.ai/docs/mobile-app](https://datalayer.ai/docs/mobile-app).
 
 The notification payload allowlist, event matrix and security-review/device gates are in [`docs/push-data-classification.md`](docs/push-data-classification.md). Privacy/store declarations and the push-credential incident procedure are in [`docs/privacy-and-store.md`](docs/privacy-and-store.md). The store listing's words, review notes and the Apple and Google review answers, drafted, are in [`docs/store-listing.md`](docs/store-listing.md). Account ownership, identifiers and credential custody are in [`docs/release-prerequisites.md`](docs/release-prerequisites.md). The deployed server contracts, their versions and the dated result of exercising each are in [`docs/contracts.md`](docs/contracts.md). The public, person-facing guide is [datalayer.ai/docs/mobile-app](https://datalayer.ai/docs/mobile-app).
 
@@ -40,8 +40,8 @@ What each way of running the app needs:
 | `make publish-ios` / `publish-android`                                | **yes**      | **yes**                                                                         | **yes**                        | no                   |
 
 - **Expo account**: free at expo.dev. The free plan gives a limited number of cloud builds a month in a slower queue; paid plans give more and faster ones (see expo.dev/pricing). Then `eas login`.
-- **This project on Expo**: [`@datalayer/datalayer-agents`](https://expo.dev/accounts/datalayer/projects/datalayer-agents). `app.config.ts` names its owner (`datalayer`), slug and project id (`extra.eas.projectId`, and the updates URL `https://u.expo.dev/<project id>`), so a cloud build needs your Expo account to be a member of the `datalayer` account; `eas init` is not needed. `npx eas-cli project:info` shows the project.
-- **Signing**: EAS creates and keeps the Android keystore and, with an Apple Developer account, the iOS certificates and profiles. Nothing is committed here.
+- **This project on Expo**: [`@datalayer/datalayer-agents`](https://expo.dev/accounts/datalayer/projects/datalayer-agents). `app.config.ts` names its owner (`datalayer`), slug and project id (`extra.eas.projectId`), so a cloud build needs your Expo account to be a member of the `datalayer` account; `eas init` is not needed. `npx eas-cli project:info` shows the project.
+- **Signing**: EAS keeps the signing credentials; nothing is committed here. The first store versions were built locally (Xcode and Android Studio), so a store build from EAS needs the Android **upload key** those versions were signed with uploaded to EAS (`eas credentials --platform android`), or Play App Signing's upload key reset to one EAS holds; EAS must never generate a new keystore for `ai.datalayer.mobile`. On iOS, `eas credentials --platform ios` (signed in with the Apple account) creates or reuses the distribution certificate and provisioning profile. Development and preview builds (`.dev`, `.preview`) are other apps and may use keystores EAS generates.
 - **Without any account**: a plugged Android phone (`make dev-device-android`) or the browser (`make dev-web`).
 
 ### Dev mode
@@ -90,7 +90,7 @@ for APNs/FCM delivery, secure hardware/keychain behavior, background networking,
 VoiceOver/TalkBack on representative phones, thermals or device memory. Those
 physical-device gates remain open release gates.
 
-Every `dev:*` and `start*` script sets `APP_VARIANT=development`, so the app installs as _Datalayer Agents Dev_ (`ai.datalayer.mobile.dev`, scheme `datalayer-dev`) beside a store build. Once Metro is up, press `a` or `i` to open the installed development build, `r` to reload, `j` to open the debugger, `m` for the dev menu. Shake the phone (or `Cmd+D` / `Cmd+M` in a simulator) for the same menu on the device.
+Every `dev:*` and `start*` script sets `APP_VARIANT=development`, so the app installs as _Datalayer Dev_ (`ai.datalayer.mobile.dev`, scheme `datalayer-dev`) beside a store build. Once Metro is up, press `a` or `i` to open the installed development build, `r` to reload, `j` to open the debugger, `m` for the dev menu. Shake the phone (or `Cmd+D` / `Cmd+M` in a simulator) for the same menu on the device.
 
 Against a local server: set `EXPO_PUBLIC_DATALAYER_RUN_URL=http://localhost:8080` and `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` to the same or the local runtimes plane (and `EXPO_PUBLIC_DATALAYER_MCP_URL` to the local MCP gateway) for the iOS Simulator or `http://10.0.2.2:8080` for the Android emulator; a phone needs an HTTPS URL or `npm run start:tunnel` plus a tunnel to the server. `EXPO_PUBLIC_*` values are read when Metro starts: restart it after changing `.env`.
 
@@ -200,10 +200,10 @@ Common preparation:
 
 1. The Expo project is `@datalayer/datalayer-agents`; its id is in
    `app.config.ts`. Give a primary and recovery owner access to the
-   `datalayer` Expo account, create the `staging` EAS environment, and
+   `datalayer` Expo account and
    keep a least-privilege robot `EXPO_TOKEN` in GitHub Actions.
-2. Keep the final application identity: **Datalayer Agents**, Expo slug
-   `datalayer-agents`, iOS bundle id and Android package
+2. Keep the final application identity: **Datalayer**, Expo slug
+   `datalayer-agents` (the Expo project's name only), iOS bundle id and Android package
    `ai.datalayer.mobile`. Store identifiers cannot be casually replaced after
    publication.
 3. Complete [`docs/store-listing.md`](docs/store-listing.md) and verify every
@@ -232,6 +232,10 @@ Apple App Store:
 3. Let `eas credentials --platform ios` manage the distribution certificate,
    provisioning profile and APNs key. Add an App Store Connect API key to EAS
    for non-interactive submission; keep a recovery owner for every credential.
+   `eas.json` names the App Store Connect app id and the Apple Team id for
+   submission (`submit.staging.ios`, `submit.production.ios`); until they are
+   filled in, `ASC_APP_ID_PLACEHOLDER` and `APPLE_TEAM_ID_PLACEHOLDER` stand
+   there and an iOS submission must not be started.
 4. Complete the product page, age rating, App Privacy, accessibility,
    encryption/export, content-rights, sign-in and account-deletion answers.
    Put working demo credentials and the exact review journey in App Review
@@ -277,7 +281,7 @@ credential files never belong in the repository.
 | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
 | `development`, `development-simulator`, `e2e` | `development`                                                                                                              | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL`, `EXPO_PUBLIC_DATALAYER_MCP_URL` from `.env`; profile and variant come from `eas.json` | EAS development signing credentials                |
 | `preview`                                     | `preview`                                                                                                                  | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL`, `EXPO_PUBLIC_DATALAYER_MCP_URL` (production services, in `eas.json`)                       | EAS internal-distribution credentials              |
-| `staging`                                     | `staging` (its own: a custom EAS environment the account holders create)                                                    | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL` (production services, in `eas.json`)                     | The production app's EAS/store signing credentials |
+| `staging`                                     | `preview` (Expo's built-in environment, shared with the `preview` profile)                                                  | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL` (production services, in `eas.json`)                     | The production app's EAS/store signing credentials |
 | `production`                                  | `production`                                                                                                               | production `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL` (in `eas.json`)                              | The production app's EAS/store signing credentials |
 | GitHub `release.yaml`, `eas-build.yaml`       | repository Actions secrets                                                                                                 | none                                                                                                                                                               | `EXPO_TOKEN`, scoped to the Datalayer Expo project |
 
@@ -294,13 +298,11 @@ commit → npm run check → preview build → staging (TestFlight, Play interna
 
 Before any store build:
 
-- `version` in `app.config.ts` is the user-facing version; Android `versionCode` and iOS `buildNumber` are managed by EAS (`appVersionSource: remote`) and only ever increase.
+- `version` in `app.config.ts` is the user-facing version; Android `versionCode` and iOS `buildNumber` are managed by EAS (`appVersionSource: remote`, `autoIncrement` on `staging` and `production`) and only ever increase. The first store versions were built locally, outside EAS: before the first EAS store build, set EAS's numbers to the highest ones already uploaded to each store (`eas build:version:set --platform android` and `--platform ios`, read from Play Console → *App bundle explorer* and App Store Connect → *TestFlight*), so the next build is above them.
 - The build is made from a clean, pushed commit by EAS, never from a working tree. Record the commit, the EAS build id, the runtime version and the lockfile the release resolved (the `release-lockfile` artifact and its checksum; no lockfile is committed).
 - Signing and submit credentials live in EAS and the platform consoles, with named owners. Nothing is committed here.
 - Store listing, screenshots, privacy and data-safety answers, support and privacy-policy URLs, the account-deletion route and a review account without real customer data are current.
-- No over-the-air update reaches `production` before the same update was verified on `staging` on the same runtime; a native, permission or config change always means a new store binary.
-- Every EAS profile builds on its own update channel (`development`, `development-simulator`, `e2e`, `preview`, `staging`, `production`; `eas.json`) with `runtimeVersion` from the app version. `make update-staging` publishes to `staging`; `make promote-update GROUP=<id>` republishes that verified group to `production`, never a new bundle.
-- Updates are signed. A `preview`, `staging` or `production` build refuses to configure without `certs/updates-certificate.pem` (the public certificate, committed); the private key from `npx expo-updates codesigning:generate` is kept by the account holders with the other signing credentials and is never committed.
+- No over-the-air updates in v1: `updates.enabled` is `false` in `app.config.ts` for every build, and no profile has an update channel. The app changes only through a new store version, reviewed by Apple and Google. `expo-updates` stays installed and disabled; turning updates on later takes a configuration change, channels and a store release that carries them.
 
 Apple (`make publish-ios`):
 
@@ -323,7 +325,7 @@ Before tagging:
 
 - confirm the release commit is reviewed, clean, pushed and green in CI;
 - run `npm run check` and `npm run check:bundle`, and see the release commit's Check green (`release.yaml` refuses the tag otherwise), its `doctor` and `manifests` jobs included (`manifests` holds the generated privacy manifest, `Info.plist` and merged Android permissions to `docs/privacy-and-store.md`; its `release-manifests` artifact goes to the release record);
-- bump `version`, verify the remote iOS build number and Android version code will increase, and check `runtimeVersion` equals the app version;
+- bump `version`, verify the remote iOS build number and Android version code will increase;
 - verify staging against the same backend contract and run the sign-in, approval race/stale state, notification tap, stream/stop and pause/reset smoke journeys;
 - verify store copy, screenshots, privacy/data-safety answers, support/privacy/deletion links and the non-customer review account;
 - nominate the release owner, incident owner and explicit go/no-go approver.
@@ -342,7 +344,7 @@ IAM serves the oldest version of the app still supported on each platform at
 (`{"success": true, "minimum": {"ios": "1.2.0", "android": "1.2.0"}}`, public,
 cached for a minute). The app reads it at launch and every time it comes back
 to the foreground (`src/release/`). Below its platform's minimum it stops at
-_Update Datalayer Agents_, naming the version to install; an answer it cannot read — a
+_Update Datalayer_, naming the version to install; an answer it cannot read — a
 503, a missing or malformed version, no network — stops it at _Datalayer could
 not be reached_ with _Try again_: an unreadable switch is never taken as off.
 
@@ -368,9 +370,8 @@ rate or material push/stream failure. Stop the phased/staged rollout in both
 store consoles, disable the affected server capability and raise the minimum-supported-version
 policy (the kill switch above) when an installed binary is unsafe.
 
-An OTA rollback is allowed only to a previously staged update on the same
-`runtimeVersion`; native/config/permission faults require a new incremented
-binary. Never point an old JavaScript update at a different native runtime.
+There are no over-the-air updates to roll back to: every fix is a new,
+incremented store binary.
 If EAS Submit fails after a successful build, download that exact artifact
 from EAS and upload the `.ipa` with Transporter or the `.aab` in Play Console;
 do not rebuild it. If signing or submission credentials fail, stop, rotate or

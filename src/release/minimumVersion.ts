@@ -25,9 +25,9 @@ export type Support =
   | { kind: 'unknown'; why: string };
 
 export const SUPPORT_WORDS = {
-  updateTitle: 'Update Datalayer Agents',
+  updateTitle: 'Update Datalayer',
   update: (minimum: string, current: string) =>
-    `This version (${current}) is no longer supported. Install version ${minimum} or later to keep using Datalayer Agents.`,
+    `This version (${current}) is no longer supported. Install version ${minimum} or later to keep using Datalayer.`,
   unknownTitle: 'Datalayer could not be reached',
   unknown: 'Datalayer could not confirm this version of the app is still supported. Check your connection and try again.',
   retry: 'Try again'

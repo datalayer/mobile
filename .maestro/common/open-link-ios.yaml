@@ -1,4 +1,4 @@
-# iOS asks "Open in “Datalayer Agents Preview”?" for a link opened from outside the app; the flow says Open.
+# iOS asks "Open in “Datalayer Preview”?" for a link opened from outside the app; the flow says Open.
 # Left unanswered, the dialog stays over the Simulator and every later flow fails. The dialog can come
 # a few seconds after openLink, notably from the home screen: tapping at once missed it once and left
 # the deep-link flow waiting behind it, so the flow waits for it first (up to 10 s; none on Android).

@@ -36,7 +36,7 @@ describe('application faces', () => {
   });
 });
 
-describe('the Datalayer Agents eyes, drawn natively', () => {
+describe('the Datalayer eyes, drawn natively', () => {
   it('turns an ellipse into a stretched circle centred where the geometry says', () => {
     const { eyes } = eyesGeometry('ahead');
     const scale = 20 / EYES_VIEW.height;

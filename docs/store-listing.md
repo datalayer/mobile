@@ -1,6 +1,6 @@
 # Store listing and review answers (draft)
 
-What the App Store Connect and Google Play Console records of Datalayer Agents
+What the App Store Connect and Google Play Console records of Datalayer
 say, drafted from the app as it is. The records, the ownership of the app, the
 signing and submit credentials, the review account and the screenshots are the
 account holders'.
@@ -9,13 +9,13 @@ correct this file with what changed. Privacy and Data safety answers are in
 [`privacy-and-store.md`](privacy-and-store.md). The process is in the README's
 *Publish* section.
 
-Drafted 16 October 2026; the app renamed **Datalayer Agents** on 19 October 2026.
+Drafted 16 October 2026. On 19 October 2026 the app's name became **Datalayer**, on the phone and in both stores, which is what the store records were already titled, so no listing is renamed.
 
 ## Identity
 
 | Field | Value | Status |
 |---|---|---|
-| Name | Datalayer Agents | The name on the phone (`app.config.ts`) and in both stores |
+| Name (App Store Connect *Name*, 30 characters at most; Play *App name*, 30 characters at most) | Datalayer | The name on the phone (`app.config.ts`) and in both stores; _Datalayer Dev_ and _Datalayer Preview_ for the side-by-side builds, which are never listed |
 | iOS bundle id / Android package | `ai.datalayer.mobile` | Decided in `app.config.ts`; kept once a store record exists |
 | Category | Productivity (Apple and Google) | Draft |
 | Age rating | 4+ (Apple), Everyone / PEGI 3 (Google, from the questionnaire below) | Draft |
@@ -38,9 +38,9 @@ Drafted 16 October 2026; the app renamed **Datalayer Agents** on 19 October 2026
 
 **Description (Apple and Google; 4,000 characters at most):**
 
-> Datalayer Agents puts the agents and applications you run on Datalayer in your pocket.
+> Datalayer puts the agents and applications you run on Datalayer in your pocket.
 >
-> When an agent needs your consent — to send an email, run a tool, reach a company in your name — Datalayer Agents asks you on your phone. You see the whole request before you answer: who asks, what it will do, with which arguments. A notification never approves anything by itself, and an answer given elsewhere is never overwritten.
+> When an agent needs your consent — to send an email, run a tool, reach a company in your name — Datalayer asks you on your phone. You see the whole request before you answer: who asks, what it will do, with which arguments. A notification never approves anything by itself, and an answer given elsewhere is never overwritten.
 >
 > - **Inbox.** Every approval waiting for you, oldest first, with the full request.
 > - **Agents.** Your running applications and agents, live or paused, with what they are doing.
@@ -49,9 +49,14 @@ Drafted 16 October 2026; the app renamed **Datalayer Agents** on 19 October 2026
 > - **In your name.** The companies your applications act for you at, and a way to end that.
 > - **Notifications.** Optional, and they carry no content: tapping one opens the item and reads it again.
 >
-> Datalayer Agents works with a Datalayer account. Building applications stays on the web.
+> Datalayer works with a Datalayer account. Building applications stays on the web.
 
 Each claim above is shipped in the app on the day of drafting; remove any that a release does not carry.
+
+**In the consoles.** The account holders paste the words above:
+
+1. Play Console → the app → *Grow users → Store presence → Main store listing*: *App name* `Datalayer` (unchanged), *Short description* and *Full description* as above; save, then send the change for review from *Publishing overview*.
+2. App Store Connect → the app → *App Information*: *Name* `Datalayer` (unchanged) and *Subtitle*; then the version being prepared: *Promotional Text*, *Description* and *Keywords* as above. The name and subtitle change only with a version submitted for review; promotional text can change at any time.
 
 ## Review notes (Apple *App Review Information*, Google *App access*)
 
@@ -61,14 +66,14 @@ All functionality is behind sign-in with a Datalayer account. The reviewer signs
 - one approval waiting, created just before review, to see Inbox and the full request (*Approve* or *Reject* both work);
 - notifications are optional; the reviewer may decline the system prompt.
 
-Review account: **to be created by the account holders** (handle and password entered in the consoles, never in this repository). It must be a dedicated account with no real customer data and no billing card. Datalayer Agents charges nothing: there are no in-app purchases, subscriptions or external payment links in the app.
+Review account: **to be created by the account holders** (handle and password entered in the consoles, never in this repository). It must be a dedicated account with no real customer data and no billing card. Datalayer charges nothing: there are no in-app purchases, subscriptions or external payment links in the app.
 
 ## Apple answers
 
 | Question | Draft answer | Why |
 |---|---|---|
 | Export compliance: does the app use encryption? | It uses only encryption exempt from export documentation (HTTPS through the operating system); `ITSAppUsesNonExemptEncryption` is `false` | `app.config.ts`: `ios.config.usesNonExemptEncryption: false`; the app implements no cryptography of its own |
-| Sign-in (Guideline 4.8) | **Open — needs a decision** | The app signs in through Datalayer's own web sign-in, which also offers third-party providers (GitHub, Google, LinkedIn and others). Guideline 4.8 asks for an equivalent privacy-preserving login option when an app's primary account uses a third-party login. Either IAM offers *Sign in with Apple* (or an equivalent meeting 4.8), or the phone's sign-in is shown as the Datalayer account only. Added to the open decisions. |
+| Sign-in (Guideline 4.8) | The app signs in to a Datalayer account only (decided 19 October 2026): its sign-in screen has one button, *Sign in with Datalayer*, and no third-party login button; 4.8 does not apply to an app that uses only the company's own account system | The button opens Datalayer's web sign-in in the system browser (OAuth with PKCE). That page can still list third-party providers (GitHub, Google, LinkedIn and others) when the browser is not signed in, and the app has no way to ask for the Datalayer account alone yet; until the web sign-in can hide them for the app, a reviewer may still see them there. |
 | Account deletion (Guideline 5.1.1(v)) | In the app: *Settings → Delete account*, a request to IAM with a 30-day grace period, also on the web | Decided by the user 16 October 2026 |
 | User-generated content (Guideline 1.2) | No public content; a person's applications and conversations are private to their account and the people it is shared with | — |
 | Content rights | No third-party content is shown outside what the person's own applications produce | — |
@@ -99,8 +104,8 @@ Suggested set: Inbox with one approval; the full approval with *Approve*/*Reject
 
 ## Left with the account holders
 
-- the records themselves (App Store Connect app, Play Console app), ownership and the team members;
-- signing and submit credentials in EAS, and the `staging` environment of the EAS project (`@datalayer/datalayer-agents`);
+- the records themselves (App Store Connect app, Play Console app), ownership and the team members; both are titled *Datalayer*, which stays;
+- signing and submit credentials in EAS (the Android upload key the first versions were signed with, the iOS distribution certificate and profile, the App Store Connect API key, the Play service account), and the App Store Connect app id and Apple Team id in `eas.json` (placeholders until then);
 - the review account, its application and a waiting approval on the day of review;
 - the screenshots on real builds, and the submission;
-- the two open answers above: Apple 4.8 sign-in, Google's in-app report of generated content.
+- the open answer above: Google's in-app report of generated content; and, for Apple 4.8, a web sign-in that shows the Datalayer account alone when the app opens it.

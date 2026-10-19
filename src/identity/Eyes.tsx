@@ -4,7 +4,7 @@
  */
 
 /**
- * The Datalayer Agents eyes, drawn natively from Primer Addons' geometry (the web draws
+ * The Datalayer eyes, drawn natively from Primer Addons' geometry (the web draws
  * the same with SVG). Each eye is a filled ellipse in the ink with a smaller
  * one in the surface on it, so the outline keeps one width all round.
  */

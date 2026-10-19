@@ -1,6 +1,6 @@
 # Mobile privacy, store declarations and push incident runbook
 
-This is the review source for the privacy and store declarations of Datalayer Agents. It describes the current application; it is not evidence that Apple or Google forms have been submitted. Reconcile it with the release binary's generated manifests and dependency privacy reports before every store submission.
+This is the review source for the privacy and store declarations of Datalayer. It describes the current application; it is not evidence that Apple or Google forms have been submitted. Reconcile it with the release binary's generated manifests and dependency privacy reports before every store submission.
 
 ## Public destinations
 

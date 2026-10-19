@@ -1,4 +1,4 @@
-# Datalayer Agents: the deployed contracts
+# Datalayer: the deployed contracts
 
 The server contracts the phone calls, as deployed on **r1** (IAM is shared and
 served from prod1's address), with the versions running when they were

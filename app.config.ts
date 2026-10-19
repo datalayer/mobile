@@ -3,8 +3,6 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { existsSync } from 'fs';
-import { join } from 'path';
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 /** The build variants that are installed side by side. */
@@ -16,7 +14,7 @@ const VARIANT: Variant =
 const BASE_ID = 'ai.datalayer.mobile';
 
 /** The app's name on the phone and in the stores. */
-const APP_NAME = 'Datalayer Agents';
+const APP_NAME = 'Datalayer';
 
 /** The Expo project: https://expo.dev/accounts/datalayer/projects/datalayer-agents */
 const EXPO_OWNER = 'datalayer';
@@ -45,36 +43,12 @@ const VARIANTS: Record<Variant, { name: string; id: string; scheme: string; icon
 };
 
 /*
- * Over-the-air updates: each EAS profile builds on its own channel (eas.json),
- * on the runtime of its app version, served from the Expo project's address. An
- * update that can reach people — preview, staging, production — is signed: the
- * build carries the public certificate, the private key stays with the account
- * holders, and such a build is refused while the certificate is missing.
+ * Over-the-air updates are off for v1: every version people run is a store
+ * binary, reviewed by Apple and Google, and a fix ships as a new store version.
+ * expo-updates stays installed and disabled, so turning updates on later is a
+ * configuration change plus one store release that carries it.
  */
-const UPDATES_CERTIFICATE = './certs/updates-certificate.pem';
-const SIGNED_PROFILES = new Set(['preview', 'staging', 'production']);
-
-function updatesOf(): ExpoConfig['updates'] {
-  const profile = process.env.EAS_BUILD_PROFILE ?? '';
-  const certified = existsSync(join(__dirname, UPDATES_CERTIFICATE));
-  if (SIGNED_PROFILES.has(profile) && !certified) {
-    throw new Error(
-      `The ${profile} build receives over-the-air updates, which are signed: ${UPDATES_CERTIFICATE} is missing ` +
-        '(npx expo-updates codesigning:generate; the private key is kept by the account holders, never committed).'
-    );
-  }
-  return {
-    url: `https://u.expo.dev/${EAS_PROJECT_ID}`,
-    checkAutomatically: 'ON_LOAD',
-    fallbackToCacheTimeout: 0,
-    ...(certified
-      ? {
-          codeSigningCertificate: UPDATES_CERTIFICATE,
-          codeSigningMetadata: { keyid: 'main', alg: 'rsa-v1_5-sha256' }
-        }
-      : {})
-  };
-}
+const UPDATES: ExpoConfig['updates'] = { enabled: false };
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const variant = VARIANTS[VARIANT];
@@ -90,7 +64,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     orientation: 'portrait',
     userInterfaceStyle: 'automatic',
     runtimeVersion: { policy: 'appVersion' },
-    updates: updatesOf(),
+    updates: UPDATES,
     ios: {
       bundleIdentifier: variant.id,
       supportsTablet: true,
