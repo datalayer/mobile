@@ -8,8 +8,8 @@ creating a production release or placing a credential in Git.
 
 | Item | Proposed value | Human owner needed before use |
 |---|---|---|
-| Expo account | `datalayer-mobile` (created) | Datalayer Expo account owner |
-| Expo project/slug | `@datalayer-mobile/datalayer-mobile`, id `1dfb9069-9ef4-4d8c-8a47-804376fa9d5e` (created; in `app.config.ts`) | Mobile release owner |
+| Expo account | `datalayer` (created) | Datalayer Expo account owner |
+| Expo project/slug | `@datalayer/datalayer-agents`, id `790468fa-e6ee-44a8-9fff-b303c45f4f84` (created; in `app.config.ts`) | Mobile release owner |
 | Production iOS bundle id / Android application id | `ai.datalayer.mobile` | Apple Account Holder and Play Console account owner |
 | Development id | `ai.datalayer.mobile.dev` | Mobile release owner |
 | Preview id | `ai.datalayer.mobile.preview` | Mobile release owner |
@@ -30,7 +30,7 @@ _Datalayer Agents Preview_ for the side-by-side variants).
 
 | Account | Cost baseline | Required human action |
 |---|---:|---|
-| Expo | Free tier (the `datalayer-mobile` account's plan on 19 October 2026) covers a limited number of builds a month; a custom `staging` environment and signed updates may need a paid plan | Organization owner invites the release owner and creates a least-privilege robot token for CI |
+| Expo | Free tier (the `datalayer` account's plan on 19 October 2026) covers a limited number of builds a month; a custom `staging` environment and signed updates may need a paid plan | Organization owner invites the release owner and creates a least-privilege robot token for CI |
 | Apple Developer Program | US$99/year in the US; verify the local price when enrolling | Account Holder accepts agreements, registers the bundle id and grants App Manager/Developer roles |
 | App Store Connect | Included with the Apple program | App Manager creates the app record, review account and TestFlight groups |
 | Google Play Console | US$25 one-time registration fee; verify the local price when enrolling | Account owner completes verification, creates the app and grants the release manager least privilege |

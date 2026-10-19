@@ -18,10 +18,10 @@ const BASE_ID = 'ai.datalayer.mobile';
 /** The app's name on the phone and in the stores. */
 const APP_NAME = 'Datalayer Agents';
 
-/** The Expo project: https://expo.dev/accounts/datalayer-mobile/projects/datalayer-mobile */
-const EXPO_OWNER = 'datalayer-mobile';
-const EXPO_SLUG = 'datalayer-mobile';
-export const EAS_PROJECT_ID = '1dfb9069-9ef4-4d8c-8a47-804376fa9d5e';
+/** The Expo project: https://expo.dev/accounts/datalayer/projects/datalayer-agents */
+const EXPO_OWNER = 'datalayer';
+const EXPO_SLUG = 'datalayer-agents';
+export const EAS_PROJECT_ID = '790468fa-e6ee-44a8-9fff-b303c45f4f84';
 
 const VARIANTS: Record<Variant, { name: string; id: string; scheme: string; icon: string }> = {
   development: {

@@ -8,8 +8,8 @@
 # Play's internal track (eas.json, submit.staging). Store releases are tags
 # (release.yaml), not this workflow.
 #
-# Needs the repository secret EXPO_TOKEN (an Expo robot token of the
-# datalayer-mobile account) and the signing and submit credentials kept in EAS
+# Needs the repository secret EXPO_TOKEN (an Expo access token of the
+# datalayer account) and the signing and submit credentials kept in EAS
 # (`eas credentials`). Like a release, it builds only a commit whose Check
 # passed, every job of it.
 name: EAS build

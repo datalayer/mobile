@@ -40,7 +40,7 @@ What each way of running the app needs:
 | `make publish-ios` / `publish-android`                                | **yes**      | **yes**                                                                         | **yes**                        | no                   |
 
 - **Expo account**: free at expo.dev. The free plan gives a limited number of cloud builds a month in a slower queue; paid plans give more and faster ones (see expo.dev/pricing). Then `eas login`.
-- **This project on Expo**: [`@datalayer-mobile/datalayer-mobile`](https://expo.dev/accounts/datalayer-mobile/projects/datalayer-mobile). `app.config.ts` names its owner (`datalayer-mobile`), slug and project id (`extra.eas.projectId`, and the updates URL `https://u.expo.dev/<project id>`), so a cloud build needs your Expo account to be a member of the `datalayer-mobile` account; `eas init` is not needed. `npx eas-cli project:info` shows the project.
+- **This project on Expo**: [`@datalayer/datalayer-agents`](https://expo.dev/accounts/datalayer/projects/datalayer-agents). `app.config.ts` names its owner (`datalayer`), slug and project id (`extra.eas.projectId`, and the updates URL `https://u.expo.dev/<project id>`), so a cloud build needs your Expo account to be a member of the `datalayer` account; `eas init` is not needed. `npx eas-cli project:info` shows the project.
 - **Signing**: EAS creates and keeps the Android keystore and, with an Apple Developer account, the iOS certificates and profiles. Nothing is committed here.
 - **Without any account**: a plugged Android phone (`make dev-device-android`) or the browser (`make dev-web`).
 
@@ -198,12 +198,12 @@ postponed until the devices and testers are available.
 
 Common preparation:
 
-1. The Expo project is `@datalayer-mobile/datalayer-mobile`; its id is in
+1. The Expo project is `@datalayer/datalayer-agents`; its id is in
    `app.config.ts`. Give a primary and recovery owner access to the
-   `datalayer-mobile` Expo account, create the `staging` EAS environment, and
+   `datalayer` Expo account, create the `staging` EAS environment, and
    keep a least-privilege robot `EXPO_TOKEN` in GitHub Actions.
 2. Keep the final application identity: **Datalayer Agents**, Expo slug
-   `datalayer-mobile`, iOS bundle id and Android package
+   `datalayer-agents`, iOS bundle id and Android package
    `ai.datalayer.mobile`. Store identifiers cannot be casually replaced after
    publication.
 3. Complete [`docs/store-listing.md`](docs/store-listing.md) and verify every

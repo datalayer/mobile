@@ -30,13 +30,14 @@ describe('the Expo project and the app it builds', () => {
 
   it('names the app Datalayer Agents, keeping the identifiers already registered', () => {
     expect(production.name).toBe('Datalayer Agents');
-    expect(production.slug).toBe('datalayer-mobile');
+    expect(production.slug).toBe('datalayer-agents');
     expect(production.ios?.bundleIdentifier).toBe('ai.datalayer.mobile');
     expect(production.android?.package).toBe('ai.datalayer.mobile');
   });
 
-  it('belongs to the datalayer-mobile Expo project, whose address serves its updates', () => {
-    expect(production.owner).toBe('datalayer-mobile');
+  it('belongs to the datalayer-agents Expo project of the datalayer account, whose address serves its updates', () => {
+    expect(production.owner).toBe('datalayer');
+    expect(EAS_PROJECT_ID).toBe('790468fa-e6ee-44a8-9fff-b303c45f4f84');
     expect(EAS_PROJECT_ID).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
     expect((production.extra as { eas: { projectId: string } }).eas.projectId).toBe(EAS_PROJECT_ID);
     expect(production.updates?.url).toBe(`https://u.expo.dev/${EAS_PROJECT_ID}`);

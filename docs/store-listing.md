@@ -100,7 +100,7 @@ Suggested set: Inbox with one approval; the full approval with *Approve*/*Reject
 ## Left with the account holders
 
 - the records themselves (App Store Connect app, Play Console app), ownership and the team members;
-- signing and submit credentials in EAS, and the `staging` environment of the EAS project (`@datalayer-mobile/datalayer-mobile`);
+- signing and submit credentials in EAS, and the `staging` environment of the EAS project (`@datalayer/datalayer-agents`);
 - the review account, its application and a waiting approval on the day of review;
 - the screenshots on real builds, and the submission;
 - the two open answers above: Apple 4.8 sign-in, Google's in-app report of generated content.
