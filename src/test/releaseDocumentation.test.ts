@@ -9,7 +9,7 @@ import path from 'node:path';
 const root = path.resolve(__dirname, '../..');
 const read = (file: string) => fs.readFileSync(path.join(root, file), 'utf8');
 
-describe('the mobile release runbook (M-007 and M-059)', () => {
+describe('the mobile release runbook', () => {
   it('keeps identifiers, account ownership, costs and credential custody explicit', () => {
     const prerequisites = read('docs/release-prerequisites.md');
     for (const required of [

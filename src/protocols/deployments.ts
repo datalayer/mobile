@@ -5,7 +5,7 @@
 
 /** Safe protocol capabilities already projected by ai-agents on a deployment. */
 
-/** A protocol as the registry says it (MOBILE M-045b): the specification version Datalayer implements, its status. */
+/** A protocol as the registry says it: the specification version Datalayer implements, its status. */
 export type RegistryEntry = { id: string; name: string; version: string; status: string };
 
 /** Whether the identity a deployment acts under is published as a company reads it, checked by the server. */

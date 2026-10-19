@@ -24,7 +24,7 @@ export type Environment = {
   /**
    * The runtimes plane: ai-agents, runtimes, the scheduler, contents and
    * inference, and the ai-agents WebSocket — Core's `RUNTIMES_PLANE_URL`.
-   * Deployed apart from the control plane (M-001, 16 October 2026: neither
+   * Deployed apart from the control plane (since 16 October 2026: neither
    * host serves the other's routes).
    */
   runtimesUrl: string;

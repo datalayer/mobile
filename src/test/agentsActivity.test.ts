@@ -6,7 +6,7 @@
 import { runtimeOf, scheduledSays } from '@datalayer/agent-runtimes/lib/portable';
 import { absoluteTime, relativeTime } from '../i18n/time';
 
-describe('a standalone agent stays narrower than an application (M-014a)', () => {
+describe('a standalone agent stays narrower than an application', () => {
   it('does not project application-only capabilities from a raw runtime', () => {
     expect(
       runtimeOf({
@@ -32,7 +32,7 @@ describe('a standalone agent stays narrower than an application (M-014a)', () =>
   });
 });
 
-describe('application activity wording (M-015a)', () => {
+describe('application activity wording', () => {
   it('describes schedules and gives localised absolute plus accessible relative time', () => {
     expect(
       scheduledSays({

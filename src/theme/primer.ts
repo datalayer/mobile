@@ -97,6 +97,13 @@ const first = (tokens: CssVariableMap, names: string[], fallback: string): strin
 export const fontFamilyOf = (stack: string): string | undefined =>
   /\bInter\b/.test(stack) ? 'Inter' : undefined;
 
+/**
+ * The name a theme is shown with in Settings. The app's default theme is the
+ * shared 'loop' variant, shown with the app's own name.
+ */
+const THEME_LABELS: Partial<Record<string, string>> = { loop: 'Agents' };
+export const themeLabelOf = (theme: { id: string; label: string }): string => THEME_LABELS[theme.id] ?? theme.label;
+
 export function nativeThemeOf(theme: PortableTheme, mode: ResolvedMode): NativeTheme {
   const t = theme.modes[mode];
   const color = (names: string | string[], fallback: string) =>
@@ -107,7 +114,7 @@ export function nativeThemeOf(theme: PortableTheme, mode: ResolvedMode): NativeT
   return {
     variant: theme.id,
     mode,
-    label: theme.label,
+    label: themeLabelOf(theme),
     colors: {
       background,
       surface: color(['--bgColor-muted', '--bgColor-default'], background),

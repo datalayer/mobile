@@ -4,7 +4,7 @@
  */
 
 /*
- * The release manifests (M-052), read from what the production
+ * The release manifests, read from what the production
  * build generates (Check's `manifests` job: `expo prebuild` without a variant,
  * then Gradle's merge of the release Android manifest, libraries included).
  * It holds them to docs/privacy-and-store.md:
@@ -47,7 +47,7 @@ const ANDROID_PERMISSIONS = {
 };
 
 /*
- * The icon badge's count of pending approvals (M-025) on launchers without
+ * The icon badge's count of pending approvals on launchers without
  * Android's own badges: ShortcutBadger, which expo-notifications ships,
  * declares these for each launcher it writes to. All are install-time
  * permissions nobody is asked for.
@@ -240,7 +240,7 @@ if (require.main === module) {
   ];
   console.log(lines.join('\n'));
   if (process.env.GITHUB_STEP_SUMMARY) {
-    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Release manifests (M-052)\n\n${lines.join('\n')}\n`);
+    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Release manifests\n\n${lines.join('\n')}\n`);
   }
   const problems = [...privacyProblems(privacy), ...infoPlistProblems(info, project), ...permissionProblems(permissions)];
   if (problems.length) {

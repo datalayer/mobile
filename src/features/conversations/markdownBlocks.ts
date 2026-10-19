@@ -4,8 +4,8 @@
  */
 
 /**
- * The safe subset of Markdown an answer is drawn with on the phone (MOBILE
- * M-032): paragraphs, headings, lists, quotes, fenced code, and inline bold,
+ * The safe subset of Markdown an answer is drawn with on the phone:
+ * paragraphs, headings, lists, quotes, fenced code, and inline bold,
  * italic, code and links. Nothing else is interpreted: raw HTML, images and
  * scripts are shown as the words they are, and a link is kept only when it is
  * `https:` (or `mailto:`) — it opens after the person confirms its address.

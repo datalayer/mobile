@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { fontFamilyOf, lengthOf, nativeThemeOf, portableThemeOf, resolveToken, themeVariants } from '../theme/primer';
+import { fontFamilyOf, lengthOf, nativeThemeOf, portableThemeOf, resolveToken, themeLabelOf, themeVariants } from '../theme/primer';
 import { DEFAULT_PREFERENCE, preferenceOf, resolveMode } from '../theme/ThemeProvider';
 
 describe('Primer Addons tokens on a phone', () => {
@@ -20,14 +20,21 @@ describe('Primer Addons tokens on a phone', () => {
     }
   });
 
-  it('reads the LOOP theme as the web does: white canvas, pill controls, Inter', () => {
-    const loop = nativeThemeOf(portableThemeOf('loop'), 'light');
-    expect(loop.colors.background).toBe('#FFFFFF');
-    expect(loop.colors.accentEmphasis).toBe('#7ADBB8');
-    expect(loop.radius.control).toBe(999);
-    expect(loop.radius.card).toBe(20);
-    expect(loop.fontFamily).toBe('Inter');
+  it('reads the default Agents theme as the web does: white canvas, pill controls, Inter', () => {
+    const agents = nativeThemeOf(portableThemeOf('loop'), 'light');
+    expect(agents.colors.background).toBe('#FFFFFF');
+    expect(agents.colors.accentEmphasis).toBe('#7ADBB8');
+    expect(agents.radius.control).toBe(999);
+    expect(agents.radius.card).toBe(20);
+    expect(agents.fontFamily).toBe('Inter');
     expect(nativeThemeOf(portableThemeOf('datalayer'), 'dark').fontFamily).toBeUndefined();
+  });
+
+  it("names the default theme after the app, and every other theme as Primer Addons does", () => {
+    expect(themeLabelOf(portableThemeOf('loop'))).toBe('Agents');
+    expect(nativeThemeOf(portableThemeOf('loop'), 'dark').label).toBe('Agents');
+    expect(themeLabelOf(portableThemeOf('datalayer'))).toBe(portableThemeOf('datalayer').label);
+    for (const variant of themeVariants) expect(themeLabelOf(portableThemeOf(variant))).not.toMatch(/loop/i);
   });
 
   it('follows var() references and their fallbacks', () => {
@@ -47,7 +54,7 @@ describe('Primer Addons tokens on a phone', () => {
 });
 
 describe('the theme preference', () => {
-  it('is LOOP following the system by default, and survives a bad value', () => {
+  it('is the Agents theme following the system by default, and survives a bad value', () => {
     expect(preferenceOf(null)).toEqual(DEFAULT_PREFERENCE);
     expect(preferenceOf('{"variant":"nope","colorMode":"sideways"}')).toEqual(DEFAULT_PREFERENCE);
     expect(preferenceOf('not json')).toEqual(DEFAULT_PREFERENCE);

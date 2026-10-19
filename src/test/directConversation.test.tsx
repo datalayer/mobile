@@ -4,7 +4,7 @@
  */
 
 /**
- * A Direct Conversation on the phone (MOBILE M-038): opened from a company's
+ * A Direct Conversation on the phone: opened from a company's
  * replies, the person's words go only to the company with a one-use ticket,
  * lines said apart by who wrote them, replies read back from the cursor
  * (never by sending again), and once the company closes it nothing more is
@@ -37,7 +37,7 @@ function fakeClient() {
   return { client, calls };
 }
 
-describe('a Direct Conversation on the phone (M-038)', () => {
+describe('a Direct Conversation on the phone', () => {
   it('sends only the person’s words to the company, reads replies from the cursor, and stops once closed', async () => {
     const { client, calls } = fakeClient();
     const direct = new DirectController(client, 'app-1');

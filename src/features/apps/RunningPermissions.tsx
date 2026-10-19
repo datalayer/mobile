@@ -8,7 +8,7 @@ import { EmptyState } from '../../components/primitives';
 import { QueryView, Row, SectionTitle } from '../../components/states';
 import { useRunningPermissions } from '../queries';
 
-/** Rules and permissions of one exact deployed version, never the latest draft (M-044). */
+/** Rules and permissions of one exact deployed version, never the latest draft. */
 export function RunningPermissions({ deployment }: { deployment: Deployment }) {
   const query = useRunningPermissions(deployment.appUid, deployment.version);
   return (

@@ -4,7 +4,7 @@
  */
 
 /**
- * A protocol sign-in watched until it finishes (MOBILE M-039). Once the
+ * A protocol sign-in watched until it finishes. Once the
  * person opened the company's page — Direct: the system browser, back
  * through IAM's return bound to that browser and the company asked; Device:
  * the code entered there — the gateway is asked how it stands, with their

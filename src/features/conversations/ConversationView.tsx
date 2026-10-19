@@ -4,7 +4,7 @@
  */
 
 /**
- * A conversation drawn natively (MOBILE M-030 to M-034): what Agent Runtimes'
+ * A conversation drawn natively: what Agent Runtimes'
  * conversation reducer holds — messages, tool calls and steps collapsed, how
  * a wordless turn ended, failures — with the question the application asks,
  * the composer, Stop, the application's presence line, and a screen-reader
@@ -230,9 +230,9 @@ export function ConversationView({
   closed?: string;
   /** Its deployment is paused: its presence says so. */
   paused?: boolean;
-  /** A Direct Conversation that may be opened under it (an application's conversation only, M-038). */
+  /** A Direct Conversation that may be opened under it (an application's conversation only). */
   direct?: DirectController;
-  /** How a sign-in under way stands, asked of the gateway, the application it is for, and IAM's protected input (M-039). */
+  /** How a sign-in under way stands, asked of the gateway, the application it is for, and IAM's protected input. */
   signIns?: { appUid: string; ask: SignInAsk; typed?: ProtectedInput };
 }) {
   const { colors } = useNativeTheme();
@@ -241,7 +241,7 @@ export function ConversationView({
   const noDirect = useRef({ open: null, busy: false, problem: '' } as const).current;
   const directView = useSyncExternalStore(direct?.subscribe ?? (() => () => undefined), direct?.getView ?? (() => noDirect));
   const linked = directView.open;
-  // The newest sign-in shown is watched until it finishes, then the conversation goes on, once (M-039).
+  // The newest sign-in shown is watched until it finishes, then the conversation goes on, once.
   const newestSignIn = [...view.conversation.items]
     .reverse()
     .find((item): item is Extract<ConversationItem, { kind: 'tool' }> => item.kind === 'tool' && item.display?.kind === 'sign-in');
@@ -277,9 +277,9 @@ export function ConversationView({
     return () => listening.remove();
   }, [direct]);
   const actions: DisplayActions = {
-    // A sign-in page opens in the system browser, after its address is named (M-037, M-039).
+    // A sign-in page opens in the system browser, after its address is named.
     onOpenSignIn: url =>
-      Alert.alert('Open the sign-in page?', `It opens ${linkHost(url)} in your browser, outside Datalayer.`, [
+      Alert.alert('Open the sign-in page?', `It opens ${linkHost(url)} in your browser, outside Datalayer Agents.`, [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Open', onPress: () => void WebBrowser.openBrowserAsync(url) }
       ]),

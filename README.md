@@ -2,9 +2,9 @@
 
 [![Become a Sponsor](https://img.shields.io/static/v1?label=Become%20a%20Sponsor&message=%E2%9D%A4&logo=GitHub&style=flat&color=1ABC9C)](https://github.com/sponsors/datalayer)
 
-# ☰ 📱 Datalayer Mobile
+# ☰ 📱 Datalayer Agents
 
-The running agents and LOOP applications of Datalayer, in your pocket: what needs you, the approvals to read in full before deciding, and the conversations to continue. Expo (SDK 57) and React Native, iOS and Android. The person-facing guide is [datalayer.ai/docs/mobile-app](https://datalayer.ai/docs/mobile-app).
+**Datalayer Agents** is the mobile app for the agents and applications you run on Datalayer, in your pocket: what needs you, the approvals to read in full before deciding, and the conversations to continue. Expo (SDK 57) and React Native, iOS and Android. The person-facing guide is [datalayer.ai/docs/mobile-app](https://datalayer.ai/docs/mobile-app).
 
 The notification payload allowlist, event matrix and security-review/device gates are in [`docs/push-data-classification.md`](docs/push-data-classification.md). Privacy/store declarations and the push-credential incident procedure are in [`docs/privacy-and-store.md`](docs/privacy-and-store.md). The store listing's words, review notes and the Apple and Google review answers, drafted, are in [`docs/store-listing.md`](docs/store-listing.md). Account ownership, identifiers and credential custody are in [`docs/release-prerequisites.md`](docs/release-prerequisites.md). The deployed server contracts, their versions and the dated result of exercising each are in [`docs/contracts.md`](docs/contracts.md). The public, person-facing guide is [datalayer.ai/docs/mobile-app](https://datalayer.ai/docs/mobile-app).
 
@@ -40,7 +40,7 @@ What each way of running the app needs:
 | `make publish-ios` / `publish-android`                                | **yes**      | **yes**                                                                         | **yes**                        | no                   |
 
 - **Expo account**: free at expo.dev. The free plan gives a limited number of cloud builds a month in a slower queue; paid plans give more and faster ones (see expo.dev/pricing). Then `eas login`.
-- **This project on Expo**: `app.config.ts` names the owner `datalayer`, so your account must be a member of the Datalayer organization on Expo, or build under your own account with `EXPO_OWNER=<your-username>`. Run `eas init` once; it creates the project and gives its id, which `app.config.ts` reads from `EAS_PROJECT_ID` (put it in `.env`).
+- **This project on Expo**: [`@datalayer-mobile/datalayer-mobile`](https://expo.dev/accounts/datalayer-mobile/projects/datalayer-mobile). `app.config.ts` names its owner (`datalayer-mobile`), slug and project id (`extra.eas.projectId`, and the updates URL `https://u.expo.dev/<project id>`), so a cloud build needs your Expo account to be a member of the `datalayer-mobile` account; `eas init` is not needed. `npx eas-cli project:info` shows the project.
 - **Signing**: EAS creates and keeps the Android keystore and, with an Apple Developer account, the iOS certificates and profiles. Nothing is committed here.
 - **Without any account**: a plugged Android phone (`make dev-device-android`) or the browser (`make dev-web`).
 
@@ -88,9 +88,9 @@ The simulator is suitable for screens, navigation, API contracts, streaming,
 approval races and the automated Maestro journeys. It is not release evidence
 for APNs/FCM delivery, secure hardware/keychain behavior, background networking,
 VoiceOver/TalkBack on representative phones, thermals or device memory. Those
-physical-device gates remain `[-]` in the MOBILE implementation plan.
+physical-device gates remain open release gates.
 
-Every `dev:*` and `start*` script sets `APP_VARIANT=development`, so the app installs as _Datalayer Dev_ (`ai.datalayer.mobile.dev`, scheme `datalayer-dev`) beside a store build. Once Metro is up, press `a` or `i` to open the installed development build, `r` to reload, `j` to open the debugger, `m` for the dev menu. Shake the phone (or `Cmd+D` / `Cmd+M` in a simulator) for the same menu on the device.
+Every `dev:*` and `start*` script sets `APP_VARIANT=development`, so the app installs as _Datalayer Agents Dev_ (`ai.datalayer.mobile.dev`, scheme `datalayer-dev`) beside a store build. Once Metro is up, press `a` or `i` to open the installed development build, `r` to reload, `j` to open the debugger, `m` for the dev menu. Shake the phone (or `Cmd+D` / `Cmd+M` in a simulator) for the same menu on the device.
 
 Against a local server: set `EXPO_PUBLIC_DATALAYER_RUN_URL=http://localhost:8080` and `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` to the same or the local runtimes plane (and `EXPO_PUBLIC_DATALAYER_MCP_URL` to the local MCP gateway) for the iOS Simulator or `http://10.0.2.2:8080` for the Android emulator; a phone needs an HTTPS URL or `npm run start:tunnel` plus a tunnel to the server. `EXPO_PUBLIC_*` values are read when Metro starts: restart it after changing `.env`.
 
@@ -151,12 +151,11 @@ Jupyter UI and Loro depend on 19.2.8 exactly, the Jupyter packages on 18.3.1),
 so the app has one React, and all 21 checks pass (online ones included). Inside
 the monorepo, npm ignores a member's `overrides` and the root keeps the web's
 React beside Expo's: `metro.config.js` and Jest's `moduleNameMapper` hold the
-app's own, and Doctor there reports that duplicate; read CI's run instead
-(M-010b).
+app's own, and Doctor there reports that duplicate; read CI's run instead.
 
 ### Maestro smoke flows
 
-`.maestro/` holds the smoke flows of M-054 — sign-in, an approval answered
+`.maestro/` holds the smoke flows — sign-in, an approval answered
 elsewhere while it is open, the route a tapped notification opens, a prompt
 streamed and stopped, and pause/reset with a second account refused. CI runs
 them (`e2e-android` on every run, `e2e-ios` on main, on `macos-15`) on an `e2e`
@@ -186,7 +185,7 @@ In CI, a release is a tag. Set `version` in `app.config.ts`, commit, then tag an
 git tag v0.1.0 && git push origin v0.1.0
 ```
 
-`.github/workflows/release.yaml` checks that the tag names that version, runs `npm run check` and `npm run check:bundle`, has EAS build the `.ipa` and `.aab` and submit them (TestFlight, Google Play internal track as a draft), and creates the GitHub release with the build ids. It needs the repository secret `EXPO_TOKEN` (an Expo robot token) and the signing and submit credentials kept in EAS (`eas credentials`: the App Store Connect API key, the Google Play service account). `.github/workflows/check.yaml` runs the checks on every pull request and push to `main`. A failed job turns Check red; it does not block merging, as `main` has no branch protection yet (a repository administrator may require the Check jobs). A release does require it: `release.yaml` refuses a tag whose commit's Check run is not green, every job included. The repository commits no lockfile; `release.yaml` keeps the `package-lock.json` its install resolved as the `release-lockfile` artifact and writes its checksum into the GitHub release. It pins the EAS CLI (`eas-version`); raise it deliberately.
+`.github/workflows/release.yaml` checks that the tag names that version, runs `npm run check` and `npm run check:bundle`, has EAS build the `.ipa` and `.aab` and submit them (TestFlight, Google Play internal track as a draft), and creates the GitHub release with the build ids. It needs the repository secret `EXPO_TOKEN` (an Expo robot token) and the signing and submit credentials kept in EAS (`eas credentials`: the App Store Connect API key, the Google Play service account). `.github/workflows/eas-build.yaml` is started by hand (Actions → *EAS build* → *Run workflow*): a `preview` or `staging` build of a commit whose Check is green, and for `staging` optionally its submission to TestFlight and the Play internal track (as a draft); it never runs on a push. `.github/workflows/check.yaml` runs the checks on every pull request and push to `main`. A failed job turns Check red; it does not block merging, as `main` has no branch protection yet (a repository administrator may require the Check jobs). A release does require it: `release.yaml` refuses a tag whose commit's Check run is not green, every job included. The repository commits no lockfile; `release.yaml` keeps the `package-lock.json` its install resolved as the `release-lockfile` artifact and writes its checksum into the GitHub release. It pins the EAS CLI (`eas-version`); raise it deliberately.
 
 ### What is needed to publish
 
@@ -195,16 +194,15 @@ artifacts with EAS: the iOS build runs on EAS's macOS workers, and EAS Submit
 works from Linux. Local iOS builds, Simulator runs, Xcode archives and the
 Transporter fallback still require macOS. Store publication does not replace
 testing on physical iOS and Android phones; those release gates are currently
-postponed and marked `[-]` in the MOBILE implementation plan until the devices and testers
-are available.
+postponed until the devices and testers are available.
 
 Common preparation:
 
-1. Create the Datalayer Expo project, put its real `EAS_PROJECT_ID` in the
-   development, preview, staging and production EAS environments, and give a
-   primary and recovery owner access. Add a least-privilege `EXPO_TOKEN` to
-   GitHub Actions.
-2. Keep the final application identity: **Datalayer**, Expo slug
+1. The Expo project is `@datalayer-mobile/datalayer-mobile`; its id is in
+   `app.config.ts`. Give a primary and recovery owner access to the
+   `datalayer-mobile` Expo account, create the `staging` EAS environment, and
+   keep a least-privilege robot `EXPO_TOKEN` in GitHub Actions.
+2. Keep the final application identity: **Datalayer Agents**, Expo slug
    `datalayer-mobile`, iOS bundle id and Android package
    `ai.datalayer.mobile`. Store identifiers cannot be casually replaced after
    publication.
@@ -216,8 +214,8 @@ Common preparation:
 4. Name the release, incident and recovery owners in the private release
    register. Keep signing keys, API keys, service-account JSON and tester
    credentials out of Git. Run the credential-recovery drill before tagging.
-5. Obtain the physical-device evidence postponed in M-003, M-027, M-050b and
-   M-051 before any external rollout. Simulator CI is useful evidence, but is
+5. Obtain the postponed physical-device evidence (streaming, push delivery,
+   accessibility services, performance) before any external rollout. Simulator CI is useful evidence, but is
    not evidence for APNs/FCM delivery, keychain/keystore behavior, background
    networking, accessibility services, thermal behavior or device memory.
 
@@ -277,11 +275,11 @@ credential files never belong in the repository.
 
 | Profile                                       | EAS environment                                                                                                            | Non-secret configuration                                                                                                                                           | Credential source                                  |
 | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
-| `development`, `development-simulator`, `e2e` | `development`                                                                                                              | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL`, `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID`; profile and variant come from `eas.json` | EAS development signing credentials                |
-| `preview`                                     | `preview`                                                                                                                  | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL`, `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID`                                           | EAS internal-distribution credentials              |
-| `staging`                                     | `staging` (its own, decided 16 October 2026: a custom EAS environment the account holders create with the project, M-007b) | staging `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID`                                | The production app's EAS/store signing credentials |
-| `production`                                  | `production`                                                                                                               | production `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL`, `EAS_PROJECT_ID`                             | The production app's EAS/store signing credentials |
-| GitHub release workflow                       | repository Actions secrets                                                                                                 | none                                                                                                                                                               | `EXPO_TOKEN`, scoped to the Datalayer Expo project |
+| `development`, `development-simulator`, `e2e` | `development`                                                                                                              | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL`, `EXPO_PUBLIC_DATALAYER_MCP_URL` from `.env`; profile and variant come from `eas.json` | EAS development signing credentials                |
+| `preview`                                     | `preview`                                                                                                                  | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL`, `EXPO_PUBLIC_DATALAYER_MCP_URL` (production services, in `eas.json`)                       | EAS internal-distribution credentials              |
+| `staging`                                     | `staging` (its own: a custom EAS environment the account holders create)                                                    | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL` (production services, in `eas.json`)                     | The production app's EAS/store signing credentials |
+| `production`                                  | `production`                                                                                                               | production `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL` (in `eas.json`)                              | The production app's EAS/store signing credentials |
+| GitHub `release.yaml`, `eas-build.yaml`       | repository Actions secrets                                                                                                 | none                                                                                                                                                               | `EXPO_TOKEN`, scoped to the Datalayer Expo project |
 
 EAS owns the iOS distribution/provisioning material and Android keystore.
 EAS Submit owns the App Store Connect API key and Google Play service-account
@@ -302,7 +300,7 @@ Before any store build:
 - Store listing, screenshots, privacy and data-safety answers, support and privacy-policy URLs, the account-deletion route and a review account without real customer data are current.
 - No over-the-air update reaches `production` before the same update was verified on `staging` on the same runtime; a native, permission or config change always means a new store binary.
 - Every EAS profile builds on its own update channel (`development`, `development-simulator`, `e2e`, `preview`, `staging`, `production`; `eas.json`) with `runtimeVersion` from the app version. `make update-staging` publishes to `staging`; `make promote-update GROUP=<id>` republishes that verified group to `production`, never a new bundle.
-- Updates are signed. A `preview`, `staging` or `production` build refuses to configure without `certs/updates-certificate.pem` (the public certificate, committed) and `EAS_PROJECT_ID`; the private key from `npx expo-updates codesigning:generate` is kept by the account holders with the other signing credentials (M-007b) and is never committed.
+- Updates are signed. A `preview`, `staging` or `production` build refuses to configure without `certs/updates-certificate.pem` (the public certificate, committed); the private key from `npx expo-updates codesigning:generate` is kept by the account holders with the other signing credentials and is never committed.
 
 Apple (`make publish-ios`):
 
@@ -344,7 +342,7 @@ IAM serves the oldest version of the app still supported on each platform at
 (`{"success": true, "minimum": {"ios": "1.2.0", "android": "1.2.0"}}`, public,
 cached for a minute). The app reads it at launch and every time it comes back
 to the foreground (`src/release/`). Below its platform's minimum it stops at
-_Update Datalayer_, naming the version to install; an answer it cannot read — a
+_Update Datalayer Agents_, naming the version to install; an answer it cannot read — a
 503, a missing or malformed version, no network — stops it at _Datalayer could
 not be reached_ with _Try again_: an unreadable switch is never taken as off.
 
@@ -384,4 +382,4 @@ number and Android version code; artifact checksums; backend environment and
 contract versions; test evidence; store review ids/results/URLs; rollout
 percentages and timestamps; metrics and incidents; halt/rollback decisions;
 and final completion time. A second person must be able to perform a staging
-release from this section alone before M-059 is considered fully verified.
+release from this section alone before this runbook is considered verified.

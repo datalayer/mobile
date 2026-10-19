@@ -10,10 +10,10 @@ import { EmptyState } from '../../components/primitives';
 import { Field, Row, SectionTitle } from '../../components/states';
 import { absoluteTime, relativeTime } from '../../i18n/time';
 
-/** Who each row belongs to, on the tab that shows every application's (M-040). */
+/** Who each row belongs to, on the tab that shows every application's. */
 export type Owners = { nameOf: (appUid: string) => string; faceOf: (appUid: string) => ReactNode };
 
-/** In progress, scheduled and completed (R-15), for one application or, given `owners`, all of them. */
+/** In progress, scheduled and completed, for one application or, given `owners`, all of them. */
 export function ActivitySections({ work, owners }: { work: AppActivity; owners?: Owners }) {
   const router = useRouter();
   const open = (appUid: string) =>

@@ -4,7 +4,7 @@
  */
 
 /**
- * Conversation health, sent without its words (M-036): each
+ * Conversation health, sent without its words: each
  * streamed turn's time to first token, to its complete answer, a Stop's
  * latency, a failed stream's category, and how often a lost stream was read
  * back — as OTLP/JSON to the platform's metrics ingest

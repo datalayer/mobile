@@ -20,7 +20,7 @@ const respond = (status: number, body: unknown): typeof fetch => {
 
 const callsOf = (fetcher: typeof fetch) => (fetcher as unknown as { calls: { url: string; init?: RequestInit }[] }).calls;
 
-describe('a decision (M-020)', () => {
+describe('a decision', () => {
   it('names the action it confirms', () => {
     expect(confirmTitle('approve', 'Send email')).toBe('Approve: Send email?');
     expect(confirmTitle('reject', 'Send email')).toBe('Reject: Send email?');

@@ -9,7 +9,7 @@ const { findViolations, violationsIn } = require('../../scripts/check-forbidden-
 
 const root = path.resolve(__dirname, '../..');
 
-describe('the forbidden-import gate (M-006)', () => {
+describe('the forbidden-import gate', () => {
   it('refuses every forbidden family in the fixture, type-only imports included', () => {
     const found: { specifier: string }[] = findViolations([path.join(root, 'scripts/fixtures/forbidden.ts')]);
     expect(found.map(v => v.specifier).sort()).toEqual(

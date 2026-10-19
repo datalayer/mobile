@@ -18,7 +18,7 @@ import { isConnected } from '../../../src/realtime/channel';
 import { SPACE } from '../../../src/theme/tokens';
 
 /**
- * Notifications on this phone (M-024, M-043): explained before the system
+ * Notifications on this phone: explained before the system
  * asks, asked only when turned on, by category, with quiet hours — what can
  * wait is held by the server until they end, approvals pass unless the person
  * says otherwise — kept on the server's installation. Each application can be

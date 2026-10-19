@@ -4,15 +4,15 @@
  */
 
 import { Button, Screen, Text } from '../components/primitives';
-import { LoopWordmark } from '../identity/LoopWordmark';
+import { Wordmark } from '../identity/Wordmark';
 import { SUPPORT_WORDS, type Support } from './minimumVersion';
 
-/** What stands in front of everything when this build may not go on (M-056). */
+/** What stands in front of everything when this build may not go on. */
 export function UpdateRequired({ support, onRetry }: { support: Exclude<Support, { kind: 'supported' }>; onRetry: () => void }) {
   const update = support.kind === 'update';
   return (
     <Screen>
-      <LoopWordmark />
+      <Wordmark />
       <Text accessibilityRole="header" size="title" weight="semibold">
         {update ? SUPPORT_WORDS.updateTitle : SUPPORT_WORDS.unknownTitle}
       </Text>

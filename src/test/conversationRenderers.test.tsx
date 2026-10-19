@@ -4,8 +4,8 @@
  */
 
 /**
- * The native renderers of Agent Runtimes' conversation contract (MOBILE
- * M-030, M-032): each row of the shared fixture — the one the web's renderers
+ * The native renderers of Agent Runtimes' conversation contract:
+ * each row of the shared fixture — the one the web's renderers
  * are tested against — drawn with the contract's words and labels.
  */
 

@@ -4,7 +4,7 @@
  */
 
 /**
- * This phone's push installation (M-024), registered over the ai-agents
+ * This phone's push installation, registered over the ai-agents
  * WebSocket the app already holds, never by a route. Asked for only when the
  * person turns notifications on; re-registered on every reconnect and token
  * change; removed on sign-out.
@@ -100,7 +100,7 @@ export async function registerPush(preference: PushPreference, { ask = false } =
     appVersion: Application.nativeApplicationVersion ?? '',
     locale: getLocales()[0]?.languageTag ?? '',
     categories: preference.categories,
-    // Kept on the server's installation, which holds what can wait (M-043).
+    // Kept on the server's installation, which holds what can wait.
     quietHours: preference.quietHours,
     approvalsInQuiet: preference.approvalsInQuiet,
     appCategories: preference.appCategories

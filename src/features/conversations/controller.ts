@@ -4,7 +4,7 @@
  */
 
 /**
- * One conversation on the phone (MOBILE M-033 to M-035): Agent Runtimes'
+ * One conversation on the phone: Agent Runtimes'
  * portable clients and conversation reducer, driven for a screen. No React:
  * a screen subscribes to it.
  *
@@ -83,14 +83,14 @@ export class ConversationController {
   private readonly told = new Set<AbortController>();
   /** A turn's stream was lost (the app went away, the network dropped): read back, never resent. */
   private lost = false;
-  /** The turn streaming now, measured without its words (M-036). */
+  /** The turn streaming now, measured without its words. */
   private meter: RunMeter | null = null;
 
   constructor(
     readonly target: AppTarget | AgentTarget,
     uid: string | null,
     private readonly newId: () => string,
-    /** Where a measured turn and a lost stream read back are told (M-036); nothing of their words. */
+    /** Where a measured turn and a lost stream read back are told; nothing of their words. */
     private readonly measures: { turn: (measure: RunMeasure) => void; recovered: () => void } = {
       turn: () => undefined,
       recovered: () => undefined

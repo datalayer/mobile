@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-/** What the decision flow says (M-020). Pure, so the words are tested apart from the screen. */
+/** What the decision flow says. Pure, so the words are tested apart from the screen. */
 
 import { decide, getApproval, type Approval, type Decision } from '../../api/approvals';
 import type { Client } from '../../api/client';

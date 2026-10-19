@@ -43,7 +43,7 @@ function server(answer: (sent: Sent) => [number, unknown]) {
 
 const form = (sent: Sent | undefined) => Object.fromEntries(new URLSearchParams(String(sent?.init.body)));
 
-describe('the OAuth contract with IAM (M-004)', () => {
+describe('the OAuth contract with IAM', () => {
   it('reads its endpoints from discovery; the client id is the document under the issuer', async () => {
     const { sent, fetcher } = server(() => [
       200,

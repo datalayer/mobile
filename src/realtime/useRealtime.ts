@@ -4,7 +4,7 @@
  */
 
 /**
- * Foreground reconciliation over the ai-agents WebSocket (M-017). The socket
+ * Foreground reconciliation over the ai-agents WebSocket. The socket
  * only accelerates server truth: every (re)connect refetches approvals,
  * deployments and visible activity, since the stream has no resume cursor yet.
  */

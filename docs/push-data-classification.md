@@ -1,6 +1,6 @@
 # Mobile push data classification and event matrix
 
-This is the data contract for Datalayer Mobile push notifications (MOBILE M-005 and M-029). It is intentionally narrower than an Inbox item. A push is an unreliable hint carrying an opaque id and a safe route; the authenticated destination fetches current server truth and checks access again.
+This is the data contract for Datalayer Agents push notifications, ordinary and protocol events alike. It is intentionally narrower than an Inbox item. A push is an unreliable hint carrying an opaque id and a safe route; the authenticated destination fetches current server truth and checks access again.
 
 Status: implementation contract awaiting security review and physical-device drill. It does not authorize a production push credential.
 
@@ -33,7 +33,7 @@ The only client payload read by version 1 is:
 ```
 
 - `v` is the integer payload version. A newer or missing version opens Inbox.
-- `kind` is the server notification kind that selected the generic template. Version 1 currently emits `approval.requested`, `app.paused_by_organization`, `kept`, `app.input_required`, `app.run_failed`, `app.run_completed`, `pap.consent_expiring`, `pap.counterpart_held`, `signed_fetch.failing`, `run.blocked`, `reproduction.failed`, `budget.reached` or `run.completed`. Quiet hours (M-043) hold everything but approvals unless the person said approvals wait too. The client does not trust it for navigation or authorization.
+- `kind` is the server notification kind that selected the generic template. Version 1 currently emits `approval.requested`, `app.paused_by_organization`, `kept`, `app.input_required`, `app.run_failed`, `app.run_completed`, `pap.consent_expiring`, `pap.counterpart_held`, `signed_fetch.failing`, `run.blocked`, `reproduction.failed`, `budget.reached` or `run.completed`. Quiet hours hold everything but approvals unless the person said approvals wait too. The client does not trust it for navigation or authorization.
 - `id` is the opaque Inbox-notification id. The server uses it to deduplicate one delivery per installation; it is not a trace id.
 - `route` is exactly `/`, `/approvals/{id}`, `/apps/{id}` or `/apps/{id}/protocols`, with a 1–128 character URL-safe destination id where present. Anything else opens Inbox.
 - No notification action decides an approval. A tap only opens the app.
@@ -65,7 +65,7 @@ Protocol events deliberately reuse the application and approval destinations. A 
 ## Delivery behavior
 
 - Current Android delivery uses `needs-attention`; approval, attention and failure messages are high priority, while completion is normal priority. Category-specific channels remain future work.
-- Quiet hours are server-side presentation policy. They may delay non-urgent push delivery but never the Inbox event. Approval pushes bypass quiet hours by default only after M-043 adds the explicit per-user choice.
+- Quiet hours are server-side presentation policy. They may delay non-urgent push delivery but never the Inbox event. Approval pushes bypass quiet hours by default, with an explicit per-user choice (*Approvals still reach me*).
 - Foreground delivery shows a restrained native banner and invalidates REST queries. It does not make a second Inbox entity beside the server event.
 - A reconnect and a push may both announce one event; query reconciliation and the server notification `id` keep one server entity.
 - A tap after sign-out, access withdrawal, expiry or deletion authenticates and refetches. It shows signed out, forbidden, expired or gone; it never uses payload text as a fallback record.
@@ -91,4 +91,4 @@ Before a production credential exists, security reviews:
 7. arrival after sign-out, access withdrawal, approval expiry and application deletion;
 8. screenshots and device logs proving no forbidden class appears.
 
-Approval of this document, the server-side producer tests and the M-027 device evidence are separate gates. Completing the document alone does not tick M-005 or M-029.
+Approval of this document by security, the server-side producer tests and the physical-device delivery evidence are separate gates. Completing the document alone satisfies none of them.

@@ -33,7 +33,7 @@ function productionConfig() {
   }
 }
 
-describe('the release manifests (M-052)', () => {
+describe('the release manifests', () => {
   it("declares in app.config.ts exactly what the script holds the generated manifest to", () => {
     const privacy = productionConfig().ios.privacyManifests;
     expect(privacyProblems(privacy)).toEqual([]);

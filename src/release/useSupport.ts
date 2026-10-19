@@ -10,7 +10,7 @@ import { environment } from '../config/environment';
 import { checkSupport, type Support } from './minimumVersion';
 
 /**
- * Whether this build is still supported (M-056), checked at launch and each
+ * Whether this build is still supported, checked at launch and each
  * time the app comes back to the foreground. `null` while the first check runs.
  */
 export function useSupport(): { support: Support | null; retry: () => void } {

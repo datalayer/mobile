@@ -4,7 +4,7 @@
  */
 
 /**
- * A mediated sign-in typed on the phone (MOBILE M-039, PAP_DATALAYER P-03):
+ * A mediated sign-in typed on the phone:
  * what the company asks — a name and a password, or a code it sent — read
  * with the sign-in's one-use protected ticket and sent once to IAM, which
  * passes it to the company. The agent never sees it; nothing typed is kept,

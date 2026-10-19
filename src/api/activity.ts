@@ -4,9 +4,9 @@
  */
 
 /**
- * What an application, or all of them, is doing (LOOP R-15, MOBILE M-040), from
+ * What an application, or all of them, is doing, from
  * `/api/ai-agents/v1/apps/activity`: read and said by Agent Runtimes' portable
- * contract, as the Studio reads it (M-015b).
+ * contract, as the Studio reads it.
  */
 
 import { activityOf, type AppActivity } from '@datalayer/agent-runtimes/lib/portable';

@@ -10,7 +10,7 @@ import { RUNTIMES_PLANE_PREFIXES, serviceUrlOf } from '../config/environment';
 
 const env = { runUrl: 'https://prod1.datalayer.run', runtimesUrl: 'https://r1.datalayer.run' };
 
-describe('the two planes (M-001, 16 October 2026)', () => {
+describe('the two planes (16 October 2026)', () => {
   it('sends each route to the plane that serves it', () => {
     expect(serviceUrlOf(env, '/api/iam/v1/me')).toBe(env.runUrl);
     expect(serviceUrlOf(env, '/api/spacer/v1/spaces/items/types/app')).toBe(env.runUrl);

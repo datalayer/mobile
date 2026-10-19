@@ -4,7 +4,7 @@
  */
 
 /**
- * What a tapped notification may open (M-025). A push carries only a kind, an
+ * What a tapped notification may open. A push carries only a kind, an
  * opaque id and a route; the route is checked against the screens a push may
  * name, and the screen fetches and authorizes the item again when it opens.
  */
@@ -17,7 +17,7 @@ const ROUTES = [
   /^\/approvals\/[A-Za-z0-9_-]{1,128}$/,
   /^\/apps\/[A-Za-z0-9_-]{1,128}$/,
   /^\/apps\/[A-Za-z0-9_-]{1,128}\/protocols$/,
-  // A conversation that waits for an answer (M-023): opened through ai-agents' locator, which checks access again.
+  // A conversation that waits for an answer: opened through ai-agents' locator, which checks access again.
   /^\/apps\/[A-Za-z0-9_-]{1,128}\/sessions\/[A-Za-z0-9_-]{1,128}$/
 ];
 
@@ -51,7 +51,7 @@ export const PUSH_CATEGORIES = [
 
 export type PushCategory = (typeof PUSH_CATEGORIES)[number]['value'];
 
-/** Quiet hours, as the server keeps them (M-043): `HH:MM` in an IANA time zone. */
+/** Quiet hours, as the server keeps them: `HH:MM` in an IANA time zone. */
 export type QuietHours = { start: string; end: string; tz: string };
 
 export type PushPreference = {

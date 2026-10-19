@@ -6,7 +6,7 @@
 import appConfig from '../../app.config';
 import { STORE_LINKS } from '../config/resources';
 
-describe('mobile privacy and store declarations (M-052)', () => {
+describe('mobile privacy and store declarations', () => {
   it('publishes HTTPS privacy, support and account-deletion destinations', () => {
     expect(Object.values(STORE_LINKS)).toHaveLength(3);
     for (const destination of Object.values(STORE_LINKS)) {
@@ -28,7 +28,7 @@ describe('mobile privacy and store declarations (M-052)', () => {
       'NSPrivacyCollectedDataTypeOtherUserContent',
       'NSPrivacyCollectedDataTypePerformanceData'
     ]);
-    // Conversation health (M-036) is the one analytics use: performance data, never content.
+    // Conversation health is the one analytics use: performance data, never content.
     const [performance] = (privacy?.NSPrivacyCollectedDataTypes ?? []).slice(-1);
     expect(performance).toMatchObject({
       NSPrivacyCollectedDataTypeLinked: true,

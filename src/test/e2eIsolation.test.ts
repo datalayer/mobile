@@ -32,4 +32,21 @@ describe("the Maestro smoke suite", () => {
     );
     expect(signIn).toMatch(/visible: "Inbox"\s*\n\s*timeout: 60000/);
   });
+
+  it("waits for iOS's open-link dialog before answering it", () => {
+    const openLink = read(".maestro/common/open-link-ios.yaml");
+    expect(openLink.indexOf('visible: "Open"')).toBeGreaterThan(-1);
+    expect(openLink.indexOf('visible: "Open"')).toBeLessThan(openLink.indexOf('text: "Open"'));
+  });
+
+  it("uploads Maestro's results only after the scrub kept the tokens out", () => {
+    const check = read(".github/workflows/check.yaml");
+    for (const platform of ["android", "ios"]) {
+      const upload = check.indexOf(`name: maestro-${platform}`);
+      const scrub = check.lastIndexOf("name: Keep the tokens out of the results", upload);
+      expect(scrub).toBeGreaterThan(-1);
+      expect(check.slice(scrub, upload)).toContain("id: scrub");
+      expect(check.slice(scrub, upload)).toContain("if: always() && steps.scrub.outcome == 'success'");
+    }
+  });
 });

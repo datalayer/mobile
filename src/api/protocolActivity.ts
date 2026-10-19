@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-/** A deliberately small, redacted projection of the shared protocol audit ledger (M-047). */
+/** A deliberately small, redacted projection of the shared protocol audit ledger. */
 
 import type { Client } from './client';
 import { count, record, records, segment, text, type Raw } from './fields';

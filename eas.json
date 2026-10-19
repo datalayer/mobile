@@ -1,7 +1,8 @@
 {
   "cli": {
     "version": ">= 16.0.0",
-    "appVersionSource": "remote"
+    "appVersionSource": "remote",
+    "requireCommit": true
   },
   "build": {
     "base": {
@@ -41,7 +42,10 @@
       },
       "env": {
         "APP_VARIANT": "preview",
-        "EXPO_PUBLIC_BUILD_PROFILE": "e2e"
+        "EXPO_PUBLIC_BUILD_PROFILE": "e2e",
+        "EXPO_PUBLIC_DATALAYER_RUN_URL": "https://prod1.datalayer.run",
+        "EXPO_PUBLIC_DATALAYER_RUNTIMES_URL": "https://r1.datalayer.run",
+        "EXPO_PUBLIC_DATALAYER_MCP_URL": "https://mcp.datalayer.run"
       },
       "channel": "e2e"
     },
@@ -55,7 +59,10 @@
       },
       "env": {
         "APP_VARIANT": "preview",
-        "EXPO_PUBLIC_BUILD_PROFILE": "preview"
+        "EXPO_PUBLIC_BUILD_PROFILE": "preview",
+        "EXPO_PUBLIC_DATALAYER_RUN_URL": "https://prod1.datalayer.run",
+        "EXPO_PUBLIC_DATALAYER_RUNTIMES_URL": "https://r1.datalayer.run",
+        "EXPO_PUBLIC_DATALAYER_MCP_URL": "https://mcp.datalayer.run"
       }
     },
     "staging": {
@@ -66,7 +73,10 @@
       "autoIncrement": true,
       "env": {
         "APP_VARIANT": "production",
-        "EXPO_PUBLIC_BUILD_PROFILE": "staging"
+        "EXPO_PUBLIC_BUILD_PROFILE": "staging",
+        "EXPO_PUBLIC_DATALAYER_RUN_URL": "https://prod1.datalayer.run",
+        "EXPO_PUBLIC_DATALAYER_RUNTIMES_URL": "https://r1.datalayer.run",
+        "EXPO_PUBLIC_DATALAYER_MCP_URL": "https://mcp.datalayer.run"
       }
     },
     "production": {
@@ -77,14 +87,18 @@
       "autoIncrement": true,
       "env": {
         "APP_VARIANT": "production",
-        "EXPO_PUBLIC_BUILD_PROFILE": "production"
+        "EXPO_PUBLIC_BUILD_PROFILE": "production",
+        "EXPO_PUBLIC_DATALAYER_RUN_URL": "https://prod1.datalayer.run",
+        "EXPO_PUBLIC_DATALAYER_RUNTIMES_URL": "https://r1.datalayer.run",
+        "EXPO_PUBLIC_DATALAYER_MCP_URL": "https://mcp.datalayer.run"
       }
     }
   },
   "submit": {
     "staging": {
       "android": {
-        "track": "internal"
+        "track": "internal",
+        "releaseStatus": "draft"
       }
     },
     "production": {

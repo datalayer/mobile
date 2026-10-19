@@ -4,7 +4,7 @@
  */
 
 /**
- * Conversations on the phone (MOBILE M-031 to M-035), over Agent Runtimes'
+ * Conversations on the phone, over Agent Runtimes'
  * portable session clients and conversation reducer: threads and where they
  * are reached, prompt/stream/stop/resume, questions, the safe Markdown subset,
  * and what survives navigation and the background.
@@ -25,7 +25,7 @@ const KEPT = {
   kept: { state: 'running', url: 'https://r1.datalayer.run/agent-runtimes/rt-9/', agent_id: 'desk-agent' }
 };
 
-describe('threads and where they are reached (M-031)', () => {
+describe('threads and where they are reached', () => {
   it('lists a thread without the runtime-only asked-for preamble', () => {
     const thread = threadOf({
       session_uid: 's1', app_uid: 'a1', deployment_uid: 'd1', started_at: '2026-10-14T10:00:00Z', title: '',
@@ -112,7 +112,7 @@ describe('threads and where they are reached (M-031)', () => {
   });
 });
 
-describe('the safe Markdown subset (M-032)', () => {
+describe('the safe Markdown subset', () => {
   it('draws blocks and inline marks, and keeps raw HTML as words', () => {
     expect(blocksOf('# Title\n\nSome **bold** and `code`.\n\n- one\n- two\n\n```\n<script>x</script>\n```\n<img src=x onerror=alert(1)>')).toEqual([
       { kind: 'heading', level: 1, spans: [{ kind: 'text', text: 'Title' }] },
@@ -177,7 +177,7 @@ const appTarget = (sessions: AppSessionsClient) => ({ kind: 'app' as const, sess
 const texts = (controller: ConversationController) =>
   controller.getView().conversation.items.map(item => ('text' in item ? `${item.kind}:${item.text}` : item.kind === 'end' ? `end:${item.end}` : item.kind));
 
-describe('prompt, stream, stop and resume (M-033)', () => {
+describe('prompt, stream, stop and resume', () => {
   beforeEach(() => { ids = 0; });
 
   it('starts a new conversation with the first message on the deployment kept runtime', async () => {
@@ -323,7 +323,7 @@ describe('prompt, stream, stop and resume (M-033)', () => {
   });
 });
 
-describe('questions the application asks (M-034)', () => {
+describe('questions the application asks', () => {
   beforeEach(() => { ids = 0; });
   const asked = (asking: Record<string, unknown>) =>
     [{ type: 'RUN_STARTED' }, ...words('q', String(asking.prompt)), { type: 'RUN_FINISHED', result: { asking } }] as AgUiEvent[];
@@ -357,7 +357,7 @@ describe('questions the application asks (M-034)', () => {
   });
 });
 
-describe('across navigation and the background (M-035)', () => {
+describe('across navigation and the background', () => {
   beforeEach(() => { ids = 0; forgetConversations(); });
 
   it('reads a turn lost while away back from the server, and never sends it again', async () => {
@@ -414,7 +414,7 @@ describe('applications shared with you, from the server (decided 15 October 2026
   });
 });
 
-describe('conversation health, measured without words (M-036)', () => {
+describe('conversation health, measured without words', () => {
   it('measures each turn, a Stop and a lost stream read back, and sends them as OTLP without words', async () => {
     const told: unknown[] = [];
     const recovered = jest.fn();

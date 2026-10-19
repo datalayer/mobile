@@ -9,7 +9,7 @@ import { MIN_TOUCH } from '../theme/tokens';
 
 const source = (relative: string) => fs.readFileSync(path.resolve(__dirname, '..', relative), 'utf8');
 
-describe('the source-level accessibility baseline (M-050a)', () => {
+describe('the source-level accessibility baseline', () => {
   it('uses an Android-safe minimum target and never caps Dynamic Type', () => {
     expect(MIN_TOUCH).toBeGreaterThanOrEqual(48);
     const primitives = source('components/primitives.tsx');

@@ -11,7 +11,7 @@ import {
   changeDeploymentState, deploymentOf, getResetCounts, listDeploymentEvents, resetDeployment
 } from '../api/deployments';
 
-// The lifecycle's words and bodies are Agent Runtimes' portable contract, as the Studio's (M-041b).
+// The lifecycle's words and bodies are Agent Runtimes' portable contract, as the Studio's.
 
 describe('owner deployment lifecycle', () => {
   it('pauses the exact version and says everything that did and did not stop', async () => {

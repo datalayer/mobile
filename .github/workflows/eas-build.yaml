@@ -1,0 +1,84 @@
+# Copyright (c) 2026 Datalayer, Inc.
+# Distributed under the terms of the Modified BSD License.
+
+# A preview or staging build on EAS, started by hand (Actions → EAS build →
+# Run workflow), never by a push. `preview` is an internally distributed build
+# (an installable APK and an ad-hoc iOS build); `staging` is the store binary of
+# the production application, optionally submitted to TestFlight and Google
+# Play's internal track (eas.json, submit.staging). Store releases are tags
+# (release.yaml), not this workflow.
+#
+# Needs the repository secret EXPO_TOKEN (an Expo robot token of the
+# datalayer-mobile account) and the signing and submit credentials kept in EAS
+# (`eas credentials`). Like a release, it builds only a commit whose Check
+# passed, every job of it.
+name: EAS build
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: EAS build profile
+        type: choice
+        options: [preview, staging]
+        default: preview
+      platform:
+        description: Platform
+        type: choice
+        options: [all, android, ios]
+        default: all
+      submit:
+        description: Submit a staging build to TestFlight and Google Play internal testing
+        type: boolean
+        default: false
+
+concurrency:
+  group: eas-build-${{ inputs.profile }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: The commit's Check passed, every job of it
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          conclusion="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow check.yaml --commit "$GITHUB_SHA" \
+            --status completed --limit 1 --json conclusion --jq '.[0].conclusion // "none"')"
+          if [ "$conclusion" != "success" ]; then
+            echo "Check on ${GITHUB_SHA} is '${conclusion}': an EAS build needs it green." >&2
+            exit 1
+          fi
+      - name: Only a staging build is submitted
+        if: inputs.submit && inputs.profile != 'staging'
+        run: |
+          echo "A ${{ inputs.profile }} build is distributed internally by EAS, never submitted to a store." >&2
+          exit 1
+      - run: npm install
+        env:
+          ONNXRUNTIME_NODE_INSTALL: skip
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: 24.12.1
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Build on EAS
+        run: |
+          eas build --platform "${{ inputs.platform }}" --profile "${{ inputs.profile }}" --non-interactive --wait \
+            ${{ inputs.submit && '--auto-submit' || '' }} --json > builds.json
+      - name: The builds
+        run: |
+          node -e '
+            for (const b of require("./builds.json")) {
+              console.log(`- ${b.platform}: ${b.buildProfile} ${b.appVersion} (${b.appBuildVersion}), ${b.id} — ${b.artifacts?.buildUrl ?? "see EAS"}`);
+            }
+          ' | tee -a "$GITHUB_STEP_SUMMARY"

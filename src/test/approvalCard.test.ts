@@ -3,13 +3,13 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-/** The Inbox and detail say approvals with Agent Runtimes' shared card controller (M-016), as the web does. */
+/** The Inbox and detail say approvals with Agent Runtimes' shared card controller, as the web does. */
 
 import { APPROVAL_CARD_WORDS, approvalCardOf } from '@datalayer/agent-runtimes/lib/portable';
 import { approvalOf } from '../api/approvals';
 import { actionOf, APPROVAL_WORDS, argumentsShown, rowSummary } from '../features/approvals/format';
 
-describe('approvals said as every card says them (M-016)', () => {
+describe('approvals said as every card says them', () => {
   it('reads a REST approval through the shared controller: a mail whole, anything else every argument', () => {
     const mail = approvalOf({
       id: 'a1', agent_id: 'triage', tool_name: 'send_email', status: 'pending', created_at: '2026-10-15T09:00:00Z',

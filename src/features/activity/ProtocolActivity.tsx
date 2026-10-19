@@ -49,7 +49,7 @@ function Choices<T extends string>({ label, choices, value, onChange }: {
   );
 }
 
-/** Safe, native protocol ledger rows with protocol and exact-counterpart filters (M-047). */
+/** Safe, native protocol ledger rows with protocol and exact-counterpart filters. */
 export function ProtocolActivity({ rows, appUid, nameOf }: {
   rows: ProtocolActivityRow[];
   appUid?: string;

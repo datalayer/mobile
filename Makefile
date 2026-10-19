@@ -148,10 +148,10 @@ submit-staging: ## upload the latest staging builds to TestFlight and the Play i
 	eas submit --platform ios --profile staging --latest
 	eas submit --platform android --profile staging --latest
 
-update-staging: publish-check ## a signed over-the-air update on the staging channel, for the staging builds of this app version (M-053)
+update-staging: publish-check ## a signed over-the-air update on the staging channel, for the staging builds of this app version
 	eas update --channel staging --environment staging --message "$$(git log -1 --format=%s)"
 
-promote-update: publish-check ## the update group verified on staging, republished to production on the same runtime: GROUP=<id> (M-053)
+promote-update: publish-check ## the update group verified on staging, republished to production on the same runtime: GROUP=<id>
 	@[[ -n "$(GROUP)" ]] || { echo "Name the staged update group: make promote-update GROUP=<id> (eas update:list --branch staging)."; exit 1; }
 	eas update:republish --group $(GROUP) --destination-channel production
 

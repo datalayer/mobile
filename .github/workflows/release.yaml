@@ -12,7 +12,7 @@
 #
 # Before anything is built, the tagged commit's Check run must have passed,
 # every job of it: check, doctor, manifests (the generated privacy manifest,
-# Info.plist and Android permissions), hermes and the Maestro flows (M-058).
+# Info.plist and Android permissions), hermes and the Maestro flows.
 # The repository commits no lockfile (the monorepo's rule): the lockfile this
 # install resolved is kept as the release's artifact, its checksum in the notes.
 name: Release

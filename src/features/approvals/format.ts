@@ -5,7 +5,7 @@
 
 /**
  * What an approval asks, in words: Agent Runtimes' shared approval card
- * controller (`portable/approvalCard`, M-016) — the message whole, or every
+ * controller (`portable/approvalCard`) — the message whole, or every
  * argument; why it asked apart — as the web's *Waiting for you* says it.
  */
 

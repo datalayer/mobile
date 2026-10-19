@@ -117,7 +117,7 @@ export function SessionProvider({
     [fetcher, credential, refresher]
   );
 
-  // Conversation health, measured without words (M-036): sent as the person, and when the app goes away.
+  // Conversation health, measured without words: sent as the person, and when the app goes away.
   useEffect(() => {
     setMetricsSink({
       baseUrl: environment().runUrl,

@@ -128,7 +128,7 @@ describe('realtime', () => {
   });
 });
 
-describe('interim sign-in (M-019)', () => {
+describe('interim sign-in', () => {
   const of = (profile: string) =>
     environmentOf({
       EXPO_PUBLIC_DATALAYER_RUN_URL: 'https://prod1.datalayer.run',

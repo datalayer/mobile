@@ -61,11 +61,11 @@ async function mounted() {
   return { hook, invalidated };
 }
 
-describe('foreground reconciliation (M-017)', () => {
+describe('foreground reconciliation', () => {
   it('connects with the token in a header, never in the URL', async () => {
     await mounted();
     const [socket] = FakeSocket.opened;
-    // ai-agents is on the runtimes plane (M-001).
+    // ai-agents is on the runtimes plane.
     expect(socket!.url).toBe('wss://r1.datalayer.run/api/ai-agents/v1/ws');
     expect(socket!.options.headers).toEqual({ Authorization: 'Bearer the-token' });
   });

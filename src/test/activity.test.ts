@@ -8,7 +8,7 @@ import { readActivity } from '../api/activity';
 
 const page = (body: Record<string, unknown>) => activityOf(body);
 
-describe('Activity on the shared fixture (M-015b)', () => {
+describe('Activity on the shared fixture', () => {
   it('reads and says what the Studio reads and says', async () => {
     const client = (async () => activityFixture()) as unknown as Parameters<typeof readActivity>[0];
     const work = await readActivity(client, 'app-1');
@@ -20,7 +20,7 @@ describe('Activity on the shared fixture (M-015b)', () => {
   });
 });
 
-describe('the activity of every application (M-040)', () => {
+describe('the activity of every application', () => {
   it('names the application of each session and scheduled run', () => {
     const work = page({
       in_progress: [{ uid: 'r1', app_uid: 'app-2', session_uid: 's1', kind: 'run' }],

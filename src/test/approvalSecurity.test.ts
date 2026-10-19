@@ -61,7 +61,7 @@ const failureOf = async (promise: Promise<unknown>): Promise<Problem> => {
   return failure as Problem;
 };
 
-describe('the approval security matrix (M-026)', () => {
+describe('the approval security matrix', () => {
   it('does not turn another person’s id into approval data or a decision call', async () => {
     const { client, fetcher } = scripted(response(403, { detail: 'Not yours.' }));
     const failure = await failureOf(getApproval(client, 'someone-elses-approval'));

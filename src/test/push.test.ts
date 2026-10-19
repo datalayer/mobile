@@ -40,7 +40,7 @@ describe('server broadcasts', () => {
   });
 });
 
-describe('a tapped notification (M-025)', () => {
+describe('a tapped notification', () => {
   it('opens only a route a push may name', () => {
     expect(routeOfNotification({ v: 1, route: '/approvals/a-1' })).toBe('/approvals/a-1');
     expect(routeOfNotification({ v: 1, route: '/apps/app_2' })).toBe('/apps/app_2');
@@ -83,7 +83,7 @@ describe('the push preference', () => {
   });
 });
 
-describe('the app badge (M-024)', () => {
+describe('the app badge', () => {
   it('uses the server count rather than the capped inbox list', async () => {
     const fetcher = jest.fn(async () => new Response(JSON.stringify({ count: 247 }), {
       status: 200,

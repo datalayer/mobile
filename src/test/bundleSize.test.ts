@@ -19,7 +19,7 @@ function exportWith(files: Record<string, number>): string {
   return dir;
 }
 
-describe('the bundle-size budget (M-051)', () => {
+describe('the bundle-size budget', () => {
   it('measures each platform, the bundle apart from its assets, source maps and metadata left out', () => {
     const dir = exportWith({
       'ios/_expo/static/js/ios/entry-a.hbc': 1000,

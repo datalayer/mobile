@@ -4,11 +4,11 @@
  */
 
 /**
- * Protocol displays drawn natively (MOBILE M-037), from Agent Runtimes'
+ * Protocol displays drawn natively, from Agent Runtimes'
  * strict reading of the stream: sign-ins, an operation (a purchase too) to
  * confirm in Approvals, outcomes, replies with who wrote them, a handoff,
  * and an unknown display shown by its text only; a coding agent's diff and
- * terminal (SHIELD SH-16) from Agent Runtimes' shared `shieldDisplayFixtures`.
+ * terminal from Agent Runtimes' shared `shieldDisplayFixtures`.
  */
 
 import { emptyConversation, protocolDisplayOf, reduceConversation, shieldDisplayFixtures, type AgUiEvent, type ProtocolDisplay } from '@datalayer/agent-runtimes/lib/portable';
@@ -25,7 +25,7 @@ function draw(display: ProtocolDisplay) {
   return render(<ThemeProvider store={store}><ProtocolDisplayCard display={display} {...actions} /></ThemeProvider>).then(drawn => ({ drawn, actions }));
 }
 
-describe('protocol displays on the phone (M-037)', () => {
+describe('protocol displays on the phone', () => {
   it('draws a device sign-in with its code, opens its page and says the person signed in', async () => {
     const display = protocolDisplayOf(wire('sign-in', { mode: 'device', open: 'https://shop.example/device', code: 'AB-12', needs: ['orders:read'] }))!;
     const { drawn, actions } = await draw(display);
@@ -74,7 +74,7 @@ describe('protocol displays on the phone (M-037)', () => {
     expect(tool).toMatchObject({ kind: 'tool', display: { kind: 'handoff', handed: true, responder: 'human' } });
   });
 
-  it('draws a coding agent’s diff line by line, each line said as kept, added or removed (SH-16)', async () => {
+  it('draws a coding agent’s diff line by line, each line said as kept, added or removed', async () => {
     const display = protocolDisplayOf(shieldDisplayFixtures().diff as never)!;
     expect(display.kind).toBe('diff');
     const { drawn } = await draw(display);
@@ -95,7 +95,7 @@ describe('protocol displays on the phone (M-037)', () => {
     expect(drawn.getByText(moreLines(5))).toBeTruthy();
   });
 
-  it('draws a terminal: its command, its output and how it ended (SH-16)', async () => {
+  it('draws a terminal: its command, its output and how it ended', async () => {
     const display = protocolDisplayOf(shieldDisplayFixtures().terminal as never)!;
     expect(display.kind).toBe('terminal');
     const { drawn } = await draw(display);

@@ -4,7 +4,7 @@
  */
 
 /**
- * What one application sends this phone (MOBILE M-043): as every other, or
+ * What one application sends this phone: as every other, or
  * told otherwise — by category, nothing at all included. Kept on the server's
  * installation with the rest of the preference, which decides what is pushed;
  * the inbox and the application's page always say everything.

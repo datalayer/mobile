@@ -6,7 +6,7 @@
 import { StyleSheet, Text as NativeText, View } from 'react-native';
 import type { AppFace as Face } from '../api/faces';
 import { useNativeTheme } from '../theme/tokens';
-import { LoopEyes } from './LoopEyes';
+import { Eyes } from './Eyes';
 
 /** An application's face on a tinted disc: its emoji, or the drawn eyes it has until it chooses one. */
 export function AppFace({ face, size = 40 }: { face?: Face; size?: number }) {
@@ -22,7 +22,7 @@ export function AppFace({ face, size = 40 }: { face?: Face; size?: number }) {
           {face.emoji}
         </NativeText>
       ) : (
-        <LoopEyes size={size * 0.42} surface={colors.accentMuted} />
+        <Eyes size={size * 0.42} surface={colors.accentMuted} />
       )}
     </View>
   );

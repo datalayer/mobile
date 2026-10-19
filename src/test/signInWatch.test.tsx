@@ -4,7 +4,7 @@
  */
 
 /**
- * Protocol sign-ins watched to the end (MOBILE M-039): asked with the
+ * Protocol sign-ins watched to the end: asked with the
  * person's own sign-in, a continuation taken only bound to this application,
  * company and a verified issuer, the conversation going on once; refused and
  * expired said; the Device page's QR drawn without a native module.
@@ -23,7 +23,7 @@ const stands = (raw: Record<string, unknown>, appUid = 'app-1', company = 'shop.
 
 afterEach(() => forgetSignIns());
 
-describe('a sign-in watched to the end (M-039)', () => {
+describe('a sign-in watched to the end', () => {
   it('goes on once when the gateway says it finished, bound to this application and company', async () => {
     const goOn = jest.fn();
     watchSignIn('app-1', 'shop.example', undefined, goOn);
@@ -77,7 +77,7 @@ describe('a sign-in watched to the end (M-039)', () => {
   });
 });
 
-describe('a mediated sign-in typed on the phone (M-039)', () => {
+describe('a mediated sign-in typed on the phone', () => {
   it('reads what the company asks with the one-use ticket, sends it once, and keeps nothing typed', async () => {
     const request = {
       companyName: 'Manzanita', companyDomain: 'shop.example', purpose: 'credentials' as const, sentTo: null,

@@ -4,7 +4,7 @@
  */
 
 /**
- * A Direct Conversation on the phone (MOBILE M-038, PAP_DATALAYER P-08): a
+ * A Direct Conversation on the phone: a
  * linked sub-conversation under the application's, opened from what a
  * company answered. While it is open the parent's composer is locked — the
  * person's words go only to the company, each with IAM's one-use ticket,

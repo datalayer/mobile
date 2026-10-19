@@ -4,7 +4,7 @@
  */
 
 /*
- * The bundle-size budget (M-051): the Hermes bytecode bundle each
+ * The bundle-size budget: the Hermes bytecode bundle each
  * platform's export ships, and the assets beside it, measured on every Check
  * run from the same exports the resolved-bundle gate reads. The budget comes
  * from the Phase 1 measurement (Check run 38876694406, 16 October 2026:
@@ -68,7 +68,7 @@ if (require.main === module) {
   ];
   console.log(lines.join('\n'));
   if (process.env.GITHUB_STEP_SUMMARY) {
-    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Bundle size (M-051)\n\n${lines.join('\n')}\n`);
+    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Bundle size\n\n${lines.join('\n')}\n`);
   }
   const problems = sizes.length === 0 ? [`no platform export under ${dir}`] : overBudget(sizes);
   if (problems.length) {

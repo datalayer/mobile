@@ -17,7 +17,7 @@ import { environment } from '../../../src/config/environment';
 import { STORE_LINKS } from '../../../src/config/resources';
 import { pushSupported, unregisterPush } from '../../../src/push/push';
 import { type ColorMode, useTheme } from '../../../src/theme/ThemeProvider';
-import { portableThemeOf, themeVariants } from '../../../src/theme/primer';
+import { portableThemeOf, themeLabelOf, themeVariants } from '../../../src/theme/primer';
 import { SPACE } from '../../../src/theme/tokens';
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -35,7 +35,7 @@ function Row({ label, value }: { label: string; value: string }) {
 
 const THEME_OPTIONS = themeVariants.map((variant) => ({
   value: variant,
-  label: portableThemeOf(variant).label
+  label: themeLabelOf(portableThemeOf(variant))
 }));
 const MODE_OPTIONS: { value: ColorMode; label: string }[] = [
   { value: 'auto', label: 'System' },
@@ -43,7 +43,7 @@ const MODE_OPTIONS: { value: ColorMode; label: string }[] = [
   { value: 'dark', label: 'Dark' }
 ];
 
-/** The account and the build, for support; never a token (M-011). */
+/** The account and the build, for support; never a token. */
 export default function Settings() {
   const session = useSession();
   const router = useRouter();

@@ -5,7 +5,7 @@
 
 /**
  * The faces of the person's applications, as Spacer keeps them beside each
- * app item (`face_s`, LOOP I-08) — the listing the web's `appFaces` reads.
+ * app item (`face_s`) — the listing the web's `appFaces` reads.
  * One listing answers every line: indexed by app uid and by the agent id an
  * approval names.
  */
@@ -13,7 +13,7 @@
 import type { Client } from './client';
 import { type Raw, records, text } from './fields';
 
-/** The emoji an application has until it chooses one; drawn as the LOOP eyes, never typed. */
+/** The emoji an application has until it chooses one; drawn as the Datalayer eyes, never typed. */
 export const DEFAULT_APP_EMOJI = '\u{1F440}';
 
 export type AppFace = {

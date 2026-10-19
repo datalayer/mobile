@@ -4,7 +4,7 @@
  */
 
 /**
- * A conversation with a standalone running agent (M-033): its
+ * A conversation with a standalone running agent: its
  * runtime's AG-UI mount, narrower than an application's — no session, record,
  * question or end; Stop terminates the run.
  */

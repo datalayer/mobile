@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-/** Read-only rules and permissions from the exact Appspec version a deployment runs (M-044). */
+/** Read-only rules and permissions from the exact Appspec version a deployment runs. */
 
 import type { Client } from './client';
 import { record, records, segment, text, type Raw } from './fields';

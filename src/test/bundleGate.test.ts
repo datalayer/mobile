@@ -7,7 +7,7 @@ const { bundleViolations } = require('../../scripts/check-bundle.js');
 
 type Violation = { source: string; why: string };
 
-describe('the resolved-bundle gate (M-006)', () => {
+describe('the resolved-bundle gate', () => {
   it('refuses every forbidden family, wherever the workspace put it', () => {
     const forbidden = [
       '/node_modules/@jupyterlab/services/lib/index.js',

@@ -4,7 +4,7 @@
  */
 
 /**
- * A conversation with an application (M-031, M-033). A thread
+ * A conversation with an application. A thread
  * is continued where ai-agents says it continues now, asked on every open:
  * the runtime its deployment is kept on, a runtime of the person's
  * own — started here first, after they agree, when nothing runs it for them —
@@ -49,9 +49,9 @@ function AppConversation({
   const [key] = useState(() => `${Date.now()}`);
   const { controller, view } = useConversation({ kind: 'app', address, appUid, deploymentUid, version, sessionUid, key });
   const { accessToken } = useSession();
-  // A Direct Conversation under this one, opened from what a company answered (M-038); in memory only.
+  // A Direct Conversation under this one, opened from what a company answered; in memory only.
   const [direct] = useState(() => directControllerFor(appUid, environment().runUrl, environment().gatewayUrl, accessToken, (input, init) => fetch(input, init)));
-  // How a sign-in this conversation started stands, asked with the person's own sign-in (M-039).
+  // How a sign-in this conversation started stands, asked with the person's own sign-in.
   const [signIns] = useState(() => ({
     appUid,
     ask: signInStatusClient({ baseUrl: environment().gatewayUrl, getAccessToken: accessToken, fetch: (input, init) => fetch(input, init) }),

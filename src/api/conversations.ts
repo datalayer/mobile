@@ -4,8 +4,8 @@
  */
 
 /**
- * A person's conversations (MOBILE M-031): their threads from ai-agents'
- * record (`/apps/conversations/mine/threads`, LOOP P-24), read as the web's
+ * A person's conversations: their threads from ai-agents'
+ * record (`/apps/conversations/mine/threads`), read as the web's
  * *Your conversations* reads them, and where each one can be reached now.
  *
  * A thread names its deployment, never a runtime: where it is continued is

@@ -6,7 +6,7 @@ var made = (function () {
       agent_id: 'maestro-smoke',
       runtime_name: '',
       tool_name: 'maestro_noop',
-      tool_args: { note: 'A Maestro smoke flow (MOBILE M-054): nothing runs on this decision.' }
+      tool_args: { note: 'A Maestro smoke flow: nothing runs on this decision.' }
     })
   };
   return http.post(E2E_RUNTIMES_URL + '/api/ai-agents/v1/tool-approvals', options);

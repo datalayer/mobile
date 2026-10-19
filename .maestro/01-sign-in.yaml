@@ -1,4 +1,4 @@
-# Sign-in (M-054): the token sign-in of an e2e build reaches the three tabs, each read from its plane.
+# Sign-in: the token sign-in of an e2e build reaches the three tabs, each read from its plane.
 appId: ai.datalayer.mobile.preview
 name: Sign in
 ---

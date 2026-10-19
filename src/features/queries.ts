@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-/** Server truth through TanStack Query. Keys are shared so the realtime socket can invalidate them (M-017). */
+/** Server truth through TanStack Query. Keys are shared so the realtime socket can invalidate them. */
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
@@ -71,7 +71,7 @@ export function useDeploymentEvents(uid: string) {
   return useQuery({ queryKey: KEYS.deploymentEvents(uid), queryFn: () => listDeploymentEvents(client, uid), enabled: Boolean(uid) });
 }
 
-/** One application's deployments with their identity checked now (Application → Protocols, M-045b). */
+/** One application's deployments with their identity checked now (Application → Protocols). */
 export function useCheckedDeployments(appUid: string) {
   const { client } = useSession();
   return useQuery({ queryKey: KEYS.checkedDeployments(appUid), queryFn: () => listCheckedDeployments(client, appUid) });
@@ -120,7 +120,7 @@ export function useActivity(appUid: string) {
   return useQuery({ queryKey: KEYS.activity(appUid), queryFn: () => readActivity(client, appUid), enabled: Boolean(appUid) });
 }
 
-/** Every application's activity (M-040), completed sessions a page at a time. */
+/** Every application's activity, completed sessions a page at a time. */
 export function useAllActivity() {
   const { client } = useSession();
   return useInfiniteQuery({
@@ -160,7 +160,7 @@ export function useRunningPermissions(appUid: string, version: number) {
   });
 }
 
-/** The person's pending account deletion (M-052): null when none is asked. */
+/** The person's pending account deletion: null when none is asked. */
 export function useAccountDeletion() {
   const { client } = useSession();
   return useQuery({ queryKey: KEYS.accountDeletion, queryFn: () => readDeletion(client) });
@@ -199,7 +199,7 @@ export function useDisconnectProtocolConnection() {
 }
 
 /**
- * A decision (M-020): the approval is read again immediately before, so what
+ * A decision: the approval is read again immediately before, so what
  * is approved is what is shown; a `409` or a changed status replaces the
  * controls with the server's answer; a `503` leaves it pending to retry.
  */

@@ -12,7 +12,7 @@ import { blocksOf, linkHost, type Span } from './markdownBlocks';
 
 /** Ask before leaving the app: the address is named, nothing opens by itself. */
 export function confirmLink(url: string): void {
-  Alert.alert('Open this link?', `It opens ${linkHost(url)} outside Datalayer.`, [
+  Alert.alert('Open this link?', `It opens ${linkHost(url)} outside Datalayer Agents.`, [
     { text: 'Cancel', style: 'cancel' },
     { text: 'Open', onPress: () => void Linking.openURL(url) }
   ]);

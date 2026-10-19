@@ -23,7 +23,7 @@ const spec = {
 
 const response = (body: unknown) => new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
 
-describe('exact running rules and permissions (M-044)', () => {
+describe('exact running rules and permissions', () => {
   it('reads the current version and summarizes only declared access', async () => {
     const fetcher = jest.fn(async () => response({ document: { type_s: 'app', model_s: stored(3, spec) } }));
     const client = createClient({ baseUrl: 'https://run.test', getAccessToken: () => 'person', fetch: fetcher as typeof fetch });

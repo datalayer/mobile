@@ -26,7 +26,7 @@ function fakeClient(answer: unknown) {
   return { client, asked };
 }
 
-describe('the account deletion request (M-052)', () => {
+describe('the account deletion request', () => {
   it("reads IAM's answer: none pending, or the pending request", () => {
     expect(deletionOf({ success: true, request: null })).toBeNull();
     expect(deletionOf({ success: true, request: PENDING })).toEqual({

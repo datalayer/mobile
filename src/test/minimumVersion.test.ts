@@ -8,7 +8,7 @@ import { MINIMUM_VERSION_PATH, SUPPORT_WORDS, checkSupport, compareVersions, sup
 const answer = (status: number, body: unknown): typeof fetch =>
   (async () => ({ status, json: async () => body })) as unknown as typeof fetch;
 
-describe('the minimum-version kill switch (M-056)', () => {
+describe('the minimum-version kill switch', () => {
   it('compares versions number by number', () => {
     expect(compareVersions('1.10.0', '1.9.9')).toBe(1);
     expect(compareVersions('1.2.3', '1.2.3')).toBe(0);

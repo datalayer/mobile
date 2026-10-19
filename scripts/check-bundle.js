@@ -4,7 +4,7 @@
  */
 
 /*
- * The resolved-bundle gate (M-006): what Metro actually put
+ * The resolved-bundle gate: what Metro actually put
  * in the iOS and Android bundles, read from their source maps. The source
  * gate (check-forbidden-imports.js) reads what the app imports; this reads
  * what those imports resolved to, transitively.
@@ -34,12 +34,12 @@ const FORBIDDEN = [
   {
     pattern: /\/node_modules\/@datalayer\/core\/|\/tech\/datalayer\/core\//,
     allowed: CORE_PORTABLE,
-    why: 'Core beyond its portable entry (M-002)'
+    why: 'Core beyond its portable entry'
   },
   {
     pattern: /\/node_modules\/@datalayer\/agent-runtimes\/|\/ai\/agent-runtimes\//,
     allowed: /\/(ai\/agent-runtimes|@datalayer\/agent-runtimes)\/lib\/portable\/[A-Za-z]+\.js$/,
-    why: 'Agent Runtimes beyond its portable entry (M-002)'
+    why: 'Agent Runtimes beyond its portable entry'
   },
   {
     pattern: /\/node_modules\/@datalayer\/primer-addons\/|\/primer\/addons\//,

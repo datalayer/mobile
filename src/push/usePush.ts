@@ -30,7 +30,7 @@ export function usePushRegistration(): void {
   }, []);
 }
 
-/** A tapped notification opens its item once; the screen reads and authorizes it again (M-025). */
+/** A tapped notification opens its item once; the screen reads and authorizes it again. */
 export function useNotificationRoutes(): void {
   const router = useRouter();
   const response = Notifications.useLastNotificationResponse();

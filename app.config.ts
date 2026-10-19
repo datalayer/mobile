@@ -15,21 +15,29 @@ const VARIANT: Variant =
 
 const BASE_ID = 'ai.datalayer.mobile';
 
+/** The app's name on the phone and in the stores. */
+const APP_NAME = 'Datalayer Agents';
+
+/** The Expo project: https://expo.dev/accounts/datalayer-mobile/projects/datalayer-mobile */
+const EXPO_OWNER = 'datalayer-mobile';
+const EXPO_SLUG = 'datalayer-mobile';
+export const EAS_PROJECT_ID = '1dfb9069-9ef4-4d8c-8a47-804376fa9d5e';
+
 const VARIANTS: Record<Variant, { name: string; id: string; scheme: string; icon: string }> = {
   development: {
-    name: 'Datalayer Dev',
+    name: `${APP_NAME} Dev`,
     id: `${BASE_ID}.dev`,
     scheme: 'datalayer-dev',
     icon: './assets/icon-development.png'
   },
   preview: {
-    name: 'Datalayer Preview',
+    name: `${APP_NAME} Preview`,
     id: `${BASE_ID}.preview`,
     scheme: 'datalayer-preview',
     icon: './assets/icon-preview.png'
   },
   production: {
-    name: 'Datalayer',
+    name: APP_NAME,
     id: BASE_ID,
     scheme: 'datalayer',
     icon: './assets/icon.png'
@@ -37,29 +45,26 @@ const VARIANTS: Record<Variant, { name: string; id: string; scheme: string; icon
 };
 
 /*
- * Over-the-air updates (MOBILE M-053): each EAS profile builds on its own
- * channel (eas.json), on the runtime of its app version. An update that can
- * reach people — preview, staging, production — is signed: the build carries
- * the public certificate, the private key stays with the account holders
- * (M-007b), and such a build is refused while the certificate is missing.
+ * Over-the-air updates: each EAS profile builds on its own channel (eas.json),
+ * on the runtime of its app version, served from the Expo project's address. An
+ * update that can reach people — preview, staging, production — is signed: the
+ * build carries the public certificate, the private key stays with the account
+ * holders, and such a build is refused while the certificate is missing.
  */
 const UPDATES_CERTIFICATE = './certs/updates-certificate.pem';
 const SIGNED_PROFILES = new Set(['preview', 'staging', 'production']);
 
-function updatesOf(projectId: string | undefined): ExpoConfig['updates'] {
+function updatesOf(): ExpoConfig['updates'] {
   const profile = process.env.EAS_BUILD_PROFILE ?? '';
   const certified = existsSync(join(__dirname, UPDATES_CERTIFICATE));
   if (SIGNED_PROFILES.has(profile) && !certified) {
     throw new Error(
       `The ${profile} build receives over-the-air updates, which are signed: ${UPDATES_CERTIFICATE} is missing ` +
-        '(npx expo-updates codesigning:generate, the key kept by the account holders; MOBILE M-007b, M-053).'
+        '(npx expo-updates codesigning:generate; the private key is kept by the account holders, never committed).'
     );
   }
-  if (SIGNED_PROFILES.has(profile) && !projectId) {
-    throw new Error(`The ${profile} build needs EAS_PROJECT_ID: its updates are served from the project's address.`);
-  }
   return {
-    ...(projectId ? { url: `https://u.expo.dev/${projectId}` } : {}),
+    url: `https://u.expo.dev/${EAS_PROJECT_ID}`,
     checkAutomatically: 'ON_LOAD',
     fallbackToCacheTimeout: 0,
     ...(certified
@@ -76,8 +81,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   return {
     ...config,
     name: variant.name,
-    slug: 'datalayer-mobile',
-    owner: process.env.EXPO_OWNER ?? 'datalayer',
+    slug: EXPO_SLUG,
+    owner: EXPO_OWNER,
     version: '0.0.1',
     // The second is the OAuth redirect's private scheme, named by the build's id (RFC 8252 §7.1).
     scheme: [variant.scheme, variant.id],
@@ -85,7 +90,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     orientation: 'portrait',
     userInterfaceStyle: 'automatic',
     runtimeVersion: { policy: 'appVersion' },
-    updates: updatesOf(process.env.EAS_PROJECT_ID),
+    updates: updatesOf(),
     ios: {
       bundleIdentifier: variant.id,
       supportsTablet: true,
@@ -120,7 +125,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
             NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAppFunctionality']
           },
           {
-            // Conversation health (M-036, decided by the user 15 October 2026): durations, counts and
+            // Conversation health: durations, counts and
             // failure categories, never words; linked to the account, not tracking.
             NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypePerformanceData',
             NSPrivacyCollectedDataTypeLinked: true,
@@ -138,7 +143,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       // Expo's template asks for storage and drawing over other apps, expo-secure-store's biometric
       // library for biometrics and expo-application's install-referrer library for the Play Store's
       // referrer: the app uses none of them. scripts/release-manifests.js holds the merged release
-      // manifest to docs/privacy-and-store.md (M-052).
+      // manifest to docs/privacy-and-store.md.
       blockedPermissions: [
         'android.permission.READ_EXTERNAL_STORAGE',
         'android.permission.WRITE_EXTERNAL_STORAGE',
@@ -172,7 +177,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     plugins: [
       'expo-router',
-      // The tokens are kept without biometrics, so no Face ID usage description (M-052).
+      // The tokens are kept without biometrics, so no Face ID usage description.
       ['expo-secure-store', { faceIDPermission: false }],
       'expo-localization',
       [
@@ -196,7 +201,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     extra: {
       variant: VARIANT,
       applicationId: variant.id,
-      eas: { projectId: process.env.EAS_PROJECT_ID }
+      eas: { projectId: EAS_PROJECT_ID }
     }
   };
 };

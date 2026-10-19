@@ -1,11 +1,11 @@
-# Datalayer Mobile: the deployed contracts
+# Datalayer Agents: the deployed contracts
 
 The server contracts the phone calls, as deployed on **r1** (IAM is shared and
 served from prod1's address), with the versions running when they were
-exercised and the result of each exercise (M-001).
+exercised and the result of each exercise.
 
 Exercised on **16 October 2026** as `@datalayer-demo`, a non-production
-account, by `~/.cache/mobile-m001/drill.py` (each step records its status code
+account, by a drill script run from a workstation (each step records its status code
 and the shape of the answer, never a key, token or runtime pod name). Three
 model requests in all; the agent runtime the drill started was stopped and is
 gone at the runtimes service and in Kubernetes.
@@ -56,14 +56,14 @@ otherwise. *Result* is what the drill got.
 The browser half of *Sign in with Datalayer* (authorize, code exchange,
 refresh rotation, revocation) needs a device or a browser: it is held by IAM's
 `test_oauth_mobile_client.py` and the phone's `oauth.test.ts`, and is drilled
-on a device under M-027.
+on a physical device, which is outside this round.
 
 ### Agents
 
 | Contract | Route | Result, 16 October 2026 |
 |---|---|---|
 | The person's deployments, each with what it speaks | `GET /api/ai-agents/v1/apps/deployments` | 200, 5 hosted deployments, each `speaks.known: true`, 4 kept running |
-| One application's, its identity checked now | `GET /api/ai-agents/v1/apps/deployments?app_uid=…&identity=true` | 200, `speaks.registry` and `speaks.identity` (M-045b, probed the same day as the owner account) |
+| One application's, its identity checked now | `GET /api/ai-agents/v1/apps/deployments?app_uid=…&identity=true` | 200, `speaks.registry` and `speaks.identity` (probed the same day as the owner account) |
 | Shared with the person | `GET /api/ai-agents/v1/apps/deployments/shared` | 200, none |
 | Standalone runtimes | `GET /api/runtimes/v1/runtimes` | 200; the drill's agent runtime listed while it ran (`agent_spec_id: example-simple`, environment `ai-agents-env`), absent after |
 | The person's conversations | `GET /api/ai-agents/v1/apps/conversations/mine/threads?limit=50` | 200, 50 threads |
@@ -121,5 +121,5 @@ phone does not use it.
 ## Not exercised here
 
 A device push, a physical notification deep link and the browser sign-in are
-device drills (M-003, M-027). Pause, resume and reset are held by their own
+physical-device drills. Pause, resume and reset are held by their own
 route tests and were not run against the demo account's deployments.

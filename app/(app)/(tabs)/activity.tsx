@@ -10,7 +10,7 @@ import { ProtocolActivity } from '../../../src/features/activity/ProtocolActivit
 import { useAllActivity, useApplications, useFaces, useProtocolActivity } from '../../../src/features/queries';
 import { AppFace } from '../../../src/identity/AppFace';
 
-/** Every application's activity in one list (M-040), completed sessions a page at a time. */
+/** Every application's activity in one list, completed sessions a page at a time. */
 export default function Activity() {
   const activity = useAllActivity();
   const applications = useApplications();

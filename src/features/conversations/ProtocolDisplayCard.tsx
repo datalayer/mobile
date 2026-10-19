@@ -4,12 +4,12 @@
  */
 
 /**
- * A protocol display under its tool row (MOBILE M-037): the native renderer
+ * A protocol display under its tool row: the native renderer
  * of Agent Runtimes' `ProtocolDisplayProps`. What it says is the display's
  * own, read strictly by `protocolDisplayOf`; what the person does goes out
  * through the host — a sign-in page in the system browser after its address
  * is named, an operation answered in Approvals, *I have signed in* as their
- * next message. A coding agent's diff and terminal (SHIELD SH-16) are drawn
+ * next message. A coding agent's diff and terminal are drawn
  * as the web draws them: the unified diff line by line, the command and its
  * output as it stands. An unknown display shows its text and type, nothing of
  * its data.
@@ -71,10 +71,10 @@ function tail(output: string): { shown: string; more: number } {
   return { shown: lines.slice(-PHONE_LINES).join('\n'), more: lines.length - PHONE_LINES };
 }
 
-/** The contract's props, and how a sign-in shown is watched on this phone (M-039). */
+/** The contract's props, and how a sign-in shown is watched on this phone. */
 export type NativeDisplayProps = ProtocolDisplayProps & {
   watch?: SignInWatch;
-  /** A mediated sign-in typed here, with its one-use protected ticket (M-039). */
+  /** A mediated sign-in typed here, with its one-use protected ticket. */
   typed?: ProtectedInput;
 };
 

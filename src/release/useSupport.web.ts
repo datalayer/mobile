@@ -7,7 +7,7 @@ import type { Support } from './minimumVersion';
 
 /**
  * The development web preview (`make dev-web`) is no shipped build: it has no
- * app version for the kill switch (M-056) to hold, which governs the iOS and
+ * app version for the kill switch to hold, which governs the iOS and
  * Android builds only.
  */
 export function useSupport(): { support: Support | null; retry: () => void } {

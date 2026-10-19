@@ -1,4 +1,4 @@
-# Prompt, stream and stop (M-030): a new conversation with the kept-running application E2E_CHAT_APP,
+# Prompt, stream and stop: a new conversation with the kept-running application E2E_CHAT_APP,
 # a streamed answer, then a long answer stopped while it streams, and the conversation ended. Two model requests.
 appId: ai.datalayer.mobile.preview
 name: Prompt, stream and stop

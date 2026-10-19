@@ -4,7 +4,7 @@
  */
 
 /*
- * The forbidden-import gate (M-006), on source files.
+ * The forbidden-import gate, on source files.
  * Usage: node scripts/check-forbidden-imports.js [dir ...]   (default: app src)
  */
 
@@ -16,10 +16,10 @@ const FORBIDDEN = [
   { pattern: /^@jupyterlab\//, why: 'JupyterLab' },
   { pattern: /^@lumino\//, why: 'Lumino' },
   { pattern: /^@datalayer\/jupyter-/, why: 'Datalayer Jupyter' },
-  { pattern: /^@datalayer\/core(?!\/lib\/portable$)(\/|$)/, why: 'Core beyond lib/portable (M-002)' },
+  { pattern: /^@datalayer\/core(?!\/lib\/portable$)(\/|$)/, why: 'Core beyond lib/portable' },
   {
     pattern: /^@datalayer\/agent-runtimes(?!\/lib\/portable$)(\/|$)/,
-    why: 'Agent Runtimes beyond lib/portable (M-002)'
+    why: 'Agent Runtimes beyond lib/portable'
   },
   { pattern: /^@primer\/react(\/|$)/, why: 'Primer web' },
   {

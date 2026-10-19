@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Datalayer, Inc.
 # Distributed under the terms of the Modified BSD License.
 
-"""Draws the app's icon, Android adaptive icon and splash image from the LOOP
+"""Draws the app's icon, Android adaptive icon and splash image from the Datalayer
 eyes (Primer Addons' `loopEyes`, the same geometry the app and the web draw).
 
 Usage: python scripts/make-icons.py   (writes assets/*.png; needs Pillow)
@@ -54,7 +54,7 @@ def main() -> None:
     ASSETS.mkdir(exist_ok=True)
     # The store icon: opaque, the eyes on white.
     eyes(1024, 600, INK, WHITE, WHITE).convert("RGB").save(ASSETS / "icon.png")
-    # Development and preview builds install beside it: the LOOP mint and sky behind the same eyes.
+    # Development and preview builds install beside it: the brand's mint and sky behind the same eyes.
     eyes(1024, 600, INK, WHITE, DEVELOPMENT).convert("RGB").save(ASSETS / "icon-development.png")
     eyes(1024, 600, INK, WHITE, PREVIEW).convert("RGB").save(ASSETS / "icon-preview.png")
     # Android's adaptive foreground: transparent, inside the 66% safe zone.

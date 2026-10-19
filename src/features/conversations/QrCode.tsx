@@ -4,7 +4,7 @@
  */
 
 /**
- * A QR code of a sign-in page (MOBILE M-039), to open it on another device —
+ * A QR code of a sign-in page, to open it on another device —
  * a computer, a tablet — where the person would rather sign in. Drawn with
  * views, row by row in runs: no native module, no image decoder.
  */

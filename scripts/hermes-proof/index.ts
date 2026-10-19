@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-/* The bundle's entry for the Hermes proof (M-002): prints under the Hermes CLI, ends on a sentence CI reads. */
+/* The bundle's entry for the Hermes proof: prints under the Hermes CLI, ends on a sentence CI reads. */
 
 import { runProof } from './proof';
 

@@ -4,7 +4,7 @@
  */
 
 /**
- * The minimum-version kill switch (MOBILE M-056). Datalayer serves the oldest
+ * The minimum-version kill switch. Datalayer serves the oldest
  * version of the app it still supports on each platform (IAM, beside the
  * app's client document); the app reads it at launch and every time it comes
  * back to the foreground, and below it stops at an update screen. Fail closed:
@@ -25,9 +25,9 @@ export type Support =
   | { kind: 'unknown'; why: string };
 
 export const SUPPORT_WORDS = {
-  updateTitle: 'Update Datalayer',
+  updateTitle: 'Update Datalayer Agents',
   update: (minimum: string, current: string) =>
-    `This version (${current}) is no longer supported. Install version ${minimum} or later to keep using Datalayer.`,
+    `This version (${current}) is no longer supported. Install version ${minimum} or later to keep using Datalayer Agents.`,
   unknownTitle: 'Datalayer could not be reached',
   unknown: 'Datalayer could not confirm this version of the app is still supported. Check your connection and try again.',
   retry: 'Try again'

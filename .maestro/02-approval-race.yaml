@@ -1,4 +1,4 @@
-# Approval race and stale state (M-020, M-026): answered elsewhere while it is open, the phone says so and does not decide again.
+# Approval race and stale state: answered elsewhere while it is open, the phone says so and does not decide again.
 # Open the confirmation before the other client rejects. This deliberately holds
 # the version the person reviewed, so Confirm must refetch and refuse the stale
 # decision even if the live query has already reconciled underneath the sheet.

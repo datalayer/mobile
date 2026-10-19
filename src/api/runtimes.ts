@@ -5,7 +5,7 @@
 
 /**
  * A person's running agent runtimes, from the runtimes service, read by Agent
- * Runtimes' portable contract (M-014b). Raw runtimes have no application
+ * Runtimes' portable contract. Raw runtimes have no application
  * capabilities.
  */
 

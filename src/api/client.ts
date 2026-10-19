@@ -27,7 +27,7 @@ export type Client = <T = Record<string, unknown>>(path: string, options?: Reque
 
 /**
  * A JSON client of the Datalayer services, with the session's token and the
- * errors of M-013. A `401` is refreshed once and the request sent again — the
+ * errors every screen shows. A `401` is refreshed once and the request sent again — the
  * server acted on nothing it could not authenticate; other retries belong to
  * the caller.
  */

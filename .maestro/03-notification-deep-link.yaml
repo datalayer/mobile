@@ -1,4 +1,4 @@
-# Notification deep link (M-025): an approval's notification opens /approvals/{id}, fetched again on opening.
+# Notification deep link: an approval's notification opens /approvals/{id}, fetched again on opening.
 # The emulator has no push credentials: the flow opens the route a tapped notification opens, from the
 # background, through the build's scheme, then answers it there.
 appId: ai.datalayer.mobile.preview

@@ -1,4 +1,4 @@
-# Maestro smoke flows of MOBILE M-054, run by the `e2e-android` job of
+# The Maestro smoke flows, run by the `e2e-android` job of
 # .github/workflows/check.yaml on an e2e build (APP_VARIANT=preview,
 # EXPO_PUBLIC_BUILD_PROFILE=e2e) against the r1 runtimes plane. Each flow is
 # given the test account's token (E2E_TOKEN), a second account's (E2E_SECOND_TOKEN),

@@ -21,7 +21,7 @@ describe('the environment', () => {
     expect(runUrlProblem(undefined)).toMatch(/not set/);
   });
 
-  it('offers the interim sign-in to development builds only (M-019)', () => {
+  it('offers the interim sign-in to development builds only', () => {
     const of = (profile: string) =>
       environmentOf({
         EXPO_PUBLIC_DATALAYER_RUN_URL: 'https://prod1.datalayer.run/',
@@ -36,7 +36,7 @@ describe('the environment', () => {
     expect(of('production').allowsInterimSignIn).toBe(false);
     expect(of('unknown').profile).toBe('production');
     expect(of('development').runUrl).toBe('https://prod1.datalayer.run');
-    // The MCP gateway is published on its own host (M-038, M-039).
+    // The MCP gateway is published on its own host.
     expect(of('development').gatewayUrl).toBe('https://mcp.datalayer.run');
     expect(() => environmentOf({ EXPO_PUBLIC_DATALAYER_RUN_URL: 'https://prod1.datalayer.run' })).toThrow(/EXPO_PUBLIC_DATALAYER_RUNTIMES_URL/);
     expect(() =>
@@ -52,7 +52,7 @@ describe('the environment', () => {
   });
 });
 
-describe('problems (M-013)', () => {
+describe('problems', () => {
   it('gives each status its words', () => {
     expect([401, 403, 404, 409, 429, 503, 500].map(kindOfStatus)).toEqual([
       'unauthenticated',

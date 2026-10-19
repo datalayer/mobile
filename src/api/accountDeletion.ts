@@ -4,8 +4,8 @@
  */
 
 /**
- * A person deletes their own account (MOBILE M-052, decided by the user on
- * 16 October 2026): they ask IAM, typing their handle to confirm; a grace
+ * A person deletes their own account (decided on 16 October
+ * 2026): they ask IAM, typing their handle to confirm; a grace
  * period runs, during which the account works and the request can be
  * withdrawn; then the account is deleted. The web's profile settings carry
  * the same control. Pure, but for the three calls.

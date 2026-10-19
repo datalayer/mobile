@@ -109,7 +109,7 @@ describe('an application’s protocol capabilities', () => {
     ).toEqual(['future (not in the registry), PAP (not said by the registry)']);
   });
 
-  it('says the identity the server checked, what to do when it did not pass, and an unreadable check as unread (M-045b)', () => {
+  it('says the identity the server checked, what to do when it did not pass, and an unreadable check as unread', () => {
     const base = { known: true, protocols: ['pact'], registry: [], endpoints: [] };
     const passed = deploymentProtocolsOf({
       ...base,

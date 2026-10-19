@@ -21,7 +21,7 @@ configureForegroundNotifications();
 function Routes({ fontsReady }: { fontsReady: boolean }) {
   const session = useSession();
   const { theme } = useTheme();
-  // The kill switch (M-056): nothing is shown before this build is known to be supported.
+  // The kill switch: nothing is shown before this build is known to be supported.
   const { support, retry } = useSupport();
   const restoring = session.status === 'restoring' || !fontsReady || support === null;
 

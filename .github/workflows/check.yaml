@@ -1,11 +1,11 @@
 # Copyright (c) 2026 Datalayer, Inc.
 # Distributed under the terms of the Modified BSD License.
 
-# The pull-request gate (M-006, M-054): types, lint, the import
+# The pull-request gate: types, lint, the import
 # gate on the sources, the tests, and the import gate on what Metro resolved;
 # the Expo/Hermes proof; and the Maestro smoke flows (.maestro/) on an e2e
 # build, Android on every run, iOS on main, once the test account is set
-# (e2e-account); the bundle-size budget of M-051 (scripts/bundle-size.js).
+# (e2e-account); the bundle-size budget (scripts/bundle-size.js).
 name: Check
 
 on:
@@ -33,7 +33,7 @@ jobs:
       - run: npm run check
       - run: npm run check:bundle
 
-  # Expo Doctor (M-010b) on the repository as it installs outside the monorepo,
+  # Expo Doctor on the repository as it installs outside the monorepo,
   # where the React the app ships is the only one (the workspace's root React
   # 19.2.8 beside Expo's 19.2.3 stays in the monorepo, held apart there by
   # metro.config.js and Jest's moduleNameMapper; here package.json's overrides
@@ -55,7 +55,7 @@ jobs:
         run: find node_modules -path '*/node_modules/react/package.json' -exec node -p "require('./{}').version + '  {}'" \; | sort
       - run: npm run doctor
 
-  # The release manifests of M-052: the production app generated as a store build
+  # The release manifests: the production app generated as a store build
   # generates it (no variant, no EAS profile), the release Android manifest merged
   # with every library's, and scripts/release-manifests.js holding the privacy
   # manifest, Info.plist and permissions to docs/privacy-and-store.md.
@@ -93,7 +93,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 30
 
-  # The Expo/Hermes proof of M-002: the shared portable entries, bundled by
+  # The Expo/Hermes proof: the shared portable entries, bundled by
   # this app's Metro from an entry that imports nothing else, compiled by the
   # hermesc React Native ships and run by the Hermes VM alone (no React Native
   # runtime, no DOM, no shim). The VM is built from the Hermes tag React Native
@@ -149,7 +149,7 @@ jobs:
             grep -qx 'HERMES PROOF HELD' dist/hermes/$platform/proof.txt
           done
 
-  # The Maestro flows need the test account (MOBILE M-054): all four secrets are set
+  # The Maestro flows need the test account: all four secrets are set
   # since 16 October 2026 12:37 UTC (the first flows ran in run 38901889765). A fork's
   # pull request, which gets no secrets, skips the e2e jobs cleanly and says so here.
   # Job conditions cannot read secrets, so this job reads them and says whether
@@ -174,13 +174,13 @@ jobs:
           [ -n "$E2E_CHAT_APP" ] || missing="$missing secret DATALAYER_MOBILE_E2E_CHAT_APP (an application of the test account kept running);"
           [ -n "$E2E_LIFECYCLE_APP" ] || missing="$missing secret DATALAYER_MOBILE_E2E_LIFECYCLE_APP (an application of the test account the flow pauses and resumes);"
           if [ -n "$missing" ]; then
-            echo "::notice title=Maestro smoke flows skipped::e2e-android and e2e-ios are skipped until the test account is set:$missing in the repository's settings (MOBILE M-054)."
+            echo "::notice title=Maestro smoke flows skipped::e2e-android and e2e-ios are skipped until the test account is set:$missing in the repository's settings."
             echo "ready=false" >> "$GITHUB_OUTPUT"
           else
             echo "ready=true" >> "$GITHUB_OUTPUT"
           fi
 
-  # The Maestro smoke flows of M-054 on Android: an e2e build (APP_VARIANT=preview,
+  # The Maestro smoke flows on Android: an e2e build (APP_VARIANT=preview,
   # EXPO_PUBLIC_BUILD_PROFILE=e2e: the token sign-in is offered) made here — prebuild,
   # then Gradle, never on a laptop — installed on an emulator and driven against
   # the r1 runtimes plane as the test account. The flows need the test account's
@@ -260,13 +260,16 @@ jobs:
       # the screen hierarchies hold what was typed: this repository's artifacts are public. Those
       # files are dropped, any other holding a token too, and the step fails if one is left.
       - name: Keep the tokens out of the results
+        id: scrub
         if: always()
         env:
           E2E_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_TOKEN }}
           E2E_SECOND_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_SECOND_TOKEN }}
         run: scripts/scrub-e2e-results.sh "$HOME/.maestro/tests" maestro-android.xml
+      # Uploaded only once the scrub succeeded: a token left in the results fails it, and
+      # then nothing is uploaded (`always()` alone would upload after that failure too).
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && steps.scrub.outcome == 'success'
         with:
           name: maestro-android
           path: |
@@ -355,13 +358,16 @@ jobs:
       # the screen hierarchies hold what was typed: this repository's artifacts are public. Those
       # files are dropped, any other holding a token too, and the step fails if one is left.
       - name: Keep the tokens out of the results
+        id: scrub
         if: always()
         env:
           E2E_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_TOKEN }}
           E2E_SECOND_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_SECOND_TOKEN }}
         run: scripts/scrub-e2e-results.sh "$HOME/.maestro/tests" maestro-ios.xml
+      # Uploaded only once the scrub succeeded: a token left in the results fails it, and
+      # then nothing is uploaded (`always()` alone would upload after that failure too).
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && steps.scrub.outcome == 'success'
         with:
           name: maestro-ios
           path: |

@@ -5,9 +5,9 @@
 
 import { EYES_VIEW, eyesGeometry } from '@datalayer/primer-addons/lib/theme/portable';
 import { DEFAULT_APP_EMOJI, faceFor, faceIndexOf, listedFaceOf } from '../api/faces';
-import { ovalStyle } from '../identity/LoopEyes';
+import { ovalStyle } from '../identity/Eyes';
 
-describe('application faces (M-012b)', () => {
+describe('application faces', () => {
   const index = faceIndexOf([
     { uid: 'app-1', name_t: 'Inbox Triage', face_s: JSON.stringify({ id: 'inbox-triage', emoji: '\u{1F4EC}' }) },
     { uid: 'app-2', name_t: 'Digest', face_s: JSON.stringify({ emoji: DEFAULT_APP_EMOJI }) },
@@ -36,7 +36,7 @@ describe('application faces (M-012b)', () => {
   });
 });
 
-describe('the LOOP eyes, drawn natively', () => {
+describe('the Datalayer Agents eyes, drawn natively', () => {
   it('turns an ellipse into a stretched circle centred where the geometry says', () => {
     const { eyes } = eyesGeometry('ahead');
     const scale = 20 / EYES_VIEW.height;

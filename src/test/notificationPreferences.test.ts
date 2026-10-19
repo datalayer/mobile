@@ -4,7 +4,7 @@
  */
 
 /**
- * Per-application notification preferences and quiet hours (MOBILE M-043):
+ * Per-application notification preferences and quiet hours:
  * read strictly from the device, sent with the installation, said in words.
  */
 
@@ -15,7 +15,7 @@ import {
 
 const QUIET = { start: '22:00', end: '07:00', tz: 'Europe/Brussels' };
 
-describe('the notification preference, per application and with quiet hours (M-043)', () => {
+describe('the notification preference, per application and with quiet hours', () => {
   it('reads quiet hours, the approvals switch and each application strictly', () => {
     const kept = pushPreferenceOf(JSON.stringify({
       enabled: true,
@@ -61,7 +61,7 @@ describe('the notification preference, per application and with quiet hours (M-0
   });
 });
 
-describe('a push for a conversation waiting on the person (M-023)', () => {
+describe('a push for a conversation waiting on the person', () => {
   it('opens that conversation, and nothing that is not an allowlisted route', () => {
     expect(routeOfNotification({ v: 1, route: '/apps/a-1/sessions/5c3554cd-0e78' })).toBe('/apps/a-1/sessions/5c3554cd-0e78');
     expect(routeOfNotification({ v: 1, route: '/apps/a-1/sessions/../../x' })).toBe('/');

@@ -1,4 +1,4 @@
-# Pause, reset and authorization (M-037, M-039): the owner pauses E2E_LIFECYCLE_APP's hosted deployment, is
+# Pause, reset and authorization: the owner pauses E2E_LIFECYCLE_APP's hosted deployment, is
 # offered Reset only while it is paused (and cancels it), resumes it; a second account calling the same
 # controls is refused.
 appId: ai.datalayer.mobile.preview

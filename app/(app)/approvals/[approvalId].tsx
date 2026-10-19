@@ -27,7 +27,7 @@ import { ProtocolApprovalDetails } from '../../../src/protocols/ProtocolApproval
 import { isKnownProtocolApproval, protocolApprovalOf } from '../../../src/protocols/approvals';
 import { SPACE, useNativeTheme } from '../../../src/theme/tokens';
 
-/** Fetched on every open, marked read on the server; decided through the audited routes (M-020). */
+/** Fetched on every open, marked read on the server; decided through the audited routes. */
 export default function ApprovalDetail() {
   const { approvalId = '' } = useLocalSearchParams<{ approvalId: string }>();
   const { colors, radius } = useNativeTheme();

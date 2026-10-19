@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-/** Loading, problem and list building blocks every read-only screen uses (M-013). */
+/** Loading, problem and list building blocks every read-only screen uses. */
 
 import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';

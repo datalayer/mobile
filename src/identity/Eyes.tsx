@@ -4,7 +4,7 @@
  */
 
 /**
- * The eyes of L👀P, drawn natively from Primer Addons' geometry (the web draws
+ * The Datalayer Agents eyes, drawn natively from Primer Addons' geometry (the web draws
  * the same with SVG). Each eye is a filled ellipse in the ink with a smaller
  * one in the surface on it, so the outline keeps one width all round.
  */
@@ -30,7 +30,7 @@ export function ovalStyle({ cx, cy, rx, ry }: Oval, scale: number, color: string
   };
 }
 
-export function LoopEyes({
+export function Eyes({
   size = 20,
   gaze = 'aside',
   label,

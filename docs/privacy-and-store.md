@@ -1,6 +1,6 @@
 # Mobile privacy, store declarations and push incident runbook
 
-This is the review source for MOBILE M-052. It describes the current application; it is not evidence that Apple or Google forms have been submitted. Reconcile it with the release binary's generated manifests and dependency privacy reports before every store submission.
+This is the review source for the privacy and store declarations of Datalayer Agents. It describes the current application; it is not evidence that Apple or Google forms have been submitted. Reconcile it with the release binary's generated manifests and dependency privacy reports before every store submission.
 
 ## Public destinations
 
@@ -22,7 +22,7 @@ The app does not track a person across other companies' apps or websites and has
 | Device ID           | Expo push token and opaque installation id                              | Yes, only after notification consent   | Push installation; remove on sign-out/disable and invalid-token receipt |
 | Product interaction | Approval decisions, deployment controls and protocol connection actions | Yes, through audited APIs              | Service audit/operation policy                                          |
 | Other user content  | Optional approval note and, when conversations ship, prompts/answers    | Yes, only when the person submits it   | Owning service policy; never push or mobile analytics                   |
-| Performance data    | Conversation health (M-036): time to first token, to the complete answer, Stop latency, failed-stream category, lost streams read back | Yes, by tens and when the app goes to the background, to the platform's metrics ingest as the signed-in account | The platform's metrics retention; never a prompt, an answer, an argument or an id |
+| Performance data    | Conversation health: time to first token, to the complete answer, Stop latency, failed-stream category, lost streams read back | Yes, by tens and when the app goes to the background, to the platform's metrics ingest as the signed-in account | The platform's metrics retention; never a prompt, an answer, an argument or an id |
 
 Authentication/access/refresh tokens remain in platform secure storage. Prompt, answer, approval arguments, mail content, protocol credentials, signing keys and raw provider receipts are not analytics. The Query cache is memory-only and is rebuilt from the server after process death.
 
@@ -65,7 +65,7 @@ The only permission a person is asked for is notifications, and only when they t
 | `<application id>.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` | AndroidX guards the app's own receivers; no other app holds it | No (signature) |
 | `android.permission.READ_APP_BADGE` and the launcher badge permissions of Samsung, HTC, Huawei, Oppo, Sony, Nova, Apex, ADW, Everything Me and AOSP launchers (`scripts/release-manifests.js` lists the 20 names) | The icon badge's count of pending approvals on launchers without Android's own badges: ShortcutBadger, which `expo-notifications` ships, declares them | No (normal) |
 
-Blocked with `android.blockedPermissions`, because the app uses none of them: Expo's template's `READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE` and `SYSTEM_ALERT_WINDOW` (the development build's debug manifest keeps the overlay for React Native's developer menu), `expo-secure-store`'s biometric library's `USE_BIOMETRIC` and `USE_FINGERPRINT` (the tokens are kept without biometrics), and `expo-application`'s install-referrer library's `BIND_GET_INSTALL_REFERRER_SERVICE` (the app never reads the Play Store's referrer). The development client's `NSLocalNetworkUsageDescription` is in the generated `Info.plist` and deleted from every non-Debug build by `expo-dev-launcher`'s own build phase; the check accepts it only while that phase is in the project. The store binary's own privacy report (Xcode's aggregation of every dependency's `PrivacyInfo.xcprivacy`, required-reason APIs included) comes with the first archive (M-058).
+Blocked with `android.blockedPermissions`, because the app uses none of them: Expo's template's `READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE` and `SYSTEM_ALERT_WINDOW` (the development build's debug manifest keeps the overlay for React Native's developer menu), `expo-secure-store`'s biometric library's `USE_BIOMETRIC` and `USE_FINGERPRINT` (the tokens are kept without biometrics), and `expo-application`'s install-referrer library's `BIND_GET_INSTALL_REFERRER_SERVICE` (the app never reads the Play Store's referrer). The development client's `NSLocalNetworkUsageDescription` is in the generated `Info.plist` and deleted from every non-Debug build by `expo-dev-launcher`'s own build phase; the check accepts it only while that phase is in the project. The store binary's own privacy report (Xcode's aggregation of every dependency's `PrivacyInfo.xcprivacy`, required-reason APIs included) comes with the first store archive.
 
 ## Push credential incident runbook
 
@@ -89,4 +89,4 @@ Owner names and provider-console locations belong in the private release record,
 - named private owners for store records, support response and push credential recovery;
 - a tabletop rotation of the production-like push credential and a physical-device canary.
 
-M-052 stays open until this evidence exists and the deletion request is operationally verified.
+The privacy release gate stays open until this evidence exists and the deletion request is operationally verified.

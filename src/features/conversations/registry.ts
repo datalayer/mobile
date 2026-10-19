@@ -4,7 +4,7 @@
  */
 
 /**
- * The conversations the phone holds while it runs (MOBILE M-035): in memory
+ * The conversations the phone holds while it runs: in memory
  * only, so that leaving a conversation and coming back — or the app going to
  * the background and back — finds it as it was, its stream still running.
  * Nothing is written to the device: after the process ends, a conversation is

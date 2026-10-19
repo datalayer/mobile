@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-/** Deployed LOOP applications, from ai-agents (`/api/ai-agents/v1/apps/deployments`). */
+/** Deployed applications, from ai-agents (`/api/ai-agents/v1/apps/deployments`). */
 
 import {
   deploymentEventOf,
@@ -22,7 +22,7 @@ import { count, type Raw, record, records, segment, text } from './fields';
 import { deploymentProtocolsOf, type DeploymentProtocols } from '../protocols/deployments';
 
 export type DeploymentTarget = 'hosted' | 'embedded' | 'preview';
-// Pause, resume, reset and a deployment's events: Agent Runtimes' portable lifecycle, as the Studio's (M-041b).
+// Pause, resume, reset and a deployment's events: Agent Runtimes' portable lifecycle, as the Studio's.
 export type { DeploymentEvent, DeploymentState, ResetCounts, StoppedWork };
 
 export type Deployment = {
@@ -108,7 +108,7 @@ export async function listDeployments(client: Client): Promise<Deployment[]> {
 
 /**
  * One application's deployments with the identity each acts under checked now
- * by the server (`identity=true`, MOBILE M-045b): Application → Protocols.
+ * by the server (`identity=true`): Application → Protocols.
  */
 export async function listCheckedDeployments(client: Client, appUid: string): Promise<Deployment[]> {
   const body = await client(`${BASE}?app_uid=${segment(appUid)}&identity=true`);

@@ -1,4 +1,4 @@
-// MOBILE M-054, pause/reset authorization: a second account calling the owner's controls is refused.
+// Pause/reset authorization: a second account calling the owner's controls is refused.
 var listed = http.get(E2E_RUNTIMES_URL + '/api/ai-agents/v1/apps/deployments', {
   headers: { Authorization: 'Bearer ' + E2E_TOKEN }
 });

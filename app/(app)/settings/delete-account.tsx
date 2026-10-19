@@ -13,7 +13,7 @@ import { ProblemView, QueryView } from '../../../src/components/states';
 import { useAccountDeletion, useChangeAccountDeletion } from '../../../src/features/queries';
 import { SPACE, useNativeTheme } from '../../../src/theme/tokens';
 
-/** Ask IAM to delete the account, or withdraw the request while its grace period runs (M-052). */
+/** Ask IAM to delete the account, or withdraw the request while its grace period runs. */
 export default function DeleteAccount() {
   const session = useSession();
   const deletion = useAccountDeletion();
