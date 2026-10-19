@@ -53,13 +53,13 @@ jobs:
         env:
           ONNXRUNTIME_NODE_INSTALL: skip
       - name: The lockfile this install resolved
-        run: sha256sum package-lock.json | tee package-lock.sha256
+        run: sha256sum package-lock.json | tee "$RUNNER_TEMP/package-lock.sha256"
       - uses: actions/upload-artifact@v4
         with:
           name: release-lockfile
           path: |
             package-lock.json
-            package-lock.sha256
+            ${{ runner.temp }}/package-lock.sha256
           retention-days: 90
       - name: The tag names the app's version
         run: |
@@ -74,14 +74,15 @@ jobs:
         with:
           eas-version: 24.12.1
           token: ${{ secrets.EXPO_TOKEN }}
+      # EAS builds only a clean tree (requireCommit), so what the job writes goes outside the checkout.
       - name: Build and submit to App Store Connect and Google Play
-        run: eas build --platform all --profile production --non-interactive --auto-submit --wait --json > builds.json
+        run: eas build --platform all --profile production --non-interactive --auto-submit --wait --json > "$RUNNER_TEMP/builds.json"
       - name: GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           notes="$(node -e '
-            const builds = require("./builds.json");
+            const builds = require(process.env.RUNNER_TEMP + "/builds.json");
             for (const b of builds) {
               console.log(`- ${b.platform}: build ${b.appBuildVersion} (${b.id}) — ${b.artifacts?.buildUrl ?? "see EAS"}`);
             }
@@ -90,4 +91,4 @@ jobs:
 
           ${notes}
 
-          Lockfile (the release-lockfile artifact): sha256 $(cut -d' ' -f1 package-lock.sha256)"
+          Lockfile (the release-lockfile artifact): sha256 $(cut -d' ' -f1 "$RUNNER_TEMP/package-lock.sha256")"

@@ -71,14 +71,15 @@ jobs:
         with:
           eas-version: 24.12.1
           token: ${{ secrets.EXPO_TOKEN }}
+      # EAS builds only a clean tree (requireCommit), so what the job writes goes outside the checkout.
       - name: Build on EAS
         run: |
           eas build --platform "${{ inputs.platform }}" --profile "${{ inputs.profile }}" --non-interactive --wait \
-            ${{ inputs.submit && '--auto-submit' || '' }} --json > builds.json
+            ${{ inputs.submit && '--auto-submit' || '' }} --json > "$RUNNER_TEMP/builds.json"
       - name: The builds
         run: |
           node -e '
-            for (const b of require("./builds.json")) {
+            for (const b of require(process.env.RUNNER_TEMP + "/builds.json")) {
               console.log(`- ${b.platform}: ${b.buildProfile} ${b.appVersion} (${b.appBuildVersion}), ${b.id} — ${b.artifacts?.buildUrl ?? "see EAS"}`);
             }
           ' | tee -a "$GITHUB_STEP_SUMMARY"
