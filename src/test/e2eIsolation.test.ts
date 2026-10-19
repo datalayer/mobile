@@ -10,21 +10,17 @@ const root = path.resolve(__dirname, "../..");
 const read = (file: string) => fs.readFileSync(path.join(root, file), "utf8");
 
 describe("the Maestro smoke suite", () => {
-  it("runs every top-level journey deterministically on the shared device", () => {
-    const config = read(".maestro/config.yaml");
-    const expected = [
-      "01-sign-in",
-      "02-approval-race",
-      "03-notification-deep-link",
-      "04-prompt-stream-stop",
-      "05-pause-reset-authorization",
-    ];
-
-    let cursor = -1;
-    for (const flow of expected) {
-      const next = config.indexOf(`- ${flow}`);
-      expect(next).toBeGreaterThan(cursor);
-      cursor = next;
+  it("prepares authentication in every independently ordered journey", () => {
+    for (const flow of [
+      "01-sign-in.yaml",
+      "02-approval-race.yaml",
+      "03-notification-deep-link.yaml",
+      "04-prompt-stream-stop.yaml",
+      "05-pause-reset-authorization.yaml",
+    ]) {
+      expect(read(`.maestro/${flow}`)).toContain(
+        "runFlow: common/sign-in.yaml",
+      );
     }
   });
 

@@ -161,10 +161,10 @@ elsewhere while it is open, the route a tapped notification opens, a prompt
 streamed and stopped, and pause/reset with a second account refused. CI runs
 them (`e2e-android` on every run, `e2e-ios` on main, on `macos-15`) on an `e2e`
 build it makes itself: `expo prebuild`, then Gradle or `xcodebuild`; nothing is
-built on a laptop. The five flows run in an explicit order on the one shared
-emulator or simulator, and each flow's sign-in setup also accepts an existing
-authenticated E2E session because the iOS keychain can outlive cleared app
-state. They act as a test account on the r1 runtimes plane and need
+built on a laptop. Maestro may run the five flows in any order on the one
+shared emulator or simulator, so every flow prepares authentication itself;
+that setup accepts an existing authenticated E2E session because the iOS
+keychain can outlive cleared app state. They act as a test account on the r1 runtimes plane and need
 the repository secrets `DATALAYER_MOBILE_E2E_TOKEN` (the test account's API token) and
 `DATALAYER_MOBILE_E2E_SECOND_TOKEN` (a second account's), and the secrets
 `DATALAYER_MOBILE_E2E_CHAT_APP` (an application of the test account kept running; the
