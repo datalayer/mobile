@@ -24,8 +24,11 @@ name: Prompt, stream and stop
 - extendedWaitUntil:
     visible: ".*PAP MOBILE STREAM OK.*"
     timeout: 120000
-- assertVisible:
-    id: "conversation-send"
+# The turn ends at RUN_FINISHED, which can come some seconds after the last words on iOS.
+- extendedWaitUntil:
+    visible:
+      id: "conversation-send"
+    timeout: 60000
 - tapOn:
     id: "conversation-message"
 - inputText: "Call runtime_echo exactly once with a text argument made of 12000 lowercase x characters. Do not answer or summarize before the tool completes."

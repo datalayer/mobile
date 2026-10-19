@@ -5,6 +5,15 @@ appId: ai.datalayer.mobile.preview
 # killed the new process, which stayed on the splash screen (run 38923345444). iOS SecureStore can
 # retain the E2E grant even when Maestro clears application state, so this setup accepts the already
 # authenticated Inbox as well as the sign-in screen. Every flow remains runnable by itself.
+# A system dialog a failed flow left on the iOS Simulator (the open-link question) would hide the app
+# from every later flow: it is dismissed first.
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - tapOn:
+          text: "Cancel"
+          optional: true
 - retry:
     maxRetries: 1
     commands:
