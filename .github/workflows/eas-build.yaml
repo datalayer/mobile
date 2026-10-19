@@ -72,9 +72,12 @@ jobs:
           eas-version: 24.12.1
           token: ${{ secrets.EXPO_TOKEN }}
       # EAS builds only a clean tree (requireCommit), so what the job writes goes outside the checkout.
+      # --freeze-credentials: CI uses the signing credentials kept in EAS and never creates any; a missing
+      # one fails the build. The store app's Android upload key and iOS distribution certificate are
+      # put in EAS by an account holder (`eas credentials`).
       - name: Build on EAS
         run: |
-          eas build --platform "${{ inputs.platform }}" --profile "${{ inputs.profile }}" --non-interactive --wait \
+          eas build --platform "${{ inputs.platform }}" --profile "${{ inputs.profile }}" --non-interactive --freeze-credentials --wait \
             ${{ inputs.submit && '--auto-submit' || '' }} --json > "$RUNNER_TEMP/builds.json"
       - name: The builds
         run: |

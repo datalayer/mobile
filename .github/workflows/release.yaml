@@ -75,8 +75,11 @@ jobs:
           eas-version: 24.12.1
           token: ${{ secrets.EXPO_TOKEN }}
       # EAS builds only a clean tree (requireCommit), so what the job writes goes outside the checkout.
+      # --freeze-credentials: CI uses the signing credentials kept in EAS and never creates any; a missing
+      # one fails the build. The store app's Android upload key and iOS distribution certificate are
+      # put in EAS by an account holder (`eas credentials`).
       - name: Build and submit to App Store Connect and Google Play
-        run: eas build --platform all --profile production --non-interactive --auto-submit --wait --json > "$RUNNER_TEMP/builds.json"
+        run: eas build --platform all --profile production --non-interactive --freeze-credentials --auto-submit --wait --json > "$RUNNER_TEMP/builds.json"
       - name: GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
