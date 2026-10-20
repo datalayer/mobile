@@ -17,13 +17,10 @@ name: Store screenshots
       visible: "Sign in to Datalayer"
     commands:
       - takeScreenshot: store-01-sign-in
-- runFlow: ../common/sign-in.yaml
+# The approval is asked before signing in: the Inbox reads the list once, when it opens.
 - runScript: scripts/store-approval.js
-# The Inbox with the waiting mail; pulled again so the new approval is listed.
-- tapOn:
-    id: "tab-agents"
-- tapOn:
-    id: "tab-inbox"
+- runFlow: ../common/sign-in.yaml
+# The Inbox with the waiting mail.
 - extendedWaitUntil:
     visible: "Send email"
     timeout: 30000

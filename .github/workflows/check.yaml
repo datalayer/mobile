@@ -322,7 +322,7 @@ jobs:
             adb shell am broadcast -a com.android.systemui.demo -e command enter
             adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 0941
             adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 100 -e plugged false
-            adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4 -e mobile hide
+            adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4 -e fully true -e mobile hide
             adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false
             maestro test .maestro/store/screenshots.yaml --test-output-dir store-output -e E2E_TOKEN="$E2E_TOKEN" -e E2E_RUNTIMES_URL="$EXPO_PUBLIC_DATALAYER_RUNTIMES_URL" -e E2E_CHAT_APP="$E2E_CHAT_APP"
       # takeScreenshot writes where Maestro is run or into its output directory: the
