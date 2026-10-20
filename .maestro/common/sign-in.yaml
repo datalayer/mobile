@@ -23,21 +23,15 @@ appId: ai.datalayer.mobile.preview
       - extendedWaitUntil:
           visible: "Sign in to Datalayer|Inbox"
           timeout: 60000
-# The check for the sign-in screen is made again when the Inbox does not come: on the iOS
-# Simulator a kept grant can show the Inbox for a moment before the app signs out, and the
-# first check then skipped the sign-in and waited on the sign-in screen (run 39449218343).
-- retry:
-    maxRetries: 2
+- runFlow:
+    when:
+      visible: "Sign in to Datalayer"
     commands:
-      - runFlow:
-          when:
-            visible: "Sign in to Datalayer"
-          commands:
-            - tapOn: "Use an API token instead"
-            - tapOn: "Datalayer API token"
-            - inputText: ${E2E_TOKEN}
-            - hideKeyboard
-            - tapOn: "Sign in"
-      - extendedWaitUntil:
-          visible: "Inbox"
-          timeout: 30000
+      - tapOn: "Use an API token instead"
+      - tapOn: "Datalayer API token"
+      - inputText: ${E2E_TOKEN}
+      - hideKeyboard
+      - tapOn: "Sign in"
+- extendedWaitUntil:
+    visible: "Inbox"
+    timeout: 60000
