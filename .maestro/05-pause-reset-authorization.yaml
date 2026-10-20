@@ -8,9 +8,11 @@ name: Pause, reset and authorization
 - runScript: scripts/second-account-refused.js
 - tapOn:
     id: "tab-agents"
-- extendedWaitUntil:
-    visible: ".*${E2E_LIFECYCLE_APP}.*"
+# The list puts recently started applications first: scroll to this one.
+- scrollUntilVisible:
+    element: ".*${E2E_LIFECYCLE_APP}.*"
     timeout: 30000
+    centerElement: true
 - tapOn: ".*${E2E_LIFECYCLE_APP}.*"
 - scrollUntilVisible:
     element: "Pause hosted"

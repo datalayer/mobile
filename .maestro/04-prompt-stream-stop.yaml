@@ -10,9 +10,11 @@ name: Prompt, stream and stop
 - runFlow: common/sign-in.yaml
 - tapOn:
     id: "tab-agents"
-- extendedWaitUntil:
-    visible: ".*${E2E_CHAT_APP}.*"
+# The list puts recently started applications first: scroll to this one.
+- scrollUntilVisible:
+    element: ".*${E2E_CHAT_APP}.*"
     timeout: 30000
+    centerElement: true
 - tapOn: ".*${E2E_CHAT_APP}.*"
 - runScript: scripts/chat-reach.js
 - tapOn:

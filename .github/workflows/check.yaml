@@ -433,9 +433,12 @@ jobs:
           E2E_SECOND_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_SECOND_TOKEN }}
           E2E_CHAT_APP: ${{ secrets.DATALAYER_MOBILE_E2E_CHAT_APP }}
           E2E_LIFECYCLE_APP: ${{ secrets.DATALAYER_MOBILE_E2E_LIFECYCLE_APP }}
+          # A cold runner's Simulator can take longer than Maestro's default to start its driver.
+          MAESTRO_DRIVER_STARTUP_TIMEOUT: "240000"
         run: |
           device=$(xcrun simctl list devices available | grep -m1 -oE 'iPhone [0-9]+[^(]*\(([0-9A-F-]+)\)' | grep -oE '[0-9A-F-]{36}')
           xcrun simctl boot "$device"
+          xcrun simctl bootstatus "$device" -b
           xcrun simctl install "$device" "$APP_PATH"
           maestro --device "$device" test .maestro --format junit --output maestro-ios.xml \
             -e E2E_TOKEN="$E2E_TOKEN" -e E2E_SECOND_TOKEN="$E2E_SECOND_TOKEN" \
