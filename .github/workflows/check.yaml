@@ -277,6 +277,77 @@ jobs:
             ~/.maestro/tests
           if-no-files-found: ignore
 
+  # The store screenshots (.maestro/store/screenshots.yaml): the e2e APK e2e-android built,
+  # on a Pixel 2 emulator (1080 × 1920, 9:16, where the smoke flows' default one is 320 × 640),
+  # with the status bar in demo mode, as the test account. On main and when dispatched, never on
+  # a pull request; a failure here does not turn Check red. The PNGs alone are kept, through
+  # the same token scrub, as the `store-screenshots` artifact.
+  store-screenshots:
+    needs: [e2e-account, e2e-android]
+    if: always() && github.event_name != 'pull_request' && needs.e2e-account.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    continue-on-error: true
+    env:
+      EXPO_PUBLIC_DATALAYER_RUNTIMES_URL: https://r1.datalayer.run
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: e2e-android-apk
+          path: apk
+      - name: Install Maestro
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Take the screenshots on an emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          E2E_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_TOKEN }}
+          E2E_CHAT_APP: ${{ secrets.DATALAYER_MOBILE_E2E_CHAT_APP }}
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          profile: pixel_2
+          disable-animations: true
+          script: |
+            adb install -r apk/app-release.apk
+            adb shell settings put global sysui_demo_allowed 1
+            adb shell am broadcast -a com.android.systemui.demo -e command enter
+            adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 0941
+            adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 100 -e plugged false
+            adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4 -e mobile hide
+            adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false
+            maestro test .maestro/store/screenshots.yaml --test-output-dir store-output -e E2E_TOKEN="$E2E_TOKEN" -e E2E_RUNTIMES_URL="$EXPO_PUBLIC_DATALAYER_RUNTIMES_URL" -e E2E_CHAT_APP="$E2E_CHAT_APP"
+      # takeScreenshot writes where Maestro is run or into its output directory: the
+      # store-*.png are gathered from both, and nothing else of Maestro's results is kept.
+      - name: Gather the screenshots
+        if: always()
+        run: |
+          mkdir -p store-screenshots
+          find . "$HOME/.maestro/tests" -name 'store-*.png' -not -path './store-screenshots/*' -exec cp {} store-screenshots/ \; 2>/dev/null || true
+          ls -la store-screenshots
+      - name: Keep the tokens out of the screenshots
+        id: scrub
+        if: always()
+        env:
+          E2E_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_TOKEN }}
+          E2E_SECOND_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_SECOND_TOKEN }}
+        run: scripts/scrub-e2e-results.sh store-screenshots
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.scrub.outcome == 'success'
+        with:
+          name: store-screenshots
+          path: store-screenshots
+          if-no-files-found: ignore
+          retention-days: 30
+
   # The same flows on an iOS Simulator build (macos-15: macos-13 is retired), on main only.
   e2e-ios:
     needs: e2e-account

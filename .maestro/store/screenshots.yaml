@@ -1,0 +1,120 @@
+# The store screenshots: the screens the store listings show, taken with `takeScreenshot` on the
+# e2e build as the test account, by the `store-screenshots` job of .github/workflows/check.yaml
+# (a 1080 × 1920 emulator) and uploaded as the `store-screenshots` artifact once the token scrub
+# passed. Not part of the smoke suite: .maestro/config.yaml runs the top-level flows only.
+# The token is typed in a secure field; no screenshot is taken while it is on screen.
+appId: ai.datalayer.mobile.preview
+name: Store screenshots
+---
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- extendedWaitUntil:
+    visible: "Sign in to Datalayer|Inbox"
+    timeout: 60000
+- runFlow:
+    when:
+      visible: "Sign in to Datalayer"
+    commands:
+      - takeScreenshot: store-01-sign-in
+- runFlow: ../common/sign-in.yaml
+- runScript: scripts/store-approval.js
+# The Inbox with the waiting mail; pulled again so the new approval is listed.
+- tapOn:
+    id: "tab-agents"
+- tapOn:
+    id: "tab-inbox"
+- extendedWaitUntil:
+    visible: "Send email"
+    timeout: 30000
+- takeScreenshot: store-02-inbox
+# The complete request, then the confirmation a decision asks for (cancelled).
+- tapOn: "Send email"
+- extendedWaitUntil:
+    visible: "Waiting for your answer."
+    timeout: 30000
+- takeScreenshot: store-03-approval
+- scrollUntilVisible:
+    element:
+      id: "approve"
+- tapOn:
+    id: "approve"
+- extendedWaitUntil:
+    visible:
+      id: "decision-confirm"
+    timeout: 10000
+- takeScreenshot: store-04-decide
+- tapOn:
+    id: "decision-cancel"
+- runScript: scripts/store-reject.js
+- back
+# Agents and Activity.
+- tapOn:
+    id: "tab-agents"
+- extendedWaitUntil:
+    visible: "Applications"
+    timeout: 30000
+- takeScreenshot: store-05-agents
+- tapOn:
+    id: "tab-activity"
+- extendedWaitUntil:
+    visible: "In progress"
+    timeout: 30000
+- takeScreenshot: store-06-activity
+# A conversation with the kept-running application: streaming, then answered. One model request.
+- tapOn:
+    id: "tab-agents"
+- extendedWaitUntil:
+    visible: ".*${E2E_CHAT_APP}.*"
+    timeout: 30000
+- tapOn: ".*${E2E_CHAT_APP}.*"
+- extendedWaitUntil:
+    visible:
+      id: "conversation-new"
+    timeout: 30000
+- takeScreenshot: store-07-application
+- tapOn:
+    id: "conversation-new"
+- extendedWaitUntil:
+    visible:
+      id: "conversation-message"
+    timeout: 60000
+- tapOn:
+    id: "conversation-message"
+- inputText: "In four short sentences, tell me how you can help me keep an eye on my week. Do not use any tool."
+- hideKeyboard
+- tapOn:
+    id: "conversation-send"
+    waitToSettleTimeoutMs: 0
+- extendedWaitUntil:
+    visible:
+      id: "conversation-stop"
+    timeout: 30000
+    optional: true
+# A few seconds of streaming (nothing by this text ever shows: the wait is a pause).
+- extendedWaitUntil:
+    visible: "store-screenshots-pause"
+    timeout: 6000
+    optional: true
+- takeScreenshot: store-08-streaming
+- extendedWaitUntil:
+    visible:
+      id: "conversation-send"
+    timeout: 150000
+- takeScreenshot: store-09-answered
+- tapOn:
+    text: "End"
+    optional: true
+- tapOn:
+    text: "End"
+    optional: true
+# Settings, from the Inbox of the app opened again (the session is kept).
+- launchApp
+- extendedWaitUntil:
+    visible: "Inbox"
+    timeout: 60000
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "Appearance"
+    timeout: 10000
+- takeScreenshot: store-10-settings

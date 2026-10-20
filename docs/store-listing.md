@@ -102,6 +102,8 @@ Taken on real release builds, with the review account, never with customer data:
 
 Suggested set: Inbox with one approval; the full approval with *Approve*/*Reject*; Agents; an application's Activity; a conversation streaming; *In your name*; Settings with notifications.
 
+**Taken by CI.** The `store-screenshots` job of the Check workflow runs `.maestro/store/screenshots.yaml` on the e2e build, on a 1080 × 1920 (9:16) emulator with the status bar in demo mode, as the test account, on every push to `main` and when Check is dispatched. It shows the sign-in, the Inbox with a waiting mail, the complete request, the confirmation, Agents, Activity, an application, a conversation streaming and answered, and Settings; the approval it creates is rejected before it ends. The PNGs alone, through the token scrub, are the run's `store-screenshots` artifact (`gh run download <run> -n store-screenshots`). The e2e build offers the token sign-in a store build does not: the sign-in screenshot shows *Use an API token instead*. Check each image before it goes to a store.
+
 ## Left with the account holders
 
 - the records themselves (App Store Connect app, Play Console app), ownership and the team members; both are titled *Datalayer*, which stays;
