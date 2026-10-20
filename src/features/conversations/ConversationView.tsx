@@ -18,7 +18,7 @@
 import {
   ANSWER_BELOW, ANSWER_COMPLETE, composerOf, droppedWords, formFieldsOf, messageLabel, OPENING_WORDS, presenceLine,
   presenceOfConversation, questionWords, showsQuestion, stepLine, toolLabel,
-  type ConversationItem, type ConversationQuestion, type ErrorRowProps, type MessageRowProps, type PresenceLineProps,
+  type ConversationItem, type ConversationQuestion, type ErrorRowProps, type MessageItem, type MessageRowProps, type PresenceLineProps,
   DIRECT_WORDS, directAuthor, PAP_SIGN_IN_WORDS, type QuestionCardProps, type StepRowProps, type ToolRowProps, type TurnEndRowProps
 } from '@datalayer/agent-runtimes/lib/portable';
 import { useRouter, type Href } from 'expo-router';
@@ -35,6 +35,7 @@ import { ProtocolDisplayCard, type NativeDisplayProps } from './ProtocolDisplayC
 import type { DirectController } from './direct';
 import { pollSignIns, signInWatchOf, SIGN_IN_POLL_MS, subscribeSignIn, watchingAny, watchSignIn, type SignInAsk } from './signInWatch';
 import { linkHost } from './markdownBlocks';
+import { REPORT_WORDS } from '../../api/report';
 
 export function ToolRow({ item, expanded: open, onToggle }: ToolRowProps) {
   const { colors, radius } = useNativeTheme();
@@ -83,6 +84,19 @@ export function MessageRow({ item }: MessageRowProps) {
   );
 }
 
+/** Under an answer once it is complete: report it to Datalayer support. */
+export function ReportLink({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={REPORT_WORDS.linkLabel} onPress={onPress} style={styles.report} hitSlop={8}>
+      <Text tone="muted" size="small">{REPORT_WORDS.link}</Text>
+    </Pressable>
+  );
+}
+
+/** An application's or an agent's complete answer, the only rows a person reports. */
+export const reportable = (item: ConversationItem): item is MessageItem =>
+  item.kind === 'message' && item.role === 'assistant' && !item.streaming && Boolean(item.text.trim());
+
 export function StepRow({ item }: StepRowProps) {
   return (
     <Text tone="muted" size="small" accessibilityState={{ busy: item.status === 'running' }}>
@@ -119,16 +133,25 @@ function ItemView({
   item,
   expanded,
   onToggle,
-  actions
+  actions,
+  onReport
 }: {
   item: ConversationItem;
   expanded: boolean;
   onToggle: () => void;
   actions: DisplayActions;
+  onReport?: (item: MessageItem) => void;
 }) {
   switch (item.kind) {
     case 'message':
-      return <MessageRow item={item} />;
+      return onReport && reportable(item) ? (
+        <View>
+          <MessageRow item={item} />
+          <ReportLink onPress={() => onReport(item)} />
+        </View>
+      ) : (
+        <MessageRow item={item} />
+      );
     case 'tool':
       return (
         <>
@@ -221,7 +244,8 @@ export function ConversationView({
   closed,
   paused = false,
   direct,
-  signIns
+  signIns,
+  onReport
 }: {
   controller: ConversationController;
   view: View_;
@@ -234,6 +258,8 @@ export function ConversationView({
   direct?: DirectController;
   /** How a sign-in under way stands, asked of the gateway, the application it is for, and IAM's protected input. */
   signIns?: { appUid: string; ask: SignInAsk; typed?: ProtectedInput };
+  /** Report a complete answer to support (`useAnswerReport`); without it, answers offer no Report. */
+  onReport?: (item: MessageItem) => void;
 }) {
   const { colors } = useNativeTheme();
   const [draft, setDraft] = useState('');
@@ -342,7 +368,7 @@ export function ConversationView({
         {conversation.dropped ? <Text tone="muted" size="small">{droppedWords(conversation.dropped)}</Text> : null}
         {opening ? <Text tone="muted" accessibilityRole="progressbar">{OPENING_WORDS}</Text> : null}
         {conversation.items.map(item => (
-          <ItemView key={item.id} item={item} expanded={expanded.has(item.id)} onToggle={() => toggle(item.id)} actions={{ ...actions, watch: watchOf(item), typed: signIns?.typed }} />
+          <ItemView key={item.id} item={item} expanded={expanded.has(item.id)} onToggle={() => toggle(item.id)} actions={{ ...actions, watch: watchOf(item), typed: signIns?.typed }} onReport={onReport} />
         ))}
         {asking && showsQuestion(conversation, running) ? (
           <QuestionCard
@@ -409,5 +435,6 @@ const styles = StyleSheet.create({
   composer: { borderTopWidth: 1, padding: SPACE.sm, gap: SPACE.sm },
   direct: { borderTopWidth: 2, padding: SPACE.sm, gap: SPACE.xs, maxHeight: 280 },
   input: { borderWidth: 1, borderRadius: 8, padding: SPACE.sm, minHeight: MIN_TOUCH, fontSize: 16 },
-  message: { maxHeight: 160 }
+  message: { maxHeight: 160 },
+  report: { alignSelf: 'flex-start', minHeight: MIN_TOUCH, justifyContent: 'center' }
 });

@@ -20,6 +20,7 @@ import { isProblem } from '@datalayer/core/lib/portable';
 import { disconnectProtocolConnection, listProtocolConnections } from '../api/protocolConnections';
 import { listAgentRuntimes } from '../api/runtimes';
 import { readProtocolActivity } from '../api/protocolActivity';
+import { reportAnswer, type ReportContext, type ReportDevice, type ReportedAnswer, type ReportReason } from '../api/report';
 import { readRunningPermissions } from '../api/appPermissions';
 import { useSession } from '../auth/SessionProvider';
 import { decideShown, oneDecisionAtATime } from './approvals/decision';
@@ -179,6 +180,16 @@ export function useChangeAccountDeletion() {
       return requestDeletion(client, handle);
     },
     onSuccess: request => queryClient.setQueryData(KEYS.accountDeletion, request)
+  });
+}
+
+/** Report a generated answer to Datalayer support; nothing is cached. */
+export function useReportAnswer() {
+  const { client } = useSession();
+  return useMutation({
+    mutationFn: ({ context, answer, reason, includeWords, device }: {
+      context: ReportContext; answer: ReportedAnswer; reason: ReportReason; includeWords: boolean; device: ReportDevice;
+    }) => reportAnswer(client, context, answer, reason, includeWords, device)
   });
 }
 

@@ -18,16 +18,23 @@ import { runtimeAgents } from '../../../../src/api/conversations';
 import { Problem } from '@datalayer/core/lib/portable';
 import { useSession } from '../../../../src/auth/SessionProvider';
 import { ConversationView } from '../../../../src/features/conversations/ConversationView';
+import { useAnswerReport } from '../../../../src/features/conversations/useAnswerReport';
 import { useConversation } from '../../../../src/features/conversations/useConversation';
 import { useAgentRuntimes } from '../../../../src/features/queries';
 
 function AgentConversation({ baseUrl, agent, name, runtimeName }: { baseUrl: string; agent: string; name: string; runtimeName: string }) {
   const [key] = useState(() => `${Date.now()}`);
   const { controller, view } = useConversation({ kind: 'agent', baseUrl, agent, runtimeName, key });
+  const report = useAnswerReport({ kind: 'agent', name, runtimeName, agent });
   return (
     <>
       <Stack.Screen options={{ title: name }} />
-      <ConversationView controller={controller} view={view} placeholder={`Message ${name}`} />
+      <ConversationView
+        controller={controller}
+        view={view}
+        placeholder={`Message ${name}`}
+        onReport={report}
+      />
     </>
   );
 }

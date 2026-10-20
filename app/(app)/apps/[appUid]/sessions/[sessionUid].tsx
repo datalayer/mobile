@@ -22,6 +22,7 @@ import { ProblemView, QueryView } from '../../../../../src/components/states';
 import { STARTS_YOUR_RUNTIME, type ThreadReach } from '../../../../../src/api/conversations';
 import type { SessionAddress } from '../../../../../src/api/deployments';
 import { ConversationView } from '../../../../../src/features/conversations/ConversationView';
+import { useAnswerReport } from '../../../../../src/features/conversations/useAnswerReport';
 import { directControllerFor } from '../../../../../src/features/conversations/direct';
 import { protectedInputClient, signInStatusClient } from '@datalayer/agent-runtimes/lib/portable';
 import { useSession } from '../../../../../src/auth/SessionProvider';
@@ -57,6 +58,7 @@ function AppConversation({
     ask: signInStatusClient({ baseUrl: environment().gatewayUrl, getAccessToken: accessToken, fetch: (input, init) => fetch(input, init) }),
     typed: protectedInputClient({ iamUrl: environment().runUrl, getAccessToken: accessToken, fetch: (input, init) => fetch(input, init) })
   }));
+  const report = useAnswerReport({ kind: 'application', name, appUid, deploymentUid, sessionUid: view.uid });
   const end = () =>
     Alert.alert('End this conversation?', 'It cannot be continued afterwards. What its record keeps stays.', [
       { text: 'Cancel', style: 'cancel' },
@@ -70,7 +72,14 @@ function AppConversation({
           headerRight: view.uid && !view.ended ? () => <Button label="End" tone="plain" onPress={end} /> : undefined
         }}
       />
-      <ConversationView controller={controller} view={view} placeholder={`Message ${name || 'the application'}`} direct={direct} signIns={signIns} />
+      <ConversationView
+        controller={controller}
+        view={view}
+        placeholder={`Message ${name || 'the application'}`}
+        direct={direct}
+        signIns={signIns}
+        onReport={report}
+      />
     </>
   );
 }

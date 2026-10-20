@@ -102,7 +102,7 @@ Datalayer charges nothing in the app: there are no in-app purchases, subscriptio
 | Ads | No ads | — |
 | Content rating questionnaire | Category: utility/productivity. No violence, sexual content, profanity, drugs, gambling or simulated gambling. Users interact: no public interaction between users; sharing is by invitation. Shares location: no. Digital purchases: no | Expected rating: Everyone / PEGI 3 |
 | Target audience | 18 and over; not designed for children | A Datalayer account is a work account |
-| AI-generated content policy | **Open:** the policy asks generative AI apps to let people report or flag offensive generated content from inside the app. The app has no report action yet | Needs a decision on where a report goes (support or an in-app *Report* on an answer) before production |
+| AI-generated content policy | Yes: under every complete answer of an application or an agent, **Report** asks why (*Offensive or harmful*, *Wrong or misleading*), then whether the answer's words go too, and sends the report to Datalayer support (`POST /api/support/v1/support/request`, signed in as the person) with where the answer was given: application, deployment and conversation, or agent and runtime. Its words are sent only when the person includes them | Proposed default, built; the product owner confirms it before production |
 | Target API level | `targetSdk` 36 (Android 16), from React Native 0.86 under Expo SDK 57; `minSdk` 24 | Meets Play's requirement for new apps in 2026; check the requirement on the day |
 | Data safety | See `privacy-and-store.md` | — |
 | Account deletion | In the app and at the URL above | Decided 16 October 2026 |
@@ -125,4 +125,4 @@ Suggested set: Inbox with one approval; the full approval with *Approve*/*Reject
 - signing and submit credentials in EAS (the Android upload key the first versions were signed with, the iOS distribution certificate and profile, the App Store Connect API key, the Play service account), and the App Store Connect app id and Apple Team id in `eas.json` (placeholders until then);
 - the review account's handle and password in both consoles, and a waiting approval on the day of review (a new one when the last reviewer answered it; the account and its application exist);
 - the screenshots on real builds, and the submission;
-- the open answer above: Google's in-app report of generated content; and, for Apple 4.8, a web sign-in that shows the Datalayer account alone when the app opens it.
+- confirming the in-app **Report** above as Google's AI-generated content answer; and, for Apple 4.8, a web sign-in that shows the Datalayer account alone when the app opens it.
