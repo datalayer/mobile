@@ -7,6 +7,7 @@
 
 import type { ReactNode } from 'react';
 import { Platform, RefreshControl, ScrollView, StyleSheet, Text as RNText, type TextProps, type TextStyle, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SPACE, useColors, useNativeTheme } from '../theme/tokens';
 
 export { Button } from './native';
@@ -48,18 +49,22 @@ export function Text({
 export function Screen({
   children,
   refreshing,
-  onRefresh
+  onRefresh,
+  headerless = false
 }: {
   children: ReactNode;
   refreshing?: boolean;
   onRefresh?: () => void;
+  /** No navigation header above it: the screen keeps its content below the status bar itself. */
+  headerless?: boolean;
 }) {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   return (
     <ScrollView
       style={{ backgroundColor: colors.background }}
-      contentContainerStyle={styles.screen}
-      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={[styles.screen, headerless ? { paddingTop: insets.top + SPACE.md } : null]}
+      contentInsetAdjustmentBehavior={headerless ? 'never' : 'automatic'}
       automaticallyAdjustKeyboardInsets
       keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
       keyboardShouldPersistTaps="handled"

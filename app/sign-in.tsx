@@ -67,7 +67,7 @@ export default function SignIn() {
 
   if (!allowsInterimSignIn) {
     return (
-      <Screen>
+      <Screen headerless>
         <Wordmark />
         <Text accessibilityRole="header" size="title" weight="semibold" style={styles.title}>
           Sign in to Datalayer
@@ -84,7 +84,7 @@ export default function SignIn() {
   }
 
   return (
-    <Screen>
+    <Screen headerless>
       <Wordmark />
       <Text accessibilityRole="header" size="title" weight="semibold" style={styles.title}>
         Sign in to Datalayer
