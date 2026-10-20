@@ -6,6 +6,7 @@
 import { Link, Tabs } from 'expo-router';
 import { Pressable } from 'react-native';
 import { Text } from '../../../src/components/primitives';
+import { TabIcon } from '../../../src/components/TabIcon';
 import { MIN_TOUCH, useNativeTheme } from '../../../src/theme/tokens';
 
 function SettingsLink() {
@@ -35,9 +36,9 @@ export default function TabsLayout() {
         headerRight: () => <SettingsLink />
       }}
     >
-      <Tabs.Screen name="inbox" options={{ title: 'Inbox', tabBarButtonTestID: 'tab-inbox' }} />
-      <Tabs.Screen name="agents" options={{ title: 'Agents', tabBarButtonTestID: 'tab-agents' }} />
-      <Tabs.Screen name="activity" options={{ title: 'Activity', tabBarButtonTestID: 'tab-activity' }} />
+      <Tabs.Screen name="inbox" options={{ title: 'Inbox', tabBarButtonTestID: 'tab-inbox', tabBarIcon: ({ color, size }) => <TabIcon name="inbox" color={color} size={size} /> }} />
+      <Tabs.Screen name="agents" options={{ title: 'Agents', tabBarButtonTestID: 'tab-agents', tabBarIcon: ({ color, size }) => <TabIcon name="agents" color={color} size={size} /> }} />
+      <Tabs.Screen name="activity" options={{ title: 'Activity', tabBarButtonTestID: 'tab-activity', tabBarIcon: ({ color, size }) => <TabIcon name="activity" color={color} size={size} /> }} />
     </Tabs>
   );
 }
