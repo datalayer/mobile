@@ -10,6 +10,7 @@
  */
 
 import { Host, Icon } from '@expo/ui';
+import type { ColorValue } from 'react-native';
 
 const TAB_ICONS = {
   inbox: Icon.select({ ios: 'tray', android: import('@expo/material-symbols/inbox.xml') }),
@@ -19,7 +20,7 @@ const TAB_ICONS = {
 
 export type TabIconName = keyof typeof TAB_ICONS;
 
-export function TabIcon({ name, color, size }: { name: TabIconName; color: string; size: number }) {
+export function TabIcon({ name, color, size }: { name: TabIconName; color: ColorValue; size: number }) {
   return (
     <Host matchContents>
       <Icon name={TAB_ICONS[name]} size={size} color={color} />
