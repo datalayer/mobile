@@ -54,6 +54,9 @@ describe('the mobile release runbook', () => {
     expect(release).toContain('--workflow check.yaml --commit "$GITHUB_SHA"');
     expect(release.indexOf("The tagged commit's Check passed")).toBeLessThan(release.indexOf('eas build'));
     expect(release).toMatch(/eas-version: \d+\.\d+\.\d+\n/);
+    // While iOS is off, an Android release rests on these jobs, not on e2e-ios.
+    expect(release).toContain('RELEASE_JOBS: check doctor manifests hermes e2e-account e2e-android');
+    expect(release).not.toMatch(/RELEASE_JOBS:.*e2e-ios/);
     expect(release).toContain('name: release-lockfile');
     expect(read('.gitignore').split('\n')).toContain('package-lock.json');
     const readme = read('README.md');

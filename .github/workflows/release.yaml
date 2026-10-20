@@ -22,9 +22,12 @@
 # (versionCode 5) was put on the internal testing track, completed, outside this
 # workflow on 20 October 2026; each tag adds the next versionCode.
 #
-# Before anything is built, the tagged commit's Check run must have passed,
-# every job of it: check, doctor, manifests (the generated privacy manifest,
-# Info.plist and Android permissions), hermes and the Maestro flows.
+# Before anything is built, the tagged commit's Check run must have passed the
+# jobs an Android release rests on: check, doctor, manifests (the generated
+# privacy manifest, Info.plist and Android permissions), hermes, e2e-account and
+# the Android Maestro flows (e2e-android). While iOS is off, e2e-ios and the
+# store screenshots do not block a release (the user's decision, 20 October
+# 2026); add e2e-ios back to RELEASE_JOBS when iOS is turned back on.
 # The repository commits no lockfile (the monorepo's rule): the lockfile this
 # install resolved is kept as the release's artifact, its checksum in the notes.
 # EAS installs with `npm install` too (eas.json's base profile:
@@ -67,14 +70,25 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: The tagged commit's Check passed, every job of it
+      - name: The tagged commit's Check passed, the jobs an Android release rests on
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_JOBS: check doctor manifests hermes e2e-account e2e-android
         run: |
-          conclusion="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow check.yaml --commit "$GITHUB_SHA" \
-            --status completed --limit 1 --json conclusion --jq '.[0].conclusion // "none"')"
-          if [ "$conclusion" != "success" ]; then
-            echo "Check on ${GITHUB_SHA} is '${conclusion}': a release needs it green, doctor, manifests, hermes and the Maestro flows included (README, Release-owner checklist)." >&2
+          run="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow check.yaml --commit "$GITHUB_SHA" \
+            --status completed --limit 1 --json databaseId --jq '.[0].databaseId // ""')"
+          if [ -z "$run" ]; then
+            echo "Check on ${GITHUB_SHA} has not completed: a release needs it (README, Release-owner checklist)." >&2
+            exit 1
+          fi
+          failed=""
+          for job in $RELEASE_JOBS; do
+            conclusion="$(gh run view "$run" --repo "$GITHUB_REPOSITORY" --json jobs \
+              --jq ".jobs[] | select(.name == \"$job\") | .conclusion")"
+            [ "$conclusion" = "success" ] || failed="$failed $job (${conclusion:-absent})"
+          done
+          if [ -n "$failed" ]; then
+            echo "Check ${run} on ${GITHUB_SHA} did not pass:${failed}. A release needs ${RELEASE_JOBS} green (README, Release-owner checklist)." >&2
             exit 1
           fi
       # EAS builds only a clean tree (requireCommit), so the key goes outside the checkout,

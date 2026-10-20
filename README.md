@@ -193,13 +193,13 @@ git tag v0.1.0 && git push origin v0.1.0
 
 `.github/workflows/release.yaml` then:
 
-1. refuses to start without the repository secrets `EXPO_TOKEN` (an Expo robot token of the `datalayer` account) and `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT` (the Google Play service account's JSON key, below), and refuses a tag whose commit's Check run is not green, every job included;
+1. refuses to start without the repository secrets `EXPO_TOKEN` (an Expo robot token of the `datalayer` account) and `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT` (the Google Play service account's JSON key, below), and refuses a tag whose commit's Check run did not pass the jobs an Android release rests on (`check`, `doctor`, `manifests`, `hermes`, `e2e-account`, `e2e-android`; while iOS is off, `e2e-ios` and the store screenshots do not block it);
 2. checks that the tag names `version`, runs `npm run check` and `npm run check:bundle`;
 3. has EAS build the production `.aab` (`eas build --platform android --profile production --non-interactive --freeze-credentials --wait`; EAS numbers it, `versionCode` above the last);
 4. submits that build with EAS Submit (`eas submit --platform android --profile production --id <build> --non-interactive`) to the internal testing track as a **completed** release (`eas.json`, `submit.production.android`: `track: internal`, `releaseStatus: completed`): the internal testers get it at once;
 5. writes the EAS build id, version, `versionCode` and EAS submission id in the run's summary, and creates the GitHub release with them.
 
-Promotion beyond internal testing (closed testing, production, the staged rollout) is done by hand in Play Console, with the same bundle.
+Promotion to production is started by hand: Actions → *Promote to production* → *Run workflow*, with the `versionCode` the internal testers ran and a rollout fraction (below 1 is a staged rollout; run it again to raise it). It promotes that same bundle and refuses a `versionCode` the internal track does not hold; Google reviews a production release before it reaches people.
 
 **iOS is off.** Apple has not yet validated Datalayer's developer account, so the release workflow builds and submits nothing for iOS. To turn it back on: fill `submit.production.ios` in `eas.json` (the App Store Connect app id and Apple team id), put the distribution certificate and App Store Connect API key in EAS (`eas credentials --platform ios`), and add the iOS build and submit steps beside the Android ones in `release.yaml` (its header says how).
 
