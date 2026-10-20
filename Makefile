@@ -159,7 +159,7 @@ publish-ios: publish-check check ## production .ipa with EAS, submitted to App S
 	eas build --platform ios --profile production --auto-submit
 	@echo "Next: TestFlight testers, then select the build for App Review in App Store Connect."
 
-publish-android: publish-check check ## production .aab with EAS, submitted as a draft to the Play internal track
+publish-android: publish-check check ## production .aab with EAS, released (completed) on the Play internal track
 	eas build --platform android --profile production --auto-submit
 	@echo "Next: promote from the internal track to production with a staged rollout in the Play Console."
 

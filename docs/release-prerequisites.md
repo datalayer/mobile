@@ -49,7 +49,7 @@ numbers, recovery codes or billing details in this repository.
 | iOS distribution certificate and provisioning profiles | EAS Credentials, under the Datalayer Expo project | Never committed |
 | App Store Connect API key | EAS Submit credential; recovery by Apple Account Holder | Never committed |
 | Android upload keystore | EAS Credentials; encrypted recovery copy under company credential policy | Never committed |
-| Google Play service-account JSON | EAS Submit credential; recovery/rotation by Play account owner | Never committed |
+| Google Play service-account JSON | GitHub Actions secret `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT` (the tag release; written outside the checkout at run time and removed after); optionally also an EAS Submit credential for `make publish-android`; recovery/rotation by Play account owner | Never committed |
 | APNs key and FCM service-account material | EAS notification credentials; recovery by platform account owner | Never committed |
 | EAS environment values | Expo `development`, `preview` and `production` environments | Names only in Git; values in EAS |
 
@@ -57,6 +57,22 @@ For each credential, the private release register records its platform key
 id (not its secret), primary owner, recovery owner, creation and rotation
 date, and the last successful drill. A departing owner triggers rotation.
 The push-specific leak response is in `privacy-and-store.md`.
+
+## Release channels
+
+- **Google Play**: a version tag (`vX.Y.Z`) runs `.github/workflows/release.yaml`,
+  which builds the production `.aab` with EAS and submits it with EAS Submit to
+  the **internal testing** track as a completed release. Promotion to closed
+  testing and production is done by hand in Play Console. Before the first tag,
+  an account holder uploads the first bundle by hand and rolls it out to
+  internal testing (Google accepts an app's first bundle only through Play
+  Console), and a Play account owner stores the service account's JSON key as
+  the repository secret `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT`. The service
+  account is invited in Play Console with release permissions on
+  `ai.datalayer.mobile` only.
+- **Apple App Store**: off. Apple has not yet validated Datalayer's developer
+  account; the release workflow builds and submits nothing for iOS until it
+  has (the workflow's header and the README say how to turn it back on).
 
 ## Readiness gate
 

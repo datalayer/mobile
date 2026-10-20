@@ -60,4 +60,27 @@ describe('the mobile release runbook', () => {
     expect(readme).not.toContain('committed lockfile');
     expect(readme).toContain('does not block merging');
   });
+
+  it('releases Android only, to the internal track, with the Play key from a secret written outside the checkout', () => {
+    const release = read('.github/workflows/release.yaml');
+    const commands = release.split('\n').filter(line => !line.trim().startsWith('#'));
+    const eas = commands.filter(line => /\beas (build|submit)\b/.test(line));
+    expect(eas.length).toBe(2);
+    for (const line of eas) {
+      expect(line).toContain('--platform android');
+      expect(line).toContain('--non-interactive');
+    }
+    expect(eas[0]).toContain('--freeze-credentials');
+    expect(commands.join('\n')).not.toMatch(/--platform (ios|all)\b/);
+    expect(release).toContain('secrets.DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT }}');
+    expect(release).toContain('$RUNNER_TEMP/play-service-account.json');
+    expect(release).toContain('DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT_KEY_PATH=$key');
+    expect(release.indexOf('The release secrets are set')).toBeLessThan(release.indexOf('actions/checkout'));
+    expect(release).toContain('GITHUB_STEP_SUMMARY');
+    const readme = read('README.md');
+    for (const required of ['### Releasing', 'DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT', 'internal testing', '**iOS is off.**']) {
+      expect(readme).toContain(required);
+    }
+    expect(read('docs/release-prerequisites.md')).toContain('DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT');
+  });
 });

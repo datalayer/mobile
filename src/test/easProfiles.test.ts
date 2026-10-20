@@ -90,10 +90,14 @@ describe('the Expo project and the app it builds', () => {
     }
   });
 
-  it('submits to the stores as drafts on the internal track, and builds only from a commit', () => {
+  it('submits staging as a draft and production as a completed release on the internal track, and builds only from a commit', () => {
     expect(eas.cli.requireCommit).toBe(true);
     expect(eas.submit.staging.android).toEqual({ track: 'internal', releaseStatus: 'draft' });
-    expect(eas.submit.production.android).toEqual({ track: 'internal', releaseStatus: 'draft' });
+    expect(eas.submit.production.android).toEqual({
+      serviceAccountKeyPath: '$DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT_KEY_PATH',
+      track: 'internal',
+      releaseStatus: 'completed'
+    });
   });
 
   it('names the App Store Connect app and Apple team for submission, as placeholders until they are known', () => {

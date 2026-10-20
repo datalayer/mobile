@@ -37,7 +37,7 @@ What each way of running the app needs:
 | `make build-dev-simulator`, built by EAS                              | **yes**      | no                                                                              | no                             | to run the Simulator |
 | `make build-dev-ios`, built by EAS for a real iPhone                  | **yes**      | **yes** (the iPhone registered with `eas device:create`)                        | no                             | no                   |
 | `make build-preview` / `build-staging`                                | **yes**      | **yes** for iOS                                                                 | for the staging track          | no                   |
-| `make publish-ios` / `publish-android`                                | **yes**      | **yes**                                                                         | **yes**                        | no                   |
+| `make publish-ios` / `publish-android` (CI releases Android only)     | **yes**      | **yes**                                                                         | **yes**                        | no                   |
 
 - **Expo account**: free at expo.dev. The free plan gives a limited number of cloud builds a month in a slower queue; paid plans give more and faster ones (see expo.dev/pricing). Then `eas login`.
 - **This project on Expo**: [`@datalayer/datalayer`](https://expo.dev/accounts/datalayer/projects/datalayer). `app.config.ts` names its owner (`datalayer`), slug and project id (`extra.eas.projectId`), so a cloud build needs your Expo account to be a member of the `datalayer` account; `eas init` is not needed. `npx eas-cli project:info` shows the project.
@@ -183,13 +183,31 @@ computers once every flow is done.
 
 One promotion pipeline, from a committed and checked state to the stores. The Makefile runs it: `make build-preview`, `make build-staging` and `make submit-staging` for the rings before release; `make publish-ios`, `make publish-android` or `make publish` for the stores. `publish-*` refuse a dirty or unpushed tree, run `make check`, build with EAS and submit the artifact (`--auto-submit`); the console steps that follow are the release owner's.
 
-In CI, a release is a tag. Set `version` in `app.config.ts`, commit, then tag and push it:
+### Releasing
+
+In CI, a release is a tag, and today it releases **Android only**, to Google Play's **internal testing** track. Set `version` in `app.config.ts`, commit and push, wait for that commit's Check to be green, then tag and push the tag:
 
 ```bash
 git tag v0.1.0 && git push origin v0.1.0
 ```
 
-`.github/workflows/release.yaml` checks that the tag names that version, runs `npm run check` and `npm run check:bundle`, has EAS build the `.ipa` and `.aab` and submit them (TestFlight, Google Play internal track as a draft), and creates the GitHub release with the build ids. It needs the repository secret `EXPO_TOKEN` (an Expo robot token) and the signing and submit credentials kept in EAS (`eas credentials`: the App Store Connect API key, the Google Play service account). `.github/workflows/eas-build.yaml` is started by hand (Actions → *EAS build* → *Run workflow*): a `preview`, `staging` or `production` build of a commit whose Check is green, and for `staging` optionally its submission to TestFlight and the Play internal track (as a draft); a `production` build from it is never submitted (it is the bundle an account holder uploads by hand); it never runs on a push. EAS installs the dependencies with `npm install`, like the workflows: with no lockfile, EAS would otherwise run `yarn install --frozen-lockfile`, so `eas.json`'s base profile sets `EAS_FALLBACK_PACKAGE_MANAGER=npm` and `EAS_NO_FROZEN_LOCKFILE`. `.github/workflows/check.yaml` runs the checks on every pull request and push to `main`. A failed job turns Check red; it does not block merging, as `main` has no branch protection yet (a repository administrator may require the Check jobs). A release does require it: `release.yaml` refuses a tag whose commit's Check run is not green, every job included. The repository commits no lockfile; `release.yaml` keeps the `package-lock.json` its install resolved as the `release-lockfile` artifact and writes its checksum into the GitHub release. It pins the EAS CLI (`eas-version`); raise it deliberately.
+`.github/workflows/release.yaml` then:
+
+1. refuses to start without the repository secrets `EXPO_TOKEN` (an Expo robot token of the `datalayer` account) and `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT` (the Google Play service account's JSON key, below), and refuses a tag whose commit's Check run is not green, every job included;
+2. checks that the tag names `version`, runs `npm run check` and `npm run check:bundle`;
+3. has EAS build the production `.aab` (`eas build --platform android --profile production --non-interactive --freeze-credentials --wait`; EAS numbers it, `versionCode` above the last);
+4. submits that build with EAS Submit (`eas submit --platform android --profile production --id <build> --non-interactive`) to the internal testing track as a **completed** release (`eas.json`, `submit.production.android`: `track: internal`, `releaseStatus: completed`): the internal testers get it at once;
+5. writes the EAS build id, version, `versionCode` and EAS submission id in the run's summary, and creates the GitHub release with them.
+
+Promotion beyond internal testing (closed testing, production, the staged rollout) is done by hand in Play Console, with the same bundle.
+
+**iOS is off.** Apple has not yet validated Datalayer's developer account, so the release workflow builds and submits nothing for iOS. To turn it back on: fill `submit.production.ios` in `eas.json` (the App Store Connect app id and Apple team id), put the distribution certificate and App Store Connect API key in EAS (`eas credentials --platform ios`), and add the iOS build and submit steps beside the Android ones in `release.yaml` (its header says how).
+
+**The service account key.** EAS Submit sends the bundle to Google Play with a Google Cloud service account that Play Console has invited with release permissions on `ai.datalayer.mobile` (Play Console → *Users and permissions*). A Play account owner creates its JSON key and stores the whole JSON as the repository secret `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT` (Settings → *Secrets and variables* → *Actions*); it is never committed. The workflow writes it to the runner's temporary directory, outside the checkout (EAS builds only a clean tree), points `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT_KEY_PATH` at it (`eas.json` reads `serviceAccountKeyPath` from that variable), and removes it when the job ends. Where the variable is unset, as for `make publish-android` on a laptop, EAS Submit uses the service account key stored in EAS (`eas credentials --platform android`), if any.
+
+**The first bundle is uploaded by hand.** Google accepts an app's first bundle only through Play Console. Before the first tag, an account holder uploads a production `.aab` (from `eas-build.yaml`, profile `production`) to internal testing and rolls that release out, so the app is no longer a draft app: Google refuses a completed release on a draft app (*Only releases with status draft may be created on draft app*). If Play Console still shows the app as a draft, set `releaseStatus` to `draft` in `submit.production.android` until it no longer does.
+
+`.github/workflows/eas-build.yaml` is started by hand (Actions → *EAS build* → *Run workflow*): a `preview`, `staging` or `production` build of a commit whose Check is green, and for `staging` optionally its submission to TestFlight and the Play internal track (as a draft); a `production` build from it is never submitted (it is the bundle an account holder uploads by hand); it never runs on a push. EAS installs the dependencies with `npm install`, like the workflows: with no lockfile, EAS would otherwise run `yarn install --frozen-lockfile`, so `eas.json`'s base profile sets `EAS_FALLBACK_PACKAGE_MANAGER=npm` and `EAS_NO_FROZEN_LOCKFILE`. `.github/workflows/check.yaml` runs the checks on every pull request and push to `main`. A failed job turns Check red; it does not block merging, as `main` has no branch protection yet (a repository administrator may require the Check jobs). A release does require it: `release.yaml` refuses a tag whose commit's Check run is not green, every job included. The repository commits no lockfile; `release.yaml` keeps the `package-lock.json` its install resolved as the `release-lockfile` artifact and writes its checksum into the GitHub release. It pins the EAS CLI (`eas-version`); raise it deliberately.
 
 ### What is needed to publish
 
@@ -256,16 +274,19 @@ Google Play:
    Distribution Agreement and pay the registration fee. Create the app with
    package `ai.datalayer.mobile`, accept Play App Signing and keep the package
    name and signing ownership in the private register.
-2. Create a least-privilege Google service account for this app, link it in
-   Play Console and upload its JSON key to EAS with
-   `eas credentials --platform android`. EAS stores the submit key; it is never
-   committed. Confirm the upload keystore and Play App Signing recovery path.
+2. Create a least-privilege Google service account for this app, invite it in
+   Play Console with release permissions on `ai.datalayer.mobile`, and store
+   its JSON key as the repository secret `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT`
+   for the tag release (and, for `make publish-android`, in EAS with
+   `eas credentials --platform android`). It is never committed. Confirm the
+   upload keystore and Play App Signing recovery path.
 3. Complete the main store listing and App content: contact details, privacy
    policy, Data safety, ads, content rating, target audience, app access and
    review credentials, account deletion and every declaration currently shown
    by Play Console. Confirm the release meets the live target-API requirement.
-4. Build a production `.aab` (not the preview APK) and submit it as a draft to
-   internal testing. Test the exact bundle, then meet any closed-testing or
+4. Upload the first production `.aab` (not the preview APK) by hand to
+   internal testing and roll it out; from then on, a tag builds and submits
+   each `.aab` to internal testing as a completed release. Test the exact bundle, then meet any closed-testing or
    production-access requirement Play Console shows for this organization and
    account type. Promote the same artifact through a staged production rollout.
 
@@ -287,11 +308,12 @@ credential files never belong in the repository.
 | `preview`                                     | `preview`                                                                                                                  | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL`, `EXPO_PUBLIC_DATALAYER_MCP_URL` (production services, in `eas.json`)                       | EAS internal-distribution credentials              |
 | `staging`                                     | `preview` (Expo's built-in environment, shared with the `preview` profile)                                                  | `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL` (production services, in `eas.json`)                     | The production app's EAS/store signing credentials |
 | `production`                                  | `production`                                                                                                               | production `EXPO_PUBLIC_DATALAYER_RUN_URL`, `EXPO_PUBLIC_DATALAYER_RUNTIMES_URL` and `EXPO_PUBLIC_DATALAYER_MCP_URL` (in `eas.json`)                              | The production app's EAS/store signing credentials |
-| GitHub `release.yaml`, `eas-build.yaml`       | repository Actions secrets                                                                                                 | none                                                                                                                                                               | `EXPO_TOKEN`, scoped to the Datalayer Expo project |
+| GitHub `release.yaml`, `eas-build.yaml`       | repository Actions secrets                                                                                                 | none                                                                                                                                                               | `EXPO_TOKEN`, scoped to the Datalayer Expo project; `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT` (release.yaml) |
 
 EAS owns the iOS distribution/provisioning material and Android keystore.
-EAS Submit owns the App Store Connect API key and Google Play service-account
-JSON. APNs and FCM credentials are configured in the same Datalayer-owned
+EAS Submit owns the App Store Connect API key; the Google Play service-account
+JSON is the repository secret `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT` for the tag
+release (and may also be kept in EAS for `make publish-android`). APNs and FCM credentials are configured in the same Datalayer-owned
 project. Named primary and recovery owners are recorded outside Git according
 to [`docs/release-prerequisites.md`](docs/release-prerequisites.md).
 
@@ -317,7 +339,7 @@ Apple (`make publish-ios`):
 
 Google (`make publish-android`):
 
-1. `eas build --platform android --profile production --auto-submit` produces the `.aab` (an APK is never the store artifact) and uploads it as a draft to the internal track with the least-privilege service account.
+1. `eas build --platform android --profile production --auto-submit` produces the `.aab` (an APK is never the store artifact) and releases it on the internal track (completed) with the least-privilege service account; a tag does the same in CI (Releasing, above).
 2. Internal testing track first, then closed testing as needed. Complete Data safety, content rating, target audience, app access and target-API requirements.
 3. Promote the tested artifact to production with a staged rollout; monitor each ring and halt on auth, approval, push or crash regression.
 
@@ -327,6 +349,7 @@ Google (`make publish-android`):
 
 Before tagging:
 
+- confirm the repository secrets `EXPO_TOKEN` and `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT` exist and that the app's first bundle was uploaded by hand and rolled out to internal testing (Releasing, above);
 - confirm the release commit is reviewed, clean, pushed and green in CI;
 - run `npm run check` and `npm run check:bundle`, and see the release commit's Check green (`release.yaml` refuses the tag otherwise), its `doctor` and `manifests` jobs included (`manifests` holds the generated privacy manifest, `Info.plist` and merged Android permissions to `docs/privacy-and-store.md`; its `release-manifests` artifact goes to the release record);
 - bump `version`, verify the remote iOS build number and Android version code will increase;

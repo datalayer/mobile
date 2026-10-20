@@ -110,8 +110,9 @@
         "appleTeamId": "APPLE_TEAM_ID_PLACEHOLDER"
       },
       "android": {
+        "serviceAccountKeyPath": "$DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT_KEY_PATH",
         "track": "internal",
-        "releaseStatus": "draft"
+        "releaseStatus": "completed"
       }
     }
   }

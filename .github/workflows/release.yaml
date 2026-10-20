@@ -2,13 +2,25 @@
 # Distributed under the terms of the Modified BSD License.
 
 # A release, on a version tag (`v1.2.3`): the checks, then EAS builds the
-# store `.ipa` and `.aab` from this commit and submits them, the `.ipa` to
-# App Store Connect (TestFlight) and the `.aab` as a draft on Google Play's
-# internal track (eas.json, submit.production). Promotion to the stores'
-# production is the release owner's, in the consoles (README, Publish).
+# store `.aab` from this commit and EAS Submit sends it to Google Play's
+# internal testing track as a completed release (eas.json, submit.production):
+# the internal testers get it at once. Promotion to closed testing and
+# production is the release owner's, by hand in Play Console (README, Releasing).
 #
-# Needs the repository secret EXPO_TOKEN (an Expo robot token), and the
-# signing and submit credentials kept in EAS (`eas credentials`).
+# iOS is off. Apple has not yet validated Datalayer's developer account, so this
+# workflow builds and submits nothing for iOS: no `.ipa`, no App Store Connect.
+# To turn iOS back on once the account is validated: put the App Store Connect
+# app id and team id in eas.json (submit.production.ios), the distribution
+# certificate and the App Store Connect API key in EAS (`eas credentials
+# --platform ios`), then add an iOS build and submit beside the Android ones
+# below (`--platform ios`, the same flags) and their ids to the summary.
+#
+# Needs the repository secrets EXPO_TOKEN (an Expo robot token) and
+# DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT (the Google Play service account's JSON
+# key, with the release permissions on `ai.datalayer.mobile`), and the Android
+# upload key kept in EAS (`eas credentials`). Google takes an app's first bundle
+# only by hand: before the first tag, an account holder uploads one in Play
+# Console and rolls it out to internal testing.
 #
 # Before anything is built, the tagged commit's Check run must have passed,
 # every job of it: check, doctor, manifests (the generated privacy manifest,
@@ -36,7 +48,21 @@ jobs:
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    env:
+      NO_COLOR: '1'
     steps:
+      - name: The release secrets are set
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          PLAY_SERVICE_ACCOUNT: ${{ secrets.DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT }}
+        run: |
+          missing=""
+          [ -n "$EXPO_TOKEN" ] || missing="$missing secret EXPO_TOKEN (an Expo robot token of the datalayer account);"
+          [ -n "$PLAY_SERVICE_ACCOUNT" ] || missing="$missing secret DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT (the Google Play service account's JSON key, README, Releasing);"
+          if [ -n "$missing" ]; then
+            echo "A release needs the repository's$missing nothing was built." >&2
+            exit 1
+          fi
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -51,6 +77,25 @@ jobs:
             echo "Check on ${GITHUB_SHA} is '${conclusion}': a release needs it green, doctor, manifests, hermes and the Maestro flows included (README, Release-owner checklist)." >&2
             exit 1
           fi
+      # EAS builds only a clean tree (requireCommit), so the key goes outside the checkout,
+      # readable by this job alone, and is removed when the job ends. eas.json's
+      # submit.production.android.serviceAccountKeyPath reads its path from
+      # DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT_KEY_PATH.
+      - name: The Google Play service account key, outside the checkout
+        env:
+          PLAY_SERVICE_ACCOUNT: ${{ secrets.DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT }}
+        run: |
+          key="$RUNNER_TEMP/play-service-account.json"
+          (umask 077 && printf '%s' "$PLAY_SERVICE_ACCOUNT" > "$key")
+          node -e '
+            let key;
+            try { key = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")); } catch { key = null; }
+            if (!key || key.type !== "service_account" || !key.client_email || !key.private_key) {
+              console.error("The secret DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT is not a Google service account JSON key (type service_account, client_email, private_key).");
+              process.exit(1);
+            }
+          ' "$key"
+          echo "DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT_KEY_PATH=$key" >> "$GITHUB_ENV"
       - run: npm install
         env:
           ONNXRUNTIME_NODE_INSTALL: skip
@@ -76,12 +121,44 @@ jobs:
         with:
           eas-version: 24.12.1
           token: ${{ secrets.EXPO_TOKEN }}
-      # EAS builds only a clean tree (requireCommit), so what the job writes goes outside the checkout.
       # --freeze-credentials: CI uses the signing credentials kept in EAS and never creates any; a missing
-      # one fails the build. The store app's Android upload key and iOS distribution certificate are
-      # put in EAS by an account holder (`eas credentials`).
-      - name: Build and submit to App Store Connect and Google Play
-        run: eas build --platform all --profile production --non-interactive --freeze-credentials --auto-submit --wait --json > "$RUNNER_TEMP/builds.json"
+      # one fails the build. The Android upload key (the keystore EAS holds for ai.datalayer.mobile,
+      # Play App Signing's upload key) is put in EAS by an account holder (`eas credentials`).
+      # Android only: iOS waits for Apple's validation of the account (top of this file).
+      - name: Build the Android store bundle
+        run: |
+          eas build --platform android --profile production --non-interactive --freeze-credentials --wait --json > "$RUNNER_TEMP/builds.json"
+          node -e '
+            const [build] = require(process.argv[1]);
+            if (!build || build.platform !== "ANDROID" || build.status !== "FINISHED") {
+              console.error("EAS did not finish an Android build: " + JSON.stringify(build && { id: build.id, status: build.status }));
+              process.exit(1);
+            }
+            const fs = require("fs");
+            fs.appendFileSync(process.env.GITHUB_ENV, `BUILD_ID=${build.id}\n`);
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, [
+              "### Google Play release",
+              "",
+              `- Tag: ${process.env.GITHUB_REF_NAME} (${process.env.GITHUB_SHA})`,
+              `- EAS build: ${build.id}, version ${build.appVersion}, versionCode ${build.appBuildVersion}`,
+              `- Bundle: ${build.artifacts?.applicationArchiveUrl ?? build.artifacts?.buildUrl ?? "see EAS"}`,
+              ""
+            ].join("\n"));
+          ' "$RUNNER_TEMP/builds.json"
+      - name: Submit it to Google Play's internal testing track
+        run: |
+          set -o pipefail
+          eas submit --platform android --profile production --id "$BUILD_ID" --non-interactive --wait 2>&1 | tee "$RUNNER_TEMP/submit.log"
+          url="$(grep -oE 'https://expo\.dev/accounts/[^ ]+/submissions/[0-9a-f-]+' "$RUNNER_TEMP/submit.log" | head -1)"
+          echo "SUBMISSION_URL=${url}" >> "$GITHUB_ENV"
+          {
+            echo "- EAS submission: ${url##*/} (${url:-see EAS})"
+            echo "- Google Play: internal testing track, completed release; promote it by hand in Play Console"
+            echo "- iOS: not built or submitted (waiting for Apple's validation of the account)"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove the service account key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/play-service-account.json"
       - name: GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -92,7 +169,7 @@ jobs:
               console.log(`- ${b.platform}: build ${b.appBuildVersion} (${b.id}) — ${b.artifacts?.buildUrl ?? "see EAS"}`);
             }
           ')"
-          gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes "Submitted to TestFlight and Google Play internal testing.
+          gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes "Submitted to Google Play internal testing (EAS submission ${SUBMISSION_URL##*/}). iOS is not released yet: it waits for Apple's validation of the developer account.
 
           ${notes}
 
