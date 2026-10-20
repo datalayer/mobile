@@ -179,6 +179,19 @@ jobs:
           else
             echo "ready=true" >> "$GITHUB_OUTPUT"
           fi
+      - uses: actions/checkout@v4
+        if: steps.account.outputs.ready == 'true'
+      # Where the prompt flow's conversation will be had, and the free credits when it starts a
+      # computer: a warning here is the reason that flow fails (Maestro says only "Unknown error").
+      - name: The prompt flow's conversation
+        if: steps.account.outputs.ready == 'true'
+        continue-on-error: true
+        env:
+          E2E_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_TOKEN }}
+          E2E_CHAT_APP: ${{ secrets.DATALAYER_MOBILE_E2E_CHAT_APP }}
+          E2E_RUNTIMES_URL: https://r1.datalayer.run
+          E2E_RUN_URL: https://prod1.datalayer.run
+        run: node scripts/e2e-chat-reach.mjs
 
   # The Maestro smoke flows on Android: an e2e build (APP_VARIANT=preview,
   # EXPO_PUBLIC_BUILD_PROFILE=e2e: the token sign-in is offered) made here — prebuild,
