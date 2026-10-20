@@ -18,9 +18,9 @@
 # Needs the repository secrets EXPO_TOKEN (an Expo robot token) and
 # DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT (the Google Play service account's JSON
 # key, with the release permissions on `ai.datalayer.mobile`), and the Android
-# upload key kept in EAS (`eas credentials`). Google takes an app's first bundle
-# only by hand: before the first tag, an account holder uploads one in Play
-# Console and rolls it out to internal testing.
+# upload key kept in EAS (`eas credentials`). The app's first bundle
+# (versionCode 5) was put on the internal testing track, completed, outside this
+# workflow on 20 October 2026; each tag adds the next versionCode.
 #
 # Before anything is built, the tagged commit's Check run must have passed,
 # every job of it: check, doctor, manifests (the generated privacy manifest,

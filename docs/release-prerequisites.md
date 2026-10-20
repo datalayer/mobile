@@ -63,11 +63,12 @@ The push-specific leak response is in `privacy-and-store.md`.
 - **Google Play**: a version tag (`vX.Y.Z`) runs `.github/workflows/release.yaml`,
   which builds the production `.aab` with EAS and submits it with EAS Submit to
   the **internal testing** track as a completed release. Promotion to closed
-  testing and production is done by hand in Play Console. Before the first tag,
-  an account holder uploads the first bundle by hand and rolls it out to
-  internal testing (Google accepts an app's first bundle only through Play
-  Console), and a Play account owner stores the service account's JSON key as
-  the repository secret `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT`. The service
+  testing and production is done by hand in Play Console. The app's first
+  bundle (versionCode 5, EAS build `0097304f`) was uploaded on 20 October 2026
+  with the Play Developer API and released on internal testing as completed,
+  so the app is no longer a draft app and later tags submit as completed.
+  Before the first tag, a Play account owner stores the service account's JSON
+  key as the repository secret `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT`. The service
   account is invited in Play Console with release permissions on
   `ai.datalayer.mobile` only.
 - **Apple App Store**: off. Apple has not yet validated Datalayer's developer

@@ -205,7 +205,7 @@ Promotion beyond internal testing (closed testing, production, the staged rollou
 
 **The service account key.** EAS Submit sends the bundle to Google Play with a Google Cloud service account that Play Console has invited with release permissions on `ai.datalayer.mobile` (Play Console → *Users and permissions*). A Play account owner creates its JSON key and stores the whole JSON as the repository secret `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT` (Settings → *Secrets and variables* → *Actions*); it is never committed. The workflow writes it to the runner's temporary directory, outside the checkout (EAS builds only a clean tree), points `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT_KEY_PATH` at it (`eas.json` reads `serviceAccountKeyPath` from that variable), and removes it when the job ends. Where the variable is unset, as for `make publish-android` on a laptop, EAS Submit uses the service account key stored in EAS (`eas credentials --platform android`), if any.
 
-**The first bundle is uploaded by hand.** Google accepts an app's first bundle only through Play Console. Before the first tag, an account holder uploads a production `.aab` (from `eas-build.yaml`, profile `production`) to internal testing and rolls that release out, so the app is no longer a draft app: Google refuses a completed release on a draft app (*Only releases with status draft may be created on draft app*). If Play Console still shows the app as a draft, set `releaseStatus` to `draft` in `submit.production.android` until it no longer does.
+**The first bundle is on the track.** Google takes an app's first bundle only outside EAS Submit, and refuses a completed release on a draft app (*Only releases with status draft may be created on draft app*). On 20 October 2026 the first EAS production `.aab` (versionCode 5, EAS build `0097304f`) was uploaded with the Google Play Developer API and released on internal testing as completed, so the app is no longer a draft app: each tag now submits the next versionCode as a completed internal release.
 
 `.github/workflows/eas-build.yaml` is started by hand (Actions → *EAS build* → *Run workflow*): a `preview`, `staging` or `production` build of a commit whose Check is green, and for `staging` optionally its submission to TestFlight and the Play internal track (as a draft); a `production` build from it is never submitted (it is the bundle an account holder uploads by hand); it never runs on a push. EAS installs the dependencies with `npm install`, like the workflows: with no lockfile, EAS would otherwise run `yarn install --frozen-lockfile`, so `eas.json`'s base profile sets `EAS_FALLBACK_PACKAGE_MANAGER=npm` and `EAS_NO_FROZEN_LOCKFILE`. `.github/workflows/check.yaml` runs the checks on every pull request and push to `main`. A failed job turns Check red; it does not block merging, as `main` has no branch protection yet (a repository administrator may require the Check jobs). A release does require it: `release.yaml` refuses a tag whose commit's Check run is not green, every job included. The repository commits no lockfile; `release.yaml` keeps the `package-lock.json` its install resolved as the `release-lockfile` artifact and writes its checksum into the GitHub release. It pins the EAS CLI (`eas-version`); raise it deliberately.
 
@@ -284,9 +284,9 @@ Google Play:
    policy, Data safety, ads, content rating, target audience, app access and
    review credentials, account deletion and every declaration currently shown
    by Play Console. Confirm the release meets the live target-API requirement.
-4. Upload the first production `.aab` (not the preview APK) by hand to
-   internal testing and roll it out; from then on, a tag builds and submits
-   each `.aab` to internal testing as a completed release. Test the exact bundle, then meet any closed-testing or
+4. The first production `.aab` (not the preview APK; versionCode 5) is on
+   internal testing, completed, since 20 October 2026; from then on, a tag
+   builds and submits each `.aab` to internal testing as a completed release. Test the exact bundle, then meet any closed-testing or
    production-access requirement Play Console shows for this organization and
    account type. Promote the same artifact through a staged production rollout.
 
@@ -349,7 +349,7 @@ Google (`make publish-android`):
 
 Before tagging:
 
-- confirm the repository secrets `EXPO_TOKEN` and `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT` exist and that the app's first bundle was uploaded by hand and rolled out to internal testing (Releasing, above);
+- confirm the repository secrets `EXPO_TOKEN` and `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT` exist (Releasing, above);
 - confirm the release commit is reviewed, clean, pushed and green in CI;
 - run `npm run check` and `npm run check:bundle`, and see the release commit's Check green (`release.yaml` refuses the tag otherwise), its `doctor` and `manifests` jobs included (`manifests` holds the generated privacy manifest, `Info.plist` and merged Android permissions to `docs/privacy-and-store.md`; its `release-manifests` artifact goes to the release record);
 - bump `version`, verify the remote iOS build number and Android version code will increase;
