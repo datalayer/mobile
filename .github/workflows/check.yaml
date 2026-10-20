@@ -326,12 +326,15 @@ jobs:
             adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false
             maestro test .maestro/store/screenshots.yaml --test-output-dir store-output -e E2E_TOKEN="$E2E_TOKEN" -e E2E_RUNTIMES_URL="$EXPO_PUBLIC_DATALAYER_RUNTIMES_URL" -e E2E_CHAT_APP="$E2E_CHAT_APP"
       # takeScreenshot writes where Maestro is run or into its output directory: the
-      # store-*.png are gathered from both, and nothing else of Maestro's results is kept.
+      # store-*.png are gathered from both, with the screenshots of a failed step, and
+      # nothing else of Maestro's results is kept.
       - name: Gather the screenshots
         if: always()
         run: |
           mkdir -p store-screenshots
           find . "$HOME/.maestro/tests" -name 'store-*.png' -not -path './store-screenshots/*' -exec cp {} store-screenshots/ \; 2>/dev/null || true
+          # The screen a failed step left, to see why (Maestro's own screenshots, under debug/).
+          if [ -d store-output ]; then mkdir -p store-screenshots/debug; find store-output -path '*screenshots*' -name '*.png' -exec cp {} store-screenshots/debug/ \; ; fi
           ls -la store-screenshots
       - name: Keep the tokens out of the screenshots
         id: scrub

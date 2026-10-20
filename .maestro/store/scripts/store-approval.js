@@ -1,8 +1,18 @@
 // The approval the store screenshots show: a mail an agent asks to send, waiting on the test
 // account. Nothing runs on its decision (no runtime waits on it); the flow rejects it at the end.
+var headers = { Authorization: 'Bearer ' + E2E_TOKEN, 'Content-Type': 'application/json' };
+var base = E2E_RUNTIMES_URL + '/api/ai-agents/v1/tool-approvals';
+// One waiting at a time: any left by an earlier run that stopped before its end is rejected first.
+var pending = http.get(base + '?status=pending&limit=200', { headers: headers });
+if (pending.status !== 200) throw new Error('The pending approvals were not listed: ' + pending.status);
+(json(pending.body).approvals || []).forEach(function (left) {
+  if ((left.agent_id || left.agentId) === 'sales-digest') {
+    http.post(base + '/' + left.id + '/reject', { headers: headers, body: JSON.stringify({ note: 'Left by an earlier store screenshots run' }) });
+  }
+});
 var made = (function () {
   var options = {
-    headers: { Authorization: 'Bearer ' + E2E_TOKEN, 'Content-Type': 'application/json' },
+    headers: headers,
     body: JSON.stringify({
       agent_id: 'sales-digest',
       runtime_name: '',
@@ -18,7 +28,7 @@ var made = (function () {
       }
     })
   };
-  return http.post(E2E_RUNTIMES_URL + '/api/ai-agents/v1/tool-approvals', options);
+  return http.post(base, options);
 })();
 if (made.status !== 200) throw new Error('The approval was not created: ' + made.status);
 output.approvalId = json(made.body).id;

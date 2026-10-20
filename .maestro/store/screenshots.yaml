@@ -20,13 +20,13 @@ name: Store screenshots
 # The approval is asked before signing in: the Inbox reads the list once, when it opens.
 - runScript: scripts/store-approval.js
 - runFlow: ../common/sign-in.yaml
-# The Inbox with the waiting mail.
+# The Inbox with the waiting mail (a row is one accessible element: its words are matched within).
 - extendedWaitUntil:
-    visible: "Send email"
+    visible: ".*Send email.*"
     timeout: 30000
 - takeScreenshot: store-02-inbox
 # The complete request, then the confirmation a decision asks for (cancelled).
-- tapOn: "Send email"
+- tapOn: ".*Send email.*"
 - extendedWaitUntil:
     visible: "Waiting for your answer."
     timeout: 30000
