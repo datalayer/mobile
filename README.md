@@ -40,7 +40,7 @@ What each way of running the app needs:
 | `make publish-ios` / `publish-android`                                | **yes**      | **yes**                                                                         | **yes**                        | no                   |
 
 - **Expo account**: free at expo.dev. The free plan gives a limited number of cloud builds a month in a slower queue; paid plans give more and faster ones (see expo.dev/pricing). Then `eas login`.
-- **This project on Expo**: [`@datalayer/datalayer-agents`](https://expo.dev/accounts/datalayer/projects/datalayer-agents). `app.config.ts` names its owner (`datalayer`), slug and project id (`extra.eas.projectId`), so a cloud build needs your Expo account to be a member of the `datalayer` account; `eas init` is not needed. `npx eas-cli project:info` shows the project.
+- **This project on Expo**: [`@datalayer/datalayer`](https://expo.dev/accounts/datalayer/projects/datalayer). `app.config.ts` names its owner (`datalayer`), slug and project id (`extra.eas.projectId`), so a cloud build needs your Expo account to be a member of the `datalayer` account; `eas init` is not needed. `npx eas-cli project:info` shows the project.
 - **Signing**: EAS keeps the signing credentials; nothing is committed here. The first store versions were built locally (Xcode and Android Studio), so a store build from EAS needs the Android **upload key** those versions were signed with uploaded to EAS (`eas credentials --platform android`), or Play App Signing's upload key reset to one EAS holds; EAS must never generate a new keystore for `ai.datalayer.mobile`: the workflows build with `--freeze-credentials`, and a keystore EAS generated for it before that (the first staging build, 19 October 2026) is replaced by the upload key, never used for Play. On iOS, `eas credentials --platform ios` (signed in with the Apple account) creates or reuses the distribution certificate and provisioning profile. Development and preview builds (`.dev`, `.preview`) are other apps and may use keystores EAS generates.
 - **Without any account**: a plugged Android phone (`make dev-device-android`) or the browser (`make dev-web`).
 
@@ -198,12 +198,12 @@ postponed until the devices and testers are available.
 
 Common preparation:
 
-1. The Expo project is `@datalayer/datalayer-agents`; its id is in
+1. The Expo project is `@datalayer/datalayer`; its id is in
    `app.config.ts`. Give a primary and recovery owner access to the
    `datalayer` Expo account and
    keep a least-privilege robot `EXPO_TOKEN` in GitHub Actions.
 2. Keep the final application identity: **Datalayer**, Expo slug
-   `datalayer-agents` (the Expo project's name only), iOS bundle id and Android package
+   `datalayer` (the Expo project's name only), iOS bundle id and Android package
    `ai.datalayer.mobile`. Store identifiers cannot be casually replaced after
    publication.
 3. Complete [`docs/store-listing.md`](docs/store-listing.md) and verify every

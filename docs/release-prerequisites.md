@@ -9,7 +9,7 @@ creating a production release or placing a credential in Git.
 | Item | Proposed value | Human owner needed before use |
 |---|---|---|
 | Expo account | `datalayer` (created) | Datalayer Expo account owner |
-| Expo project/slug | `@datalayer/datalayer-agents`, id `790468fa-e6ee-44a8-9fff-b303c45f4f84` (created; in `app.config.ts`) | Mobile release owner |
+| Expo project/slug | `@datalayer/datalayer`, id `69d637cd-7535-40f7-8f38-f0eefeae2008` (created; in `app.config.ts`) | Mobile release owner |
 | Production iOS bundle id / Android application id | `ai.datalayer.mobile` | Apple Account Holder and Play Console account owner |
 | Development id | `ai.datalayer.mobile.dev` | Mobile release owner |
 | Preview id | `ai.datalayer.mobile.preview` | Mobile release owner |
@@ -25,7 +25,7 @@ project id is configuration, not a secret: `app.config.ts` holds it with the
 owner and slug, so no environment variable names the project. The app's name
 is **Datalayer** on every platform (_Datalayer Dev_ and _Datalayer Preview_
 for the side-by-side variants); the Expo project keeps its slug
-`datalayer-agents`.
+`datalayer`.
 
 ## Accounts, costs and dependencies
 
