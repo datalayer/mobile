@@ -30,6 +30,17 @@ describe('the EAS profiles', () => {
     expect(profiles.production?.environment).toBe('production');
   });
 
+  it('installs with npm install on EAS in every profile, as CI does: no lockfile is committed', () => {
+    const resolvedEnv = (name: string): Record<string, string> => {
+      const profile = profiles[name];
+      return { ...(profile?.extends ? resolvedEnv(profile.extends) : {}), ...(profile?.env ?? {}) };
+    };
+    for (const name of Object.keys(profiles)) {
+      const env = resolvedEnv(name);
+      expect(`${name} ${env.EAS_FALLBACK_PACKAGE_MANAGER} ${env.EAS_NO_FROZEN_LOCKFILE}`).toBe(`${name} npm 1`);
+    }
+  });
+
   it('numbers store builds remotely, each above the last', () => {
     expect(eas.cli.appVersionSource).toBe('remote');
     expect(profiles.staging?.autoIncrement).toBe(true);

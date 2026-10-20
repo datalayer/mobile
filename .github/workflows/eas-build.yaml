@@ -1,12 +1,21 @@
 # Copyright (c) 2026 Datalayer, Inc.
 # Distributed under the terms of the Modified BSD License.
 
-# A preview or staging build on EAS, started by hand (Actions → EAS build →
-# Run workflow), never by a push. `preview` is an internally distributed build
-# (an installable APK and an ad-hoc iOS build); `staging` is the store binary of
-# the production application, optionally submitted to TestFlight and Google
-# Play's internal track (eas.json, submit.staging). Store releases are tags
-# (release.yaml), not this workflow.
+# A preview, staging or production build on EAS, started by hand (Actions → EAS
+# build → Run workflow), never by a push. `preview` is an internally distributed
+# build (an installable APK and an ad-hoc iOS build); `staging` is the store
+# binary of the production application, optionally submitted to TestFlight and
+# Google Play's internal track (eas.json, submit.staging); `production` is the
+# store binary a release builds (the `.aab` and `.ipa`), built here without
+# being submitted, for an account holder to upload by hand (the first bundle
+# of a new Play Console app, whose key becomes the upload key). Store releases
+# are tags (release.yaml), not this workflow.
+#
+# EAS installs the dependencies with `npm install`, as this job does: no
+# lockfile is committed, and eas.json's base profile sets
+# EAS_FALLBACK_PACKAGE_MANAGER=npm and EAS_NO_FROZEN_LOCKFILE (without them EAS
+# runs `yarn install --frozen-lockfile`, which fails on an optional dependency
+# npm skips).
 #
 # Needs the repository secret EXPO_TOKEN (an Expo access token of the
 # datalayer account) and the signing and submit credentials kept in EAS
@@ -20,7 +29,7 @@ on:
       profile:
         description: EAS build profile
         type: choice
-        options: [preview, staging]
+        options: [preview, staging, production]
         default: preview
       platform:
         description: Platform
@@ -28,7 +37,7 @@ on:
         options: [all, android, ios]
         default: all
       submit:
-        description: Submit a staging build to TestFlight and Google Play internal testing
+        description: Submit a staging build to TestFlight and Google Play internal testing (never a preview or production build)
         type: boolean
         default: false
 
@@ -62,7 +71,7 @@ jobs:
       - name: Only a staging build is submitted
         if: inputs.submit && inputs.profile != 'staging'
         run: |
-          echo "A ${{ inputs.profile }} build is distributed internally by EAS, never submitted to a store." >&2
+          echo "A ${{ inputs.profile }} build is never submitted from this workflow: preview is distributed internally by EAS, production is submitted by a release (release.yaml) or uploaded by hand." >&2
           exit 1
       - run: npm install
         env:

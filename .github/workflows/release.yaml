@@ -15,6 +15,8 @@
 # Info.plist and Android permissions), hermes and the Maestro flows.
 # The repository commits no lockfile (the monorepo's rule): the lockfile this
 # install resolved is kept as the release's artifact, its checksum in the notes.
+# EAS installs with `npm install` too (eas.json's base profile:
+# EAS_FALLBACK_PACKAGE_MANAGER=npm, EAS_NO_FROZEN_LOCKFILE), never yarn.
 name: Release
 
 on:

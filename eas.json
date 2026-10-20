@@ -6,7 +6,12 @@
   },
   "build": {
     "base": {
-      "node": "22.17.0"
+      "node": "22.17.0",
+      "env": {
+        "EAS_FALLBACK_PACKAGE_MANAGER": "npm",
+        "EAS_NO_FROZEN_LOCKFILE": "1",
+        "ONNXRUNTIME_NODE_INSTALL": "skip"
+      }
     },
     "development": {
       "extends": "base",
