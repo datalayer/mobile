@@ -8,7 +8,9 @@
 // with the chat test application (named `conversation-<deployment uid's first 8>` by ai-agents),
 // so a flow's runtime lives minutes, not until its 10 credits are spent. Its owner's kept computer
 // (`kept-…`) and every other runtime are left alone. Says only how many it stopped; never a token.
-const { E2E_TOKEN, E2E_CHAT_APP, E2E_RUNTIMES_URL } = process.env;
+const E2E_TOKEN = process.env.E2E_TOKEN;
+const E2E_CHAT_APP = process.env.E2E_CHAT_APP;
+const E2E_RUNTIMES_URL = process.env.E2E_RUNTIMES_URL;
 if (!E2E_TOKEN || !E2E_CHAT_APP || !E2E_RUNTIMES_URL) {
   console.error('E2E_TOKEN, E2E_CHAT_APP and E2E_RUNTIMES_URL are needed.');
   process.exit(1);
