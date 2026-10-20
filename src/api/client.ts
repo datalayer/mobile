@@ -21,6 +21,8 @@ export type RequestOptions = {
   /** A token to use instead of the session's: the interim sign-in checks one before keeping it. */
   token?: string;
   signal?: AbortSignal;
+  /** This request's limit instead of the client's: a call the server answers only once its work is done. */
+  timeoutMs?: number;
 };
 
 export type Client = <T = Record<string, unknown>>(path: string, options?: RequestOptions) => Promise<T>;
@@ -49,8 +51,9 @@ export function createClient({
       headers['Content-Type'] = 'application/json';
     }
 
+    const limit = options.timeoutMs ?? timeoutMs;
     const timeout = new AbortController();
-    const timer = setTimeout(() => timeout.abort(), timeoutMs);
+    const timer = setTimeout(() => timeout.abort(), limit);
     options.signal?.addEventListener('abort', () => timeout.abort());
 
     let response: Response;
@@ -63,7 +66,7 @@ export function createClient({
       });
     } catch (error) {
       if (timeout.signal.aborted && !options.signal?.aborted) {
-        throw new Problem('timeout', `${method} ${path} timed out after ${timeoutMs} ms`);
+        throw new Problem('timeout', `${method} ${path} timed out after ${limit} ms`);
       }
       throw new Problem('offline', `${method} ${path}: ${error instanceof Error ? error.message : String(error)}`);
     } finally {

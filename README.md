@@ -166,10 +166,14 @@ that setup accepts an existing authenticated E2E session because the iOS
 keychain can outlive cleared app state. They act as a test account on the r1 runtimes plane and need
 the repository secrets `DATALAYER_MOBILE_E2E_TOKEN` (the test account's API token) and
 `DATALAYER_MOBILE_E2E_SECOND_TOKEN` (a second account's), and the secrets
-`DATALAYER_MOBILE_E2E_CHAT_APP` (an application of the test account kept running; the
-prompt flow makes two model requests) and `DATALAYER_MOBILE_E2E_LIFECYCLE_APP` (one the
+`DATALAYER_MOBILE_E2E_CHAT_APP` (an application of the test account the prompt flow talks
+to, with two model requests) and `DATALAYER_MOBILE_E2E_LIFECYCLE_APP` (one the
 flow pauses and resumes). Without them the jobs stop after the build and say
-which is missing.
+which is missing. The prompt flow asks ai-agents where its conversation is had first: on the
+application's kept computer when that answers, otherwise on a computer of the test account's
+own, which the flow starts with *Start and continue* (10 credits reserved; the flow fails at
+once, naming the free credits, when the account has fewer). The `e2e-cleanup` job stops those
+computers once every flow is done.
 
 ## Build
 

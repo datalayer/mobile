@@ -79,6 +79,12 @@ export type ThreadReach =
 export const REACH_UNREAD = 'Where this conversation continues could not be read: open it on the web.';
 
 /** Said before a runtime of the person's own is started for a conversation. */
+/**
+ * How long Start and continue waits: ai-agents answers once the computer is up and the
+ * application's agent is created on it, which takes minutes, not the client's 20 s.
+ */
+export const LAUNCH_TIMEOUT_MS = 300_000;
+
 export const STARTS_YOUR_RUNTIME =
   'Nothing runs this application for you now. Continuing starts a computer of your own for it, as its page on the web does, and its time is counted to your credits.';
 
@@ -131,13 +137,13 @@ export async function locateNew(client: Client, deploymentUid: string): Promise<
 
 /** Start a runtime of the person's own for a new conversation ai-agents said `launch` of. */
 export async function startNewRuntime(client: Client, deploymentUid: string): Promise<ThreadReach> {
-  const body = await client(`${NEW}/${segment(deploymentUid)}/reach`, { method: 'POST' });
+  const body = await client(`${NEW}/${segment(deploymentUid)}/reach`, { method: 'POST', timeoutMs: LAUNCH_TIMEOUT_MS });
   return threadReachOf(record(body.reach));
 }
 
 /** Start a runtime of the person's own for a conversation ai-agents said `launch` of; answers where it continues. */
 export async function startThreadRuntime(client: Client, sessionUid: string): Promise<ThreadReach> {
-  const body = await client(`${THREADS}/${segment(sessionUid)}/reach`, { method: 'POST' });
+  const body = await client(`${THREADS}/${segment(sessionUid)}/reach`, { method: 'POST', timeoutMs: LAUNCH_TIMEOUT_MS });
   return threadReachOf(record(body.reach));
 }
 

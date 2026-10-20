@@ -12,7 +12,7 @@
 
 import { RUN_CUT_SHORT, RuntimeRefusal, type AgUiEvent, type AppSessionsClient, type AgentRunClient, type RunMeasure, type StreamOptions } from '@datalayer/agent-runtimes/lib/portable';
 import {
-  locateNew, locateThread, REACH_UNREAD, runtimeAgents, startNewRuntime, startThreadRuntime, threadOf, threadReachOf, threadTitle
+  LAUNCH_TIMEOUT_MS, locateNew, locateThread, REACH_UNREAD, runtimeAgents, startNewRuntime, startThreadRuntime, threadOf, threadReachOf, threadTitle
 } from '../api/conversations';
 import { deploymentOf, listShared } from '../api/deployments';
 import { flushRunMetrics, runMetrics, setMetricsSink } from '../telemetry/runMetrics';
@@ -60,6 +60,19 @@ describe('threads and where they are reached', () => {
       { path: '/api/ai-agents/v1/apps/conversations/mine/deployments/d%201/reach', method: undefined },
       { path: '/api/ai-agents/v1/apps/conversations/mine/deployments/d%201/reach', method: 'POST' }
     ]);
+  });
+
+  it('waits minutes for Start and continue, as ai-agents answers once the computer and its agent are up', async () => {
+    const limits: (number | undefined)[] = [];
+    const client = (async (_path: string, options?: { timeoutMs?: number }) => {
+      limits.push(options?.timeoutMs);
+      return { reach: { session_uid: 's1', app_uid: 'a1', app_name: 'Desk', deployment_uid: 'd1', version: 1, owner: true, reach: 'runtime', url: 'https://r1/agent-runtimes/rt-2', agent_id: 'desk' } };
+    }) as never;
+    await startNewRuntime(client, 'd1');
+    await startThreadRuntime(client, 's1');
+    await locateNew(client, 'd1');
+    expect(limits).toEqual([LAUNCH_TIMEOUT_MS, LAUNCH_TIMEOUT_MS, undefined]);
+    expect(LAUNCH_TIMEOUT_MS).toBeGreaterThanOrEqual(120_000);
   });
 
   it('continues a thread where ai-agents says it continues now, whoever the application is', async () => {

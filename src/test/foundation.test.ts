@@ -128,6 +128,22 @@ describe('the client', () => {
     await expect(client('/slow')).rejects.toMatchObject({ kind: 'timeout', message: PROBLEM_WORDS.timeout });
   });
 
+  it("gives a request its own deadline when it names one, instead of the client's", async () => {
+    const fetcher = jest.fn(
+      (_url: string, init?: RequestInit) =>
+        new Promise<Response>((resolve, reject) => {
+          const answered = setTimeout(() => resolve(new Response('{"ok":true}', { status: 200 })), 30);
+          init?.signal?.addEventListener('abort', () => {
+            clearTimeout(answered);
+            reject(new Error('aborted'));
+          }, { once: true });
+        })
+    ) as unknown as typeof fetch;
+    const client = createClient({ baseUrl: 'https://run', getAccessToken: () => undefined, fetch: fetcher, timeoutMs: 1 });
+    await expect(client('/slow', { timeoutMs: 1000 })).resolves.toEqual({ ok: true });
+    await expect(client('/slow')).rejects.toMatchObject({ kind: 'timeout' });
+  });
+
   it('says offline when the request never reached a server', async () => {
     const fetcher = jest.fn(async () => {
       throw new TypeError('Network request failed');

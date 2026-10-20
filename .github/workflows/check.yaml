@@ -171,7 +171,7 @@ jobs:
           missing=""
           [ -n "$E2E_TOKEN" ] || missing="$missing secret DATALAYER_MOBILE_E2E_TOKEN (the test account's API token);"
           [ -n "$E2E_SECOND_TOKEN" ] || missing="$missing secret DATALAYER_MOBILE_E2E_SECOND_TOKEN (a second account's API token);"
-          [ -n "$E2E_CHAT_APP" ] || missing="$missing secret DATALAYER_MOBILE_E2E_CHAT_APP (an application of the test account kept running);"
+          [ -n "$E2E_CHAT_APP" ] || missing="$missing secret DATALAYER_MOBILE_E2E_CHAT_APP (an application of the test account the prompt flow talks to);"
           [ -n "$E2E_LIFECYCLE_APP" ] || missing="$missing secret DATALAYER_MOBILE_E2E_LIFECYCLE_APP (an application of the test account the flow pauses and resumes);"
           if [ -n "$missing" ]; then
             echo "::notice title=Maestro smoke flows skipped::e2e-android and e2e-ios are skipped until the test account is set:$missing in the repository's settings."
@@ -185,7 +185,7 @@ jobs:
   # then Gradle, never on a laptop — installed on an emulator and driven against
   # the r1 runtimes plane as the test account. The flows need the test account's
   # API token (secret DATALAYER_MOBILE_E2E_TOKEN), a second account's (DATALAYER_MOBILE_E2E_SECOND_TOKEN)
-  # and the applications they use (secrets DATALAYER_MOBILE_E2E_CHAT_APP, kept running,
+  # and the applications they use (secrets DATALAYER_MOBILE_E2E_CHAT_APP, talked to,
   # and DATALAYER_MOBILE_E2E_LIFECYCLE_APP, which the flow pauses and resumes); without
   # them the job is skipped (e2e-account says which is missing).
   e2e-android:
@@ -448,3 +448,24 @@ jobs:
             maestro-ios.xml
             ~/.maestro/tests
           if-no-files-found: ignore
+
+  # After every flow: the computers the prompt flow started for the test account's own
+  # conversations with the chat test application (when nothing ran it) are stopped, so each
+  # lives minutes rather than until its 10 credits are spent. Run once both platforms and the
+  # screenshots are done, as they may share one; the kept computer and other runtimes stay.
+  e2e-cleanup:
+    needs: [e2e-account, e2e-android, e2e-ios, store-screenshots]
+    if: always() && needs.e2e-account.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Stop the conversation computers the flows started
+        env:
+          E2E_TOKEN: ${{ secrets.DATALAYER_MOBILE_E2E_TOKEN }}
+          E2E_CHAT_APP: ${{ secrets.DATALAYER_MOBILE_E2E_CHAT_APP }}
+          E2E_RUNTIMES_URL: https://r1.datalayer.run
+        run: node scripts/stop-e2e-conversation-runtimes.mjs

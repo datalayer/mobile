@@ -1,5 +1,9 @@
-# Prompt, stream and stop: a new conversation with the kept-running application E2E_CHAT_APP,
-# a streamed answer, then a long answer stopped while it streams, and the conversation ended. Two model requests.
+# Prompt, stream and stop: a new conversation with the application E2E_CHAT_APP, a streamed answer,
+# then a long answer stopped while it streams, and the conversation ended. Two model requests.
+# Where the conversation is had is ai-agents' answer, read first (scripts/chat-reach.js): on its owner's
+# kept computer when that answers, on one of the test account's own already running for it, or — when
+# nothing runs it — on one this flow starts with Start and continue, which the workflow's e2e-cleanup job
+# stops afterwards. The flow does not depend on the kept computer staying up.
 appId: ai.datalayer.mobile.preview
 name: Prompt, stream and stop
 ---
@@ -10,12 +14,20 @@ name: Prompt, stream and stop
     visible: ".*${E2E_CHAT_APP}.*"
     timeout: 30000
 - tapOn: ".*${E2E_CHAT_APP}.*"
+- runScript: scripts/chat-reach.js
 - tapOn:
     id: "conversation-new"
+# Nothing runs it for the account: the phone says so and offers to start a computer of its own.
+- runFlow:
+    when:
+      true: ${output.chatReach == 'launch'}
+    commands:
+      - tapOn:
+          id: "conversation-start-runtime"
 - extendedWaitUntil:
     visible:
       id: "conversation-message"
-    timeout: 60000
+    timeout: 300000
 - tapOn:
     id: "conversation-message"
 - inputText: "Reply with exactly PAP MOBILE STREAM OK and nothing else. Do not use any tool."
