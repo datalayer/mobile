@@ -72,39 +72,47 @@ name: Store screenshots
 - takeScreenshot: store-07-application
 - tapOn:
     id: "conversation-new"
+# The conversation only when the application runs: when nothing runs it, the app offers to start a
+# computer (counted to the credits), which the screenshots never do.
 - extendedWaitUntil:
     visible:
       id: "conversation-message"
     timeout: 60000
-- tapOn:
-    id: "conversation-message"
-- inputText: "In four short sentences, tell me how you can help me keep an eye on my week. Do not use any tool."
-- hideKeyboard
-- tapOn:
-    id: "conversation-send"
-    waitToSettleTimeoutMs: 0
-- extendedWaitUntil:
-    visible:
-      id: "conversation-stop"
-    timeout: 30000
     optional: true
-# A few seconds of streaming (nothing by this text ever shows: the wait is a pause).
-- extendedWaitUntil:
-    visible: "store-screenshots-pause"
-    timeout: 6000
-    optional: true
-- takeScreenshot: store-08-streaming
-- extendedWaitUntil:
-    visible:
-      id: "conversation-send"
-    timeout: 150000
-- takeScreenshot: store-09-answered
-- tapOn:
-    text: "End"
-    optional: true
-- tapOn:
-    text: "End"
-    optional: true
+- runFlow:
+    when:
+      visible:
+        id: "conversation-message"
+    commands:
+      - tapOn:
+          id: "conversation-message"
+      - inputText: "In four short sentences, tell me how you can help me keep an eye on my week. Do not use any tool."
+      - hideKeyboard
+      - tapOn:
+          id: "conversation-send"
+          waitToSettleTimeoutMs: 0
+      - extendedWaitUntil:
+          visible:
+            id: "conversation-stop"
+          timeout: 30000
+          optional: true
+      # A few seconds of streaming (nothing by this text ever shows: the wait is a pause).
+      - extendedWaitUntil:
+          visible: "store-screenshots-pause"
+          timeout: 6000
+          optional: true
+      - takeScreenshot: store-08-streaming
+      - extendedWaitUntil:
+          visible:
+            id: "conversation-send"
+          timeout: 150000
+      - takeScreenshot: store-09-answered
+      - tapOn:
+          text: "End"
+          optional: true
+      - tapOn:
+          text: "End"
+          optional: true
 # Settings, from the Inbox of the app opened again (the session is kept).
 - launchApp
 - extendedWaitUntil:
