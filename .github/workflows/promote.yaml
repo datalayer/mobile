@@ -1,0 +1,55 @@
+# Copyright (c) 2026 Datalayer, Inc.
+# Distributed under the terms of the Modified BSD License.
+
+# Promotion to production, by hand: the release owner runs it from the Actions
+# tab once the internal testers have tried a versionCode a tag put on Google
+# Play's internal testing track (release.yaml). It promotes that same bundle,
+# never a new build, and refuses a versionCode the internal track does not hold.
+# A rollout below 1 is a staged rollout; raise it later by running this again.
+#
+# Google reviews a production release before it reaches people; the store
+# listing, content rating and Data safety form must be complete in Play Console.
+# iOS is off until Apple validates the developer account (release.yaml).
+#
+# Needs the repository secret DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT (the Google
+# Play service account's JSON key, with "Release to production" on the app).
+name: Promote to production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_code:
+        description: The versionCode on the internal track to promote
+        required: true
+      rollout:
+        description: Fraction of users (0.01 to 1; 1 releases to everyone)
+        required: true
+        default: '1'
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install google-api-python-client==2.194.0 google-auth==2.56.2
+      - name: Promote
+        env:
+          PLAY_SERVICE_ACCOUNT: ${{ secrets.DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT }}
+          VERSION_CODE: ${{ inputs.version_code }}
+          ROLLOUT: ${{ inputs.rollout }}
+        run: |
+          [ -n "$PLAY_SERVICE_ACCOUNT" ] || { echo "The secret DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT is not set." >&2; exit 1; }
+          key="$RUNNER_TEMP/play-service-account.json"
+          trap 'rm -f "$key"' EXIT
+          (umask 077 && printf '%s' "$PLAY_SERVICE_ACCOUNT" > "$key")
+          python scripts/play-promote.py "$key" ai.datalayer.mobile "$VERSION_CODE" "$ROLLOUT" | tee -a "$GITHUB_STEP_SUMMARY"
