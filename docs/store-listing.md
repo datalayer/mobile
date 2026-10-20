@@ -60,13 +60,28 @@ Each claim above is shipped in the app on the day of drafting; remove any that a
 
 ## Review notes (Apple *App Review Information*, Google *App access*)
 
-All functionality is behind sign-in with a Datalayer account. The reviewer signs in with *Sign in with Datalayer* using the review account below, which has no customer data and holds:
+All functionality is behind sign-in with a Datalayer account. The review account exists (created 20 October 2026): a dedicated Datalayer account on an address the company owns, with a password, no customer data and no billing card. Its handle and password are entered in the consoles only, never in this repository. It holds credits granted by Datalayer for the review weeks, and:
 
-- one application kept running, to see Agents, Activity and a conversation;
-- one approval waiting, created just before review, to see Inbox and the full request (*Approve* or *Reject* both work);
-- notifications are optional; the reviewer may decline the system prompt.
+- one application, *Mail assistant*, kept always on (a daily spend limit, so its computer runs the whole day), to see Agents, Activity and a conversation. Its only tool sends a mail with a fake sender: nothing is ever delivered, whatever the reviewer approves;
+- one approval waiting: *Mail assistant* asks to send a mail to `team@example.com`, subject *Weekly update*, body *The review build is ready.* It stays pending until it is answered, so a new one is created before each submission if the last reviewer answered it.
 
-Review account: **to be created by the account holders** (handle and password entered in the consoles, never in this repository). It must be a dedicated account with no real customer data and no billing card. Datalayer charges nothing: there are no in-app purchases, subscriptions or external payment links in the app.
+Datalayer charges nothing in the app: there are no in-app purchases, subscriptions or external payment links.
+
+**Text for the consoles** (Play Console → *App content → App access* → *All or some functionality is restricted* → add the instructions with the username and password; App Store Connect → the version → *App Review Information* → *Sign-in required*, username and password, and the same text in *Notes*):
+
+> Sign in:
+> 1. Open the app and tap **Sign in with Datalayer**. The Datalayer sign-in page opens in the system browser.
+> 2. Enter the username (handle) and password given with these notes and press **Sign in**. Do not use the GitHub, Google or other buttons the page may show: the review account signs in with its username and password only.
+> 3. The browser returns to the app, signed in.
+>
+> What you will see:
+> - **Inbox**: one approval waiting. *Mail assistant* asks to send a mail to team@example.com ("Weekly update"). Open it to see the whole request: who asks, the tool and its arguments. **Approve** and **Reject** both work. The mail sender is a fake one: nothing is sent, whichever you choose. Once answered, the approval leaves the Inbox.
+> - **Agents**: the application *Mail assistant*, kept running on Datalayer, with what it is doing.
+> - **Activity**: what *Mail assistant* did and is doing, with the times.
+> - **Conversations**: the conversation that asked for the approval. Open it, or start a new one with *Mail assistant* (for example "What can you do?") and follow its answer as it streams; **Stop** ends an answer. Asking it to send a mail creates a new approval in the Inbox.
+> - **Settings**: notifications, *In your name* and *Delete account*. Please do not delete the review account.
+>
+> Notifications are optional: you may decline the system prompt, and everything above works without them. A notification carries no content; tapping one opens the item.
 
 ## Apple answers
 
@@ -108,6 +123,6 @@ Suggested set: Inbox with one approval; the full approval with *Approve*/*Reject
 
 - the records themselves (App Store Connect app, Play Console app), ownership and the team members; both are titled *Datalayer*, which stays;
 - signing and submit credentials in EAS (the Android upload key the first versions were signed with, the iOS distribution certificate and profile, the App Store Connect API key, the Play service account), and the App Store Connect app id and Apple Team id in `eas.json` (placeholders until then);
-- the review account, its application and a waiting approval on the day of review;
+- the review account's handle and password in both consoles, and a waiting approval on the day of review (a new one when the last reviewer answered it; the account and its application exist);
 - the screenshots on real builds, and the submission;
 - the open answer above: Google's in-app report of generated content; and, for Apple 4.8, a web sign-in that shows the Datalayer account alone when the app opens it.
