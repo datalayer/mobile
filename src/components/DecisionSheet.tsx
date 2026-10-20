@@ -5,11 +5,12 @@
 
 /** The confirmation sheet of a decision: names the action, takes an optional note, sends once. */
 
-import { BottomSheet, Button as NativeButton, Column, Text as NativeText, TextInput } from '@expo/ui';
+import { Button as NativeButton, Column, Text as NativeText, TextInput } from '@expo/ui';
 import { useState } from 'react';
 import type { Decision } from '../api/approvals';
 import { confirmTitle, DECISION_WORDS } from '../features/approvals/decision';
 import { useTheme } from '../theme/ThemeProvider';
+import { ThemedBottomSheet } from './ThemedBottomSheet';
 
 export function DecisionSheet({
   decision,
@@ -35,7 +36,7 @@ export function DecisionSheet({
     }
   };
   return (
-    <BottomSheet isPresented={open} onDismiss={dismiss} containerColor={theme.colors.surface} contentPadding={{ bottom: 24 }}>
+    <ThemedBottomSheet isPresented={open} onDismiss={dismiss}>
       <Column spacing={16}>
         <NativeText textStyle={{ fontSize: 20, fontWeight: '600', color: theme.colors.text }}>
           {decision ? confirmTitle(decision, action) : ''}
@@ -59,6 +60,6 @@ export function DecisionSheet({
         />
         <NativeButton label={DECISION_WORDS.cancel} variant="text" disabled={busy} onPress={dismiss} testID="decision-cancel" />
       </Column>
-    </BottomSheet>
+    </ThemedBottomSheet>
   );
 }
