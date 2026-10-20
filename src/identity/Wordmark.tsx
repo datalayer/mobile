@@ -5,16 +5,14 @@
 
 import { StyleSheet, View } from 'react-native';
 import { Text } from '../components/primitives';
-import { Eyes } from './Eyes';
 
-/** The app's name, Datalayer, after the eyes; a screen reader says the name. */
+/** The app's name, Datalayer, as the title: the name alone, no eyes before it. */
 export const APP_NAME = 'Datalayer';
 
 export function Wordmark({ size = 28 }: { size?: number }) {
   return (
     <View accessible accessibilityRole="header" accessibilityLabel={APP_NAME} style={styles.row}>
-      <Eyes size={size * 0.72} />
-      <Text weight="semibold" style={{ fontSize: size, lineHeight: size * 1.15, marginLeft: size * 0.3 }}>
+      <Text weight="semibold" style={{ fontSize: size, lineHeight: size * 1.15 }}>
         {APP_NAME}
       </Text>
     </View>
