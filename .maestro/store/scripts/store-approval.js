@@ -2,12 +2,17 @@
 // account. Nothing runs on its decision (no runtime waits on it); the flow rejects it at the end.
 var headers = { Authorization: 'Bearer ' + E2E_TOKEN, 'Content-Type': 'application/json' };
 var base = E2E_RUNTIMES_URL + '/api/ai-agents/v1/tool-approvals';
-// One waiting at a time: any left by an earlier run that stopped before its end is rejected first.
+// The Inbox shows this one alone: an approval an earlier store run left is rejected first, and so is
+// a smoke flow's (agent maestro-smoke, nothing runs on it) left by a flow that stopped before its end,
+// when over an hour old (a smoke flow running now on another device keeps its own).
 var pending = http.get(base + '?status=pending&limit=200', { headers: headers });
 if (pending.status !== 200) throw new Error('The pending approvals were not listed: ' + pending.status);
+var anHourAgo = Date.now() - 3600 * 1000;
 (json(pending.body).approvals || []).forEach(function (left) {
-  if ((left.agent_id || left.agentId) === 'sales-digest') {
-    http.post(base + '/' + left.id + '/reject', { headers: headers, body: JSON.stringify({ note: 'Left by an earlier store screenshots run' }) });
+  var agent = left.agent_id || left.agentId;
+  var asked = Date.parse(String(left.created_at || left.createdAt || '').slice(0, 19) + 'Z'); // UTC, to the second
+  if (agent === 'sales-digest' || (agent === 'maestro-smoke' && asked < anHourAgo)) {
+    http.post(base + '/' + left.id + '/reject', { headers: headers, body: JSON.stringify({ note: 'Cleared before the store screenshots' }) });
   }
 });
 var made = (function () {
