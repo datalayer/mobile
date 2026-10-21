@@ -383,9 +383,13 @@ jobs:
           retention-days: 30
 
   # The same flows on an iOS Simulator build (macos-15: macos-13 is retired), on main only.
+  # Off until Apple validates the developer account and the Simulator sign-in is fixed; the
+  # flows failed on every run since 20 October 06:16 at 'Inbox' not visible (the user, 21
+  # October 2026: "let's focus on android"). Turn back on, with release.yaml's iOS, by
+  # removing the `false &&` below; the job's definition is kept whole.
   e2e-ios:
     needs: e2e-account
-    if: github.event_name != 'pull_request' && needs.e2e-account.outputs.ready == 'true'
+    if: false && github.event_name != 'pull_request' && needs.e2e-account.outputs.ready == 'true'
     runs-on: macos-15
     timeout-minutes: 120
     env:

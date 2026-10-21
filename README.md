@@ -158,7 +158,8 @@ app's own, and Doctor there reports that duplicate; read CI's run instead.
 `.maestro/` holds the smoke flows — sign-in, an approval answered
 elsewhere while it is open, the route a tapped notification opens, a prompt
 streamed and stopped, and pause/reset with a second account refused. CI runs
-them (`e2e-android` on every run, `e2e-ios` on main, on `macos-15`) on an `e2e`
+them (`e2e-android` on every run; `e2e-ios`, on main on `macos-15`, is off for now
+until Apple validates the developer account and the Simulator sign-in is fixed) on an `e2e`
 build it makes itself: `expo prebuild`, then Gradle or `xcodebuild`; nothing is
 built on a laptop. Maestro may run the five flows in any order on the one
 shared emulator or simulator, so every flow prepares authentication itself;

@@ -39,6 +39,21 @@ describe("the Maestro smoke suite", () => {
     expect(openLink.indexOf('visible: "Open"')).toBeLessThan(openLink.indexOf('text: "Open"'));
   });
 
+  it("keeps the iOS flows defined but off for now, while Android still runs on every push", () => {
+    const check = read(".github/workflows/check.yaml");
+    const ios = check.indexOf("\n  e2e-ios:\n");
+    expect(ios).toBeGreaterThan(-1);
+    const iosJob = check.slice(ios, check.indexOf("\n  e2e-cleanup:", ios));
+    // Off until Apple validates the developer account and the Simulator sign-in is fixed
+    // (the user, 21 October 2026); the job comes back by removing `false &&`.
+    expect(iosJob).toMatch(/\n    if: false && github\.event_name != 'pull_request'/);
+    expect(iosJob).toContain("runs-on: macos-15");
+    expect(iosJob).toContain("name: maestro-ios");
+    const android = check.slice(check.indexOf("\n  e2e-android:\n"), check.indexOf("\n  store-screenshots:"));
+    expect(android).not.toMatch(/\n    if: false/);
+    expect(android).toContain("if: needs.e2e-account.outputs.ready == 'true'");
+  });
+
   it("uploads Maestro's results only after the scrub kept the tokens out", () => {
     const check = read(".github/workflows/check.yaml");
     for (const platform of ["android", "ios"]) {
