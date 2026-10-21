@@ -75,6 +75,12 @@ jobs:
       - run: npm install
         env:
           ONNXRUNTIME_NODE_INSTALL: skip
+      # React Native 0.86's Gradle plugin asks for this NDK and installs it itself when
+      # it is missing; on the runner image of 15 October 2026 that install fails
+      # ("Install NDK (Side by side) 27.1.12297006 failed"), so it is installed here
+      # first. The version is React Native's: bump it with react-native in package.json.
+      - name: The NDK React Native asks for
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;27.1.12297006" > /dev/null
       - name: Prebuild the production app
         run: npx expo prebuild --platform all --no-install --clean
       - name: Merge the release Android manifest
@@ -225,6 +231,12 @@ jobs:
       - run: npm install
         env:
           ONNXRUNTIME_NODE_INSTALL: skip
+      # React Native 0.86's Gradle plugin asks for this NDK and installs it itself when
+      # it is missing; on the runner image of 15 October 2026 that install fails
+      # ("Install NDK (Side by side) 27.1.12297006 failed"), so it is installed here
+      # first. The version is React Native's: bump it with react-native in package.json.
+      - name: The NDK React Native asks for
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;27.1.12297006" > /dev/null
       - name: Prebuild the e2e app
         run: npx expo prebuild --platform android --no-install --clean
       # The resources first, on their own: on 16 October 2026 their merge failed and the
