@@ -121,11 +121,17 @@ jobs:
           tag=$(cat node_modules/react-native/sdks/.hermesv1version)
           echo "Hermes $tag, hermes-compiler $(node -p "require('hermes-compiler/package.json').version")"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
+      # The VM links the runner's ICU: a VM built on one Ubuntu release does not load on
+      # the next (ubuntu-latest moved to 26.04 on 21 October 2026 and the 24.04 VM asked
+      # for libicuuc.so.74), so the cache is keyed by the release and rebuilt once per image.
+      - name: The runner's release
+        id: os
+        run: echo "release=$(. /etc/os-release && echo "$ID-$VERSION_ID")" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v4
         id: vm
         with:
           path: hermes-vm
-          key: hermes-vm-${{ steps.tag.outputs.tag }}-${{ runner.os }}
+          key: hermes-vm-${{ steps.tag.outputs.tag }}-${{ runner.os }}-${{ steps.os.outputs.release }}
       - name: Build the Hermes VM
         if: steps.vm.outputs.cache-hit != 'true'
         run: |
