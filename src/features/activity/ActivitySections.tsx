@@ -5,13 +5,34 @@
 
 import { useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
-import { ACTIVITY_WORDS, entrySaid, type AppActivity, scheduledSays } from '@datalayer/agent-runtimes/lib/portable';
+import {
+  ACTIVITY_WORDS,
+  entrySaid,
+  type AppActivity,
+  scheduledSays,
+  sessionAgentSaid,
+  sessionLineageSaid,
+  sessionStateSaid
+} from '@datalayer/agent-runtimes/lib/portable';
 import { EmptyState } from '../../components/primitives';
 import { Field, Row, SectionTitle } from '../../components/states';
 import { absoluteTime, relativeTime } from '../../i18n/time';
 
 /** Who each row belongs to, on the tab that shows every application's. */
 export type Owners = { nameOf: (appUid: string) => string; faceOf: (appUid: string) => ReactNode };
+
+/** A session with no words yet, as the Studio lists it. */
+export const UNTITLED_SESSION = 'A conversation';
+
+/**
+ * What a completed session's row says under its title: the agent it is bound
+ * to now (with its harness), and where it comes from — *Cloned from … at
+ * turn 2*, *Imported from a file …* — as the record says them; `''` for an
+ * ordinary session of a model agent.
+ */
+export function sessionDetail(session: Parameters<typeof sessionAgentSaid>[0] & Parameters<typeof sessionLineageSaid>[0]): string {
+  return [sessionAgentSaid(session), sessionLineageSaid(session)].filter(Boolean).join(' · ');
+}
 
 /** In progress, scheduled and completed, for one application or, given `owners`, all of them. */
 export function ActivitySections({ work, owners }: { work: AppActivity; owners?: Owners }) {
@@ -46,13 +67,16 @@ export function ActivitySections({ work, owners }: { work: AppActivity; owners?:
       ))}
       <SectionTitle>{ACTIVITY_WORDS.completed}</SectionTitle>
       {work.completed.length === 0 ? <EmptyState title={ACTIVITY_WORDS.nothing} detail="" /> : null}
-      {work.completed.map(entry => (
+      {/* Each completed row is a session as the record lists it: its title, its state, its agent, where it comes from. */}
+      {work.completed.map(session => (
         <Row
-          key={entry.uid || entry.sessionUid}
-          leading={owners?.faceOf(entry.appUid)}
-          title={titled(entry.appUid, entrySaid(entry) || 'A session')}
-          meta={`${absoluteTime(entry.createdAt)} (${relativeTime(entry.createdAt)})`}
-          onPress={open(entry.appUid)}
+          key={session.uid}
+          leading={owners?.faceOf(session.appUid)}
+          title={titled(session.appUid, session.title || UNTITLED_SESSION)}
+          detail={sessionDetail(session) || undefined}
+          badge={sessionStateSaid(session)}
+          meta={session.startedAt ? `${absoluteTime(session.startedAt)} (${relativeTime(session.startedAt)})` : undefined}
+          onPress={open(session.appUid)}
         />
       ))}
     </>

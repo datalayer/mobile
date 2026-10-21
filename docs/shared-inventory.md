@@ -15,7 +15,7 @@ Three entries, and nothing else of those packages, reach the phone:
 | Entry | Owner | What it holds |
 |---|---|---|
 | `@datalayer/core/lib/portable` | Core (≥ 1.2.20) | `personOf`; loading, empty and problem states (`Problem`, `PROBLEM_WORDS`, `STATE_WORDS`, `problemOf`, `retries`, `kindOfStatus`, `detailOf`) |
-| `@datalayer/agent-runtimes/lib/portable` | Agent Runtimes (≥ 1.5.44) | approvals and the approval card, the AG-UI stream, the conversation reducer and its views, presence, protocol displays, Direct Conversations, sign-in status and protected input, run measures, Session and agent clients, Activity, the deployment lifecycle, agent runtimes and the agent summary |
+| `@datalayer/agent-runtimes/lib/portable` | Agent Runtimes (≥ 1.5.66) | approvals and the approval card, the AG-UI stream, the conversation reducer and its views, presence, protocol displays, Direct Conversations, sign-in status and protected input, run measures, Session and agent clients, Activity, the deployment lifecycle, agent runtimes and the agent summary |
 | `@datalayer/primer-addons/lib/theme/portable` | Primer Addons (≥ 1.0.40) | theme tokens as CSS-variable maps, colours, indicators, font stacks, the Datalayer eyes' geometry |
 
 How each is held there:

@@ -23,7 +23,7 @@ image was built with (its pin commit in `k8s/services`).
 | AI Agents | `https://r1.datalayer.run/api/ai-agents/v1` | `ai-agents:0.0.71` (r1) | services `e848c78b`; Agent Runtimes 1.5.44 |
 | Agent Runtimes (in each runtime) | `https://r1.datalayer.run/agent-runtimes/<pool>/<runtime uid>` | `agent-runtimes:0.0.49`, launched by `operator:1.0.99` | Agent Runtimes 1.5.44, agentspecs 0.0.107, agent-shield 0.2.2 (services `47de4d45`) |
 
-The phone's own client is `@datalayer/agent-runtimes` `^1.5.44` and
+The phone's own client is `@datalayer/agent-runtimes` `^1.5.66` and
 `@datalayer/core` `^1.2.20` (`package.json`).
 
 ## Two planes
