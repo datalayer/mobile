@@ -20,6 +20,12 @@ describe('Primer Addons tokens on a phone', () => {
     }
   });
 
+  it('offers every theme but VS Code\'s, whose colours exist only inside the editor', () => {
+    expect(themeVariants).not.toContain('vscode');
+    expect(themeVariants).toContain('loop');
+    expect(preferenceOf(JSON.stringify({ variant: 'vscode', colorMode: 'dark' })).variant).toBe(DEFAULT_PREFERENCE.variant);
+  });
+
   it('reads the default Agents theme as the web does: white canvas, pill controls, Inter', () => {
     const agents = nativeThemeOf(portableThemeOf('loop'), 'light');
     expect(agents.colors.background).toBe('#FFFFFF');

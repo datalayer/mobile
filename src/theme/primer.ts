@@ -15,11 +15,18 @@ import {
   type PortableTheme,
   type ThemeVariant,
   exportPortableTheme,
-  themeVariants,
+  themeVariants as primerThemeVariants,
 } from '@datalayer/primer-addons/lib/theme/portable';
 
 export type { ThemeVariant };
-export { themeVariants };
+
+/**
+ * The themes a phone offers: every Primer Addons theme but `vscode`, whose
+ * tokens are VS Code's own `--vscode-*` variables and CSS `color-mix()`,
+ * which exist only inside the editor. A preference stored as `vscode` falls
+ * back to the default (`isThemeVariant`).
+ */
+export const themeVariants: ThemeVariant[] = primerThemeVariants.filter((variant) => variant !== 'vscode');
 
 export type ResolvedMode = 'light' | 'dark';
 
