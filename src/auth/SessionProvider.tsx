@@ -13,17 +13,22 @@ import { createClient, type Client } from '../api/client';
 import { isProblem } from '@datalayer/core/lib/portable';
 import { environment, serviceUrlOf } from '../config/environment';
 import { browserSignIn } from './browserSignIn';
-import { logIn, whoIs, type Person } from './iam';
+import { whoIs, type Person } from './iam';
 import {
   OAuthFailure,
   discover,
   exchangeCode,
   needsRefresh,
+  passwordCode,
+  providerAuthorizationEndpoint,
   refreshCredential,
   revoke,
   type Credential,
-  type OAuthConfig
+  type OAuthConfig,
+  type PasswordSignIn,
+  type SignInProvider
 } from './oauth';
+import { newPkce } from './pkce';
 import { tokenStore as defaultTokenStore, type TokenStore } from './tokenStore';
 import { forgetConversations } from '../features/conversations/registry';
 import { forgetSignIns } from '../features/conversations/signInWatch';
@@ -40,9 +45,11 @@ export type Session = SessionState & {
   gatewayClient: Client;
   /** The current token, read when a connection opens; never rendered or logged. */
   accessToken: () => string | undefined;
-  /** Authorization Code + PKCE in the system browser; `false` when the person cancelled. */
-  signInWithDatalayer: () => Promise<boolean>;
-  signInWithPassword: (handle: string, password: string) => Promise<void>;
+  /** A handle or email and password typed in the app, every build; an `OAuthFailure` names a refusal (`mfa_required` asks for the code). */
+  signInWithPassword: (input: PasswordSignIn) => Promise<void>;
+  /** GitHub, Google or LinkedIn in a browser tab opened at IAM; `false` when the person cancelled. */
+  signInWithProvider: (provider: SignInProvider) => Promise<boolean>;
+  /** A pasted API token: development, e2e and preview builds only. */
   signInWithToken: (token: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -250,30 +257,33 @@ export function SessionProvider({
     return () => clearTimeout(timer);
   }, [expiresAt, refresh, state.status]);
 
-  const signInWithDatalayer = useCallback(async () => {
-    const oauth = await config();
-    const granted = await browserSignIn(oauth);
-    if (!granted) {
-      return false;
-    }
-    await adopt(await exchangeCode(oauth, granted.code, granted.codeVerifier, fetcher));
-    return true;
-  }, [adopt, config, fetcher]);
-
   const signInWithPassword = useCallback(
-    async (handle: string, password: string) => {
-      if (!environment().allowsInterimSignIn) {
-        throw new Error('This build signs in with Datalayer only.');
-      }
-      await adopt({ accessToken: await logIn(client, handle.trim(), password) });
+    async (input: PasswordSignIn) => {
+      const oauth = await config();
+      const pkce = await newPkce();
+      const code = await passwordCode(environment().runUrl, oauth, input, pkce.challenge, fetcher);
+      await adopt(await exchangeCode(oauth, code, pkce.verifier, fetcher));
     },
-    [adopt, client]
+    [adopt, config, fetcher]
+  );
+
+  const signInWithProvider = useCallback(
+    async (provider: SignInProvider) => {
+      const oauth = await config();
+      const granted = await browserSignIn(oauth, providerAuthorizationEndpoint(environment().runUrl, provider));
+      if (!granted) {
+        return false;
+      }
+      await adopt(await exchangeCode(oauth, granted.code, granted.codeVerifier, fetcher));
+      return true;
+    },
+    [adopt, config, fetcher]
   );
 
   const signInWithToken = useCallback(
     async (candidate: string) => {
-      if (!environment().allowsInterimSignIn) {
-        throw new Error('This build signs in with Datalayer only.');
+      if (!environment().allowsTokenSignIn) {
+        throw new Error('This build does not sign in with a pasted token.');
       }
       await adopt({ accessToken: candidate.trim() });
     },
@@ -303,12 +313,12 @@ export function SessionProvider({
       client,
       gatewayClient,
       accessToken: () => credential.get()?.accessToken,
-      signInWithDatalayer,
       signInWithPassword,
+      signInWithProvider,
       signInWithToken,
       signOut
     }),
-    [state, client, gatewayClient, credential, signInWithDatalayer, signInWithPassword, signInWithToken, signOut]
+    [state, client, gatewayClient, credential, signInWithPassword, signInWithProvider, signInWithToken, signOut]
   );
 
   return <SessionContext.Provider value={session}>{children}</SessionContext.Provider>;

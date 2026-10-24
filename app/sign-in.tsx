@@ -5,8 +5,9 @@
 
 import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
-import { isProblem } from '@datalayer/core/lib/portable';
 import { useSession } from '../src/auth/SessionProvider';
+import type { SignInProvider } from '../src/auth/oauth';
+import { PROVIDER_BUTTONS, signInOutcomeOf } from '../src/auth/signInWords';
 import { Button, Screen, Text } from '../src/components/primitives';
 import { Wordmark } from '../src/identity/Wordmark';
 import { environment } from '../src/config/environment';
@@ -14,74 +15,51 @@ import { SPACE, useNativeTheme } from '../src/theme/tokens';
 
 type Way = 'password' | 'token';
 
+/**
+ * Signing in happens here, in the app (the user, 24 October 2026): a handle or
+ * email and password, or GitHub, Google or LinkedIn in a browser tab that opens
+ * at the provider and comes back. A pasted API token only in development, e2e
+ * and preview builds.
+ */
 export default function SignIn() {
   const session = useSession();
   const { colors, radius } = useNativeTheme();
   const [way, setWay] = useState<Way>('password');
-  const [handle, setHandle] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [mfaCode, setMfaCode] = useState('');
+  const [needsMfaCode, setNeedsMfaCode] = useState(false);
   const [token, setToken] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<Way | SignInProvider | undefined>();
   const [problem, setProblem] = useState('');
 
-  const { allowsInterimSignIn } = environment();
+  const { allowsTokenSignIn } = environment();
 
-  const withDatalayer = async () => {
-    setBusy(true);
+  const run = async (which: Way | SignInProvider, attempt: () => Promise<unknown>) => {
+    setBusy(which);
     setProblem('');
     try {
-      await session.signInWithDatalayer();
+      await attempt();
     } catch (error) {
-      setProblem(error instanceof Error ? error.message : 'Something went wrong.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const submit = async () => {
-    setBusy(true);
-    setProblem('');
-    try {
-      if (way === 'password') {
-        await session.signInWithPassword(handle, password);
-      } else {
-        await session.signInWithToken(token);
+      const outcome = signInOutcomeOf(error);
+      if (which === 'password') {
+        setNeedsMfaCode(needsMfaCode || outcome.needsMfaCode);
       }
-    } catch (error) {
-      setProblem(
-        isProblem(error) && error.kind === 'unauthenticated'
-          ? 'That did not sign you in. Check and try again.'
-          : error instanceof Error
-            ? error.message
-            : 'Something went wrong.'
-      );
+      setProblem(outcome.problem);
     } finally {
-      setBusy(false);
+      setBusy(undefined);
     }
   };
+
+  const submit = () =>
+    way === 'password'
+      ? run('password', () => session.signInWithPassword({ identifier, password, mfaCode: needsMfaCode ? mfaCode : undefined }))
+      : run('token', () => session.signInWithToken(token));
 
   const input = [
     styles.input,
     { color: colors.text, borderColor: colors.border, backgroundColor: colors.inset, borderRadius: Math.min(radius.control, 24) }
   ];
-
-  if (!allowsInterimSignIn) {
-    return (
-      <Screen headerless>
-        <Wordmark />
-        <Text accessibilityRole="header" size="title" weight="semibold" style={styles.title}>
-          Sign in to Datalayer
-        </Text>
-        <Text tone="muted">Datalayer opens in your browser, and brings you back here.</Text>
-        {problem ? (
-          <Text accessibilityLiveRegion="polite" tone="danger">
-            {problem}
-          </Text>
-        ) : null}
-        <Button label="Sign in with Datalayer" busy={busy} onPress={withDatalayer} />
-      </Screen>
-    );
-  }
 
   return (
     <Screen headerless>
@@ -89,19 +67,21 @@ export default function SignIn() {
       <Text accessibilityRole="header" size="title" weight="semibold" style={styles.title}>
         Sign in to Datalayer
       </Text>
-      <Text tone="muted">Development sign-in · {environment().runUrl}</Text>
-      <Button tone="secondary" label="Sign in with Datalayer" busy={busy} onPress={withDatalayer} />
+      {allowsTokenSignIn ? <Text tone="muted">Development build · {environment().runUrl}</Text> : null}
       {way === 'password' ? (
         <View style={styles.fields}>
           <TextInput
-            accessibilityLabel="Handle"
-            placeholder="Handle"
+            accessibilityLabel="Handle or email"
+            placeholder="Handle or email"
             placeholderTextColor={colors.muted}
             autoCapitalize="none"
             autoCorrect={false}
+            keyboardType="email-address"
             textContentType="username"
-            value={handle}
-            onChangeText={setHandle}
+            autoComplete="username"
+            importantForAutofill="yes"
+            value={identifier}
+            onChangeText={setIdentifier}
             style={input}
           />
           <TextInput
@@ -110,11 +90,30 @@ export default function SignIn() {
             placeholderTextColor={colors.muted}
             secureTextEntry
             textContentType="password"
+            autoComplete="current-password"
+            importantForAutofill="yes"
             value={password}
             onChangeText={setPassword}
-            onSubmitEditing={submit}
+            onSubmitEditing={needsMfaCode ? undefined : submit}
             style={input}
           />
+          {needsMfaCode ? (
+            <>
+              <Text tone="muted">Enter the code from your authenticator app.</Text>
+              <TextInput
+                accessibilityLabel="Authentication code"
+                placeholder="Authentication code"
+                placeholderTextColor={colors.muted}
+                keyboardType="number-pad"
+                textContentType="oneTimeCode"
+                autoComplete="one-time-code"
+                value={mfaCode}
+                onChangeText={setMfaCode}
+                onSubmitEditing={submit}
+                style={input}
+              />
+            </>
+          ) : null}
         </View>
       ) : (
         <TextInput
@@ -137,15 +136,40 @@ export default function SignIn() {
       ) : null}
       <Button
         label="Sign in"
-        busy={busy}
-        disabled={way === 'password' ? !handle || !password : !token}
+        busy={busy === way}
+        disabled={
+          busy !== undefined || (way === 'password' ? !identifier.trim() || !password || (needsMfaCode && !mfaCode.trim()) : !token)
+        }
         onPress={submit}
       />
-      <Button
-        tone="secondary"
-        label={way === 'password' ? 'Use an API token instead' : 'Use a handle and password instead'}
-        onPress={() => setWay(way === 'password' ? 'token' : 'password')}
-      />
+      {allowsTokenSignIn ? (
+        <Button
+          tone="plain"
+          label={way === 'password' ? 'Use an API token instead' : 'Use a handle and password instead'}
+          disabled={busy !== undefined}
+          onPress={() => {
+            setProblem('');
+            setWay(way === 'password' ? 'token' : 'password');
+          }}
+        />
+      ) : null}
+      {way === 'password' ? (
+        <View style={styles.providers}>
+          <Text tone="muted" style={styles.or}>
+            or
+          </Text>
+          {PROVIDER_BUTTONS.map(({ provider, label }) => (
+            <Button
+              key={provider}
+              tone="secondary"
+              label={label}
+              busy={busy === provider}
+              disabled={busy !== undefined}
+              onPress={() => run(provider, () => session.signInWithProvider(provider))}
+            />
+          ))}
+        </View>
+      ) : null}
     </Screen>
   );
 }
@@ -153,5 +177,7 @@ export default function SignIn() {
 const styles = StyleSheet.create({
   title: { marginTop: SPACE.xl },
   fields: { gap: SPACE.sm },
+  providers: { gap: SPACE.sm },
+  or: { textAlign: 'center' },
   input: { minHeight: 48, borderWidth: 1, paddingHorizontal: SPACE.md, fontSize: 17 }
 });

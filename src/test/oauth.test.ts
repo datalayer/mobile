@@ -3,18 +3,25 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { createHash } from 'node:crypto';
+import { Problem } from '@datalayer/core/lib/portable';
 import { createClient } from '../api/client';
 import {
   OAuthFailure,
+  SIGN_IN_PROVIDERS,
   credentialOf,
   discover,
   exchangeCode,
   needsRefresh,
+  passwordCode,
+  pkceOf,
+  providerAuthorizationEndpoint,
   redirectUriOf,
   refreshCredential,
   revoke,
   type OAuthConfig
 } from '../auth/oauth';
+import { PROVIDER_BUTTONS, signInOutcomeOf } from '../auth/signInWords';
 import { credentialFromKept } from '../auth/tokenStore';
 
 const ISSUER = 'https://prod1.datalayer.run/api/iam/v1/oauth';
@@ -118,6 +125,88 @@ describe('the OAuth contract with IAM', () => {
     });
     expect(credentialFromKept('bare-token')).toEqual({ accessToken: 'bare-token' });
     expect(credentialFromKept(null)).toBeNull();
+  });
+});
+
+describe('signing in inside the app', () => {
+  const RUN = 'https://prod1.datalayer.run';
+  const json = (sent: Sent | undefined) => JSON.parse(String(sent?.init.body)) as Record<string, string>;
+
+  it('posts a handle or email and password with the request of the app, for a code', async () => {
+    const { sent, fetcher } = server(() => [200, { code: 'the-code', iss: ISSUER }]);
+    const code = await passwordCode(RUN, CONFIG, { identifier: '  eric ', password: ' pass word ' }, 'the-challenge', fetcher);
+    expect(code).toBe('the-code');
+    expect(sent[0]?.url).toBe('https://prod1.datalayer.run/api/iam/v1/oauth2/mobile/password');
+    expect(sent[0]?.init.method).toBe('POST');
+    expect(json(sent[0])).toEqual({
+      client_id: CONFIG.clientId,
+      redirect_uri: 'ai.datalayer.mobile://oauth',
+      code_challenge: 'the-challenge',
+      code_challenge_method: 'S256',
+      scope: 'openid profile email offline_access',
+      identifier: 'eric',
+      // A password is sent as typed: its spaces are its own.
+      password: ' pass word ',
+      mfa_code: ''
+    });
+    // Nothing of the credentials in the URL.
+    expect(sent[0]?.url).not.toContain('?');
+  });
+
+  it('keeps the refusal IAM gives: a wrong password, a second factor asked, then a wrong code', async () => {
+    const refusal = (body: unknown) => passwordCode(RUN, CONFIG, { identifier: 'eric', password: 'x' }, 'c', server(() => [401, body]).fetcher).catch(e => e);
+    const wrong = await refusal({ error: 'invalid_grant', error_description: 'That handle or email and password do not match.' });
+    expect(wrong).toBeInstanceOf(OAuthFailure);
+    expect(signInOutcomeOf(wrong)).toEqual({ needsMfaCode: false, problem: 'That handle or email and password do not match.' });
+    expect(signInOutcomeOf(await refusal({ error: 'mfa_required', error_description: 'Enter the code.' }))).toEqual({
+      needsMfaCode: true,
+      problem: ''
+    });
+    expect(signInOutcomeOf(await refusal({ error: 'invalid_mfa_code', error_description: 'That code is not the one expected.' }))).toEqual({
+      needsMfaCode: true,
+      problem: 'That code is not the one expected.'
+    });
+    const unreachable = await passwordCode(RUN, CONFIG, { identifier: 'e', password: 'x' }, 'c', server(() => [503, null]).fetcher).catch(e => e);
+    expect(unreachable.message).toBe('Datalayer could not sign you in (503).');
+  });
+
+  it('sends the authenticator code once asked', async () => {
+    const { sent, fetcher } = server(() => [200, { code: 'c' }]);
+    await passwordCode(RUN, CONFIG, { identifier: 'ada', password: 'p', mfaCode: ' 123456 ' }, 'ch', fetcher);
+    expect(json(sent[0]).mfa_code).toBe('123456');
+  });
+
+  it('refuses an answer without a code', async () => {
+    const failure = await passwordCode(RUN, CONFIG, { identifier: 'e', password: 'p' }, 'c', server(() => [200, {}]).fetcher).catch(e => e);
+    expect(failure).toBeInstanceOf(OAuthFailure);
+  });
+
+  it('opens each provider at IAM, never at the web application', () => {
+    expect(SIGN_IN_PROVIDERS).toEqual(['github', 'google', 'linkedin']);
+    expect(providerAuthorizationEndpoint(RUN, 'github')).toBe('https://prod1.datalayer.run/api/iam/v1/oauth2/mobile/github/authorize');
+    for (const provider of SIGN_IN_PROVIDERS) {
+      expect(providerAuthorizationEndpoint(RUN, provider)).not.toMatch(/datalayer\.ai/);
+    }
+    expect(PROVIDER_BUTTONS.map(button => button.label)).toEqual([
+      'Continue with GitHub',
+      'Continue with Google',
+      'Continue with LinkedIn'
+    ]);
+  });
+
+  it('makes a PKCE pair whose challenge is the S256 of its verifier', async () => {
+    const bytes = Uint8Array.from({ length: 64 }, (_, i) => (i * 37) % 256);
+    const sha256 = async (input: string) => createHash('sha256').update(input).digest('base64');
+    const { verifier, challenge } = await pkceOf(bytes, sha256);
+    expect(verifier).toMatch(/^[A-Za-z0-9_-]{64}$/);
+    expect(challenge).toBe(createHash('sha256').update(verifier).digest('base64url'));
+    await expect(pkceOf(new Uint8Array(16), sha256)).rejects.toThrow('43');
+  });
+
+  it('says a refused token, or an unreachable server, in a sentence', () => {
+    expect(signInOutcomeOf(new Problem('unauthenticated', '', 401)).problem).toBe('That did not sign you in. Check and try again.');
+    expect(signInOutcomeOf(new Error('Network request failed')).problem).toBe('Network request failed');
+    expect(signInOutcomeOf('nope').problem).toBe('Something went wrong.');
   });
 });
 

@@ -128,7 +128,7 @@ describe('realtime', () => {
   });
 });
 
-describe('interim sign-in', () => {
+describe('token sign-in', () => {
   const of = (profile: string) =>
     environmentOf({
       EXPO_PUBLIC_DATALAYER_RUN_URL: 'https://prod1.datalayer.run',
@@ -138,10 +138,10 @@ describe('interim sign-in', () => {
     });
 
   it.each(['staging', 'production'])('is not offered by a %s build', profile => {
-    expect(of(profile).allowsInterimSignIn).toBe(false);
+    expect(of(profile).allowsTokenSignIn).toBe(false);
   });
 
   it.each(['development', 'e2e', 'preview'])('is offered by a %s build', profile => {
-    expect(of(profile).allowsInterimSignIn).toBe(true);
+    expect(of(profile).allowsTokenSignIn).toBe(true);
   });
 });

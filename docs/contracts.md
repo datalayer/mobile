@@ -53,10 +53,17 @@ otherwise. *Result* is what the drill got.
 | The phone's client document (no token) | `GET /api/iam/v1/oauth/clients/datalayer-mobile.json` | 200: its `client_id` is that URL; redirects `ai.datalayer.mobile://oauth`, `ai.datalayer.mobile.preview://oauth`, `ai.datalayer.mobile.dev://oauth` |
 | Credits before anything metered | `GET /api/iam/v1/usage/credits` | 200, `credits.credits` read |
 
-The browser half of *Sign in with Datalayer* (authorize, code exchange,
-refresh rotation, revocation) needs a device or a browser: it is held by IAM's
-`test_oauth_mobile_client.py` and the phone's `oauth.test.ts`, and is drilled
-on a physical device, which is outside this round.
+The OAuth sign-in (code exchange, refresh rotation, revocation) needs a
+device or a browser: it is held by IAM's `test_oauth_mobile_client.py` and the
+phone's `oauth.test.ts`, and is drilled on a physical device, which is outside
+this round. Since 24 October 2026 the phone signs in inside the app
+(`app/sign-in.tsx`): a handle or email and password posted to
+`POST /api/iam/v1/oauth2/mobile/password`, or GitHub, Google and LinkedIn in a
+browser tab opened at `GET /api/iam/v1/oauth2/mobile/{provider}/authorize`;
+both answer a code for the mobile client, redeemed at the token endpoint
+(IAM's `test_oauth_mobile_in_app_sign_in.py`). *Sign in with Datalayer* (the
+web's sign-in through `/oauth/authorize`) is gone from the app. Not exercised
+against a deployed IAM yet: the routes ship with the next IAM image.
 
 ### Agents
 

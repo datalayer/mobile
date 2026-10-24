@@ -70,9 +70,9 @@ Datalayer charges nothing in the app: there are no in-app purchases, subscriptio
 **Text for the consoles** (Play Console → *App content → App access* → *All or some functionality is restricted* → add the instructions with the username and password; App Store Connect → the version → *App Review Information* → *Sign-in required*, username and password, and the same text in *Notes*):
 
 > Sign in:
-> 1. Open the app and tap **Sign in with Datalayer**. The Datalayer sign-in page opens in the system browser.
-> 2. Enter the username (handle) and password given with these notes and press **Sign in**. Do not use the GitHub, Google or other buttons the page may show: the review account signs in with its username and password only.
-> 3. The browser returns to the app, signed in.
+> 1. Open the app. The sign-in screen is the app's own.
+> 2. Enter the username (handle) and password given with these notes in **Handle or email** and **Password**, and press **Sign in**. Do not use *Continue with GitHub*, *Google* or *LinkedIn*: the review account signs in with its username and password only.
+> 3. The app opens on the Inbox, signed in.
 >
 > What you will see:
 > - **Inbox**: one approval waiting. *Mail assistant* asks to send a mail to team@example.com ("Weekly update"). Open it to see the whole request: who asks, the tool and its arguments. **Approve** and **Reject** both work. The mail sender is a fake one: nothing is sent, whichever you choose. Once answered, the approval leaves the Inbox.
@@ -88,7 +88,7 @@ Datalayer charges nothing in the app: there are no in-app purchases, subscriptio
 | Question | Draft answer | Why |
 |---|---|---|
 | Export compliance: does the app use encryption? | It uses only encryption exempt from export documentation (HTTPS through the operating system); `ITSAppUsesNonExemptEncryption` is `false` | `app.config.ts`: `ios.config.usesNonExemptEncryption: false`; the app implements no cryptography of its own |
-| Sign-in (Guideline 4.8) | The app signs in to a Datalayer account only (decided 19 October 2026): its sign-in screen has one button, *Sign in with Datalayer*, and no third-party login button; 4.8 does not apply to an app that uses only the company's own account system | The button opens Datalayer's web sign-in in the system browser (OAuth with PKCE). That page can still list third-party providers (GitHub, Google, LinkedIn and others) when the browser is not signed in, and the app has no way to ask for the Datalayer account alone yet; until the web sign-in can hide them for the app, a reviewer may still see them there. |
+| Sign-in (Guideline 4.8) | **Open again (24 October 2026).** The user decided that day that the app signs in inside itself, with a Datalayer handle or email and password and with *Continue with GitHub*, *Google* and *LinkedIn*; the 19 October answer (Datalayer-only, one *Sign in with Datalayer* button) no longer holds. An app that offers a third-party or social login must also offer an equivalent privacy-preserving login (in practice *Sign in with Apple*), unless an exception applies. To decide before any iOS submission: add *Sign in with Apple*, or hide the three providers on iOS | iOS is off for now (Android only); Google Play has no such rule. |
 | Account deletion (Guideline 5.1.1(v)) | In the app: *Settings → Delete account*, a request to IAM with a 30-day grace period, also on the web | Decided by the user 16 October 2026 |
 | User-generated content (Guideline 1.2) | No public content; a person's applications and conversations are private to their account and the people it is shared with | — |
 | Content rights | No third-party content is shown outside what the person's own applications produce | — |
@@ -117,7 +117,7 @@ Taken on real release builds, with the review account, never with customer data:
 
 Suggested set: Inbox with one approval; the full approval with *Approve*/*Reject*; Agents; an application's Activity; a conversation streaming; *In your name*; Settings with notifications.
 
-**Taken by CI.** The `store-screenshots` job of the Check workflow runs `.maestro/store/screenshots.yaml` on the e2e build, on a 1080 × 1920 (9:16) emulator with the status bar in demo mode, as the test account, on every push to `main` and when Check is dispatched. It shows the sign-in, the Inbox with a waiting mail, the complete request, the confirmation, Agents, Activity, an application, a conversation streaming and answered, and Settings; the approval it creates is rejected before it ends. The PNGs alone, through the token scrub, are the run's `store-screenshots` artifact (`gh run download <run> -n store-screenshots`). The e2e build offers the token sign-in a store build does not: the sign-in screenshot shows *Use an API token instead*. Check each image before it goes to a store.
+**Taken by CI.** The `store-screenshots` job of the Check workflow runs `.maestro/store/screenshots.yaml` on the e2e build, on a 1080 × 1920 (9:16) emulator with the status bar in demo mode, as the test account, on every push to `main` and when Check is dispatched. It shows the sign-in, the Inbox with a waiting mail, the complete request, the confirmation, Agents, Activity, an application, a conversation streaming and answered, and Settings; the approval it creates is rejected before it ends. The PNGs alone, through the token scrub, are the run's `store-screenshots` artifact (`gh run download <run> -n store-screenshots`). The e2e build offers the token sign-in a store build does not: the sign-in screenshot shows *Use an API token instead* under the handle-and-password form and above the three providers. Check each image before it goes to a store.
 
 ## Left with the account holders
 
@@ -125,4 +125,4 @@ Suggested set: Inbox with one approval; the full approval with *Approve*/*Reject
 - signing and submit credentials in EAS (the Android upload key the first versions were signed with, the iOS distribution certificate and profile, the App Store Connect API key, the Play service account), and the App Store Connect app id and Apple Team id in `eas.json` (placeholders until then);
 - the review account's handle and password in both consoles, and a waiting approval on the day of review (a new one when the last reviewer answered it; the account and its application exist);
 - the screenshots on real builds, and the submission;
-- confirming the in-app **Report** above as Google's AI-generated content answer; and, for Apple 4.8, a web sign-in that shows the Datalayer account alone when the app opens it.
+- confirming the in-app **Report** above as Google's AI-generated content answer; and, for Apple 4.8, *Sign in with Apple* or no third-party provider on iOS (see the Apple answers).

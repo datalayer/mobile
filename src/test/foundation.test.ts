@@ -21,7 +21,7 @@ describe('the environment', () => {
     expect(runUrlProblem(undefined)).toMatch(/not set/);
   });
 
-  it('offers the interim sign-in to development builds only', () => {
+  it('offers the pasted-token sign-in to development builds only', () => {
     const of = (profile: string) =>
       environmentOf({
         EXPO_PUBLIC_DATALAYER_RUN_URL: 'https://prod1.datalayer.run/',
@@ -29,11 +29,11 @@ describe('the environment', () => {
         EXPO_PUBLIC_DATALAYER_MCP_URL: 'https://mcp.datalayer.run/mcp',
         EXPO_PUBLIC_BUILD_PROFILE: profile
       });
-    expect(of('development').allowsInterimSignIn).toBe(true);
-    expect(of('e2e').allowsInterimSignIn).toBe(true);
-    expect(of('preview').allowsInterimSignIn).toBe(true);
-    expect(of('staging').allowsInterimSignIn).toBe(false);
-    expect(of('production').allowsInterimSignIn).toBe(false);
+    expect(of('development').allowsTokenSignIn).toBe(true);
+    expect(of('e2e').allowsTokenSignIn).toBe(true);
+    expect(of('preview').allowsTokenSignIn).toBe(true);
+    expect(of('staging').allowsTokenSignIn).toBe(false);
+    expect(of('production').allowsTokenSignIn).toBe(false);
     expect(of('unknown').profile).toBe('production');
     expect(of('development').runUrl).toBe('https://prod1.datalayer.run');
     // The MCP gateway is published on its own host.

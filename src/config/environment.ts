@@ -34,8 +34,12 @@ export type Environment = {
    */
   gatewayUrl: string;
   profile: BuildProfile;
-  /** Whether the interim sign-in (handle and password) may be offered. */
-  allowsInterimSignIn: boolean;
+  /**
+   * Whether a pasted API token may sign in: development, e2e and preview
+   * builds only. Handle and password, GitHub, Google and LinkedIn are every
+   * build's (the user, 24 October 2026).
+   */
+  allowsTokenSignIn: boolean;
 };
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '10.0.2.2']);
@@ -84,7 +88,7 @@ export function environmentOf(variables: Record<string, string | undefined>): En
     runtimesUrl: (runtimes as string).replace(/\/+$/, ''),
     gatewayUrl: (gateway as string).replace(/\/+$/, '').replace(/\/mcp$/, ''),
     profile,
-    allowsInterimSignIn: profile !== 'staging' && profile !== 'production'
+    allowsTokenSignIn: profile !== 'staging' && profile !== 'production'
   };
 }
 

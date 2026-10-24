@@ -6,7 +6,13 @@
 /**
  * Datalayer Mobile's OAuth contract with IAM: a public
  * client, Authorization Code with PKCE S256, refresh rotation, RFC 7009
- * revocation. Pure: the browser step lives in `browserSignIn`.
+ * revocation. Pure: the browser step lives in `browserSignIn`, the random
+ * bytes and the digest in `pkce`.
+ *
+ * Every way in ends with a code for this client, bound to the phone's PKCE
+ * challenge and redeemed at the token endpoint: a handle or email and password
+ * typed in the app (`passwordCode`), or GitHub, Google or LinkedIn in a
+ * browser tab opened straight at IAM (`providerAuthorizationEndpoint`).
  */
 
 /** IAM's discovery, under the services' run URL. */
@@ -16,6 +22,22 @@ export const DISCOVERY_PATH = '/api/iam/v1/oauth/.well-known/openid-configuratio
 export const MOBILE_CLIENT_PATH = '/clients/datalayer-mobile.json';
 
 export const SCOPES = ['openid', 'profile', 'email', 'offline_access'] as const;
+
+/** IAM's in-app sign-in, under the services' run URL. */
+export const MOBILE_SIGN_IN_PATH = '/api/iam/v1/oauth2/mobile';
+
+/** The providers the sign-in screen offers, each through IAM. */
+export const SIGN_IN_PROVIDERS = ['github', 'google', 'linkedin'] as const;
+
+export type SignInProvider = (typeof SIGN_IN_PROVIDERS)[number];
+
+export type PasswordSignIn = {
+  /** A handle or an email. */
+  identifier: string;
+  password: string;
+  /** The authenticator's code, once IAM answered `mfa_required`. */
+  mfaCode?: string;
+};
 
 /** Refresh this long before the access token expires. */
 const EXPIRY_MARGIN_MS = 60_000;
@@ -78,6 +100,67 @@ export async function discover(runUrl: string, applicationId: string, fetcher: t
     revocationEndpoint: field('revocation_endpoint'),
     redirectUri: redirectUriOf(applicationId)
   };
+}
+
+/** Where the browser tab opens for a provider: IAM, which sends it on to the provider's consent. */
+export function providerAuthorizationEndpoint(runUrl: string, provider: SignInProvider): string {
+  return `${runUrl}${MOBILE_SIGN_IN_PATH}/${provider}/authorize`;
+}
+
+/**
+ * A handle or email and password, posted to IAM over HTTPS, for a code bound
+ * to `codeChallenge`. The password goes in this one request body and is kept
+ * nowhere. Refusals keep IAM's code: `invalid_grant`, `mfa_required`,
+ * `invalid_mfa_code`.
+ */
+export async function passwordCode(
+  runUrl: string,
+  config: OAuthConfig,
+  input: PasswordSignIn,
+  codeChallenge: string,
+  fetcher: typeof fetch = fetch
+): Promise<string> {
+  const response = await fetcher(`${runUrl}${MOBILE_SIGN_IN_PATH}/password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({
+      client_id: config.clientId,
+      redirect_uri: config.redirectUri,
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256',
+      scope: SCOPES.join(' '),
+      identifier: input.identifier.trim(),
+      password: input.password,
+      mfa_code: input.mfaCode?.trim() ?? ''
+    })
+  });
+  const body = ((await response.json().catch(() => ({}))) ?? {}) as Record<string, unknown>;
+  if (!response.ok) {
+    const code = typeof body.error === 'string' ? body.error : `http_${response.status}`;
+    const description =
+      typeof body.error_description === 'string' ? body.error_description : `Datalayer could not sign you in (${response.status}).`;
+    throw new OAuthFailure(code, description);
+  }
+  if (typeof body.code !== 'string' || !body.code) {
+    throw new OAuthFailure('invalid_response', 'IAM answered without a code.');
+  }
+  return body.code;
+}
+
+/** RFC 7636's unreserved alphabet, 64 letters so a byte maps without bias. */
+const VERIFIER_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+
+/** A PKCE pair from 64 random bytes and a SHA-256 that answers base64. */
+export async function pkceOf(
+  randomBytes: Uint8Array,
+  sha256Base64: (input: string) => Promise<string>
+): Promise<{ verifier: string; challenge: string }> {
+  if (randomBytes.length < 43) {
+    throw new Error('A PKCE verifier needs at least 43 random bytes.');
+  }
+  const verifier = Array.from(randomBytes, byte => VERIFIER_ALPHABET[byte & 63]).join('');
+  const challenge = (await sha256Base64(verifier)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return { verifier, challenge };
 }
 
 export function credentialOf(body: Record<string, unknown>, now: number): Credential {

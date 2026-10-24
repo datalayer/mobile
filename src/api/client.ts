@@ -18,7 +18,7 @@ export type ClientOptions = {
 export type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
-  /** A token to use instead of the session's: the interim sign-in checks one before keeping it. */
+  /** A token to use instead of the session's: the token sign-in checks one before keeping it. */
   token?: string;
   signal?: AbortSignal;
   /** This request's limit instead of the client's: a call the server answers only once its work is done. */
