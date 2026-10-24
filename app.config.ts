@@ -57,7 +57,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     name: variant.name,
     slug: EXPO_SLUG,
     owner: EXPO_OWNER,
-    version: '0.0.1',
+    version: '0.0.2',
     // The second is the OAuth redirect's private scheme, named by the build's id (RFC 8252 §7.1).
     scheme: [variant.scheme, variant.id],
     icon: variant.icon,
