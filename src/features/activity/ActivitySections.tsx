@@ -7,7 +7,6 @@ import { useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
 import {
   ACTIVITY_WORDS,
-  entrySaid,
   type AppActivity,
   scheduledSays,
   sessionAgentSaid,

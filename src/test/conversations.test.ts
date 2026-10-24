@@ -164,7 +164,8 @@ function fakeSessions(plays: Played[], described: Record<string, unknown> | 'gon
     if (typeof next === 'function') return next(options);
     for (const event of next) options.onEvent(event);
   };
-  const sessions: AppSessionsClient = {
+  // What a conversation calls, and nothing else of the client: a call to anything more fails as undefined.
+  const sessions = {
     start: async (start, options) => { calls.push(['start', start]); return play(options); },
     message: async (uid, text, options) => { calls.push(['message', uid, text]); return play(options); },
     changeSettings: async (uid, values, options) => { calls.push(['settings', uid, values]); return play(options); },
@@ -180,7 +181,7 @@ function fakeSessions(plays: Played[], described: Record<string, unknown> | 'gon
       calls.push(['messages', uid]);
       return [{ id: 'u0', role: 'user', content: 'Earlier', createdAt: new Date() }, { id: 'a0', role: 'assistant', content: 'Answered earlier', createdAt: new Date() }];
     }
-  };
+  } as Partial<AppSessionsClient> as AppSessionsClient;
   return { sessions, calls };
 }
 

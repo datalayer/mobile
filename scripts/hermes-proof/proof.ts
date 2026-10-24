@@ -19,7 +19,6 @@ import {
   approvalCardOf,
   deploymentEventLine,
   deploymentEventOf,
-  entrySaid,
   isCreatingAgent,
   resetCountsOf,
   resetLines,
@@ -35,6 +34,7 @@ import {
   protocolDisplayOf,
   reduceConversation,
   RunMeter,
+  sessionStateSaid,
   shieldDisplayFixtures,
   type AgUiEvent
 } from '@datalayer/agent-runtimes/lib/portable';
@@ -143,7 +143,7 @@ export function proofLines(): ProofLine[] {
       if (!done) {
         throw new Error('the fixture has no completed session');
       }
-      return `completed: ${entrySaid(done)}`;
+      return `completed: ${done.uid} ${sessionStateSaid(done)}`;
     }),
     check('agent-runtimes: lifecycle', () => {
       expect(stateChangeBody(3, 'paused').version === 3, 'the pause body lost its version');
