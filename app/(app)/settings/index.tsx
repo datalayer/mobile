@@ -6,6 +6,7 @@
 import * as Application from 'expo-application';
 import Constants from 'expo-constants';
 import { useRouter, type Href } from 'expo-router';
+import * as Updates from 'expo-updates';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -14,6 +15,7 @@ import { Picker } from '../../../src/components/native';
 import { Button, Screen, Text } from '../../../src/components/primitives';
 import { Row as LinkRow, SectionTitle } from '../../../src/components/states';
 import { environment } from '../../../src/config/environment';
+import { runtimeVersionOf } from '../../../src/config/runtimeVersion';
 import { STORE_LINKS } from '../../../src/config/resources';
 import { pushSupported, unregisterPush } from '../../../src/push/push';
 import { type ColorMode, useTheme } from '../../../src/theme/ThemeProvider';
@@ -97,7 +99,7 @@ export default function Settings() {
       <Row label="Build profile" value={env.profile} />
       <Row label="Variant" value={String(Constants.expoConfig?.extra?.variant ?? 'unknown')} />
       <Row label="Version" value={`${Application.nativeApplicationVersion ?? '?'} (${Application.nativeBuildVersion ?? '?'})`} />
-      <Row label="Runtime" value={String(Constants.expoConfig?.runtimeVersion ?? 'unknown')} />
+      <Row label="Runtime" value={runtimeVersionOf(Updates.runtimeVersion, Constants.expoConfig?.runtimeVersion)} />
       <SectionTitle>Help and privacy</SectionTitle>
       <LinkRow
         title="Privacy policy"
