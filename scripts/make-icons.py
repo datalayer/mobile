@@ -1,12 +1,17 @@
 # Copyright (c) 2026 Datalayer, Inc.
 # Distributed under the terms of the Modified BSD License.
 
-"""Draws the app's icon, Android adaptive icon and splash image from the Datalayer
-eyes (Primer Addons' `loopEyes`, the same geometry the app and the web draw).
+"""Draws the app's icon and Android adaptive icon from the Datalayer eyes (Primer
+Addons' `loopEyes`, the same geometry the app and the web draw), and the splash
+image from the Datalayer mark, `assets/datalayer-mark.svg` (the icons
+package's `data1/datalayer.svg`): the launch screen shows the logo (the user,
+25 October 2026). The splash is a PNG because Android draws it natively,
+before the app's code runs, and Expo's splash takes a PNG only.
 
-Usage: python scripts/make-icons.py   (writes assets/*.png; needs Pillow)
+Usage: python scripts/make-icons.py   (writes assets/*.png; needs Pillow and Inkscape)
 """
 
+import subprocess
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -61,9 +66,23 @@ def main() -> None:
     eyes(1024, 520, INK, WHITE, None).save(ASSETS / "adaptive-icon.png")
     # Android 13+ themed (monochrome) icon: the shape only.
     eyes(1024, 520, WHITE, (0, 0, 0, 0), None).save(ASSETS / "adaptive-icon-monochrome.png")
-    # The splash image, light and dark, on a transparent square.
-    eyes(512, 400, INK, WHITE, None).save(ASSETS / "splash-icon.png")
-    eyes(512, 400, INK_DARK, BLACK, None).save(ASSETS / "splash-icon-dark.png")
+    # The splash image, light and dark: the Datalayer mark, green on a transparent
+    # square, reads on both backgrounds (app.config.ts).
+    for name in ("splash-icon.png", "splash-icon-dark.png"):
+        subprocess.run(
+            [
+                "inkscape",
+                str(ASSETS / "datalayer-mark.svg"),
+                "--export-type=png",
+                f"--export-filename={ASSETS / name}",
+                "-w",
+                "1024",
+                "-h",
+                "1024",
+            ],
+            check=True,
+            capture_output=True,
+        )
 
 
 if __name__ == "__main__":
