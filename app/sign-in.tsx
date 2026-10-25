@@ -9,6 +9,7 @@ import { useSession } from '../src/auth/SessionProvider';
 import type { SignInProvider } from '../src/auth/oauth';
 import { PROVIDER_BUTTONS, signInOutcomeOf } from '../src/auth/signInWords';
 import { Button, Screen, Text } from '../src/components/primitives';
+import { PasswordToggle } from '../src/components/PasswordToggle';
 import { Wordmark } from '../src/identity/Wordmark';
 import { environment } from '../src/config/environment';
 import { SPACE, useNativeTheme } from '../src/theme/tokens';
@@ -27,6 +28,7 @@ export default function SignIn() {
   const [way, setWay] = useState<Way>('password');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
   const [needsMfaCode, setNeedsMfaCode] = useState(false);
   const [token, setToken] = useState('');
@@ -84,19 +86,26 @@ export default function SignIn() {
             onChangeText={setIdentifier}
             style={input}
           />
-          <TextInput
-            accessibilityLabel="Password"
-            placeholder="Password"
-            placeholderTextColor={colors.muted}
-            secureTextEntry
-            textContentType="password"
-            autoComplete="current-password"
-            importantForAutofill="yes"
-            value={password}
-            onChangeText={setPassword}
-            onSubmitEditing={needsMfaCode ? undefined : submit}
-            style={input}
-          />
+          <View>
+            <TextInput
+              accessibilityLabel="Password"
+              placeholder="Password"
+              placeholderTextColor={colors.muted}
+              secureTextEntry={!passwordVisible}
+              textContentType="password"
+              autoComplete="current-password"
+              importantForAutofill="yes"
+              value={password}
+              onChangeText={setPassword}
+              onSubmitEditing={needsMfaCode ? undefined : submit}
+              style={[input, styles.withToggle]}
+            />
+            <PasswordToggle
+              visible={passwordVisible}
+              onToggle={() => setPasswordVisible(visible => !visible)}
+              color={colors.muted}
+            />
+          </View>
           {needsMfaCode ? (
             <>
               <Text tone="muted">Enter the code from your authenticator app.</Text>
@@ -179,5 +188,7 @@ const styles = StyleSheet.create({
   fields: { gap: SPACE.sm },
   providers: { gap: SPACE.sm },
   or: { textAlign: 'center' },
-  input: { minHeight: 48, borderWidth: 1, paddingHorizontal: SPACE.md, fontSize: 17 }
+  input: { minHeight: 48, borderWidth: 1, paddingHorizontal: SPACE.md, fontSize: 17 },
+  // Room for the eye at the field's end.
+  withToggle: { paddingRight: 48 }
 });
