@@ -23,26 +23,31 @@ PAPER = (232, 245, 240)
 FONT_BOLD = "/usr/share/fonts/truetype/roboto/unhinted/RobotoTTF/Roboto-Bold.ttf"
 FONT_MEDIUM = "/usr/share/fonts/truetype/roboto/unhinted/RobotoTTF/Roboto-Medium.ttf"
 
-# (output name, capture, title, subtitle, rows to drop from the capture: (from, to) or None)
+# (output name, capture, title, subtitle, a cut: (from, to, tail) or None — the rows from..to of the capture
+# are dropped and what follows pulled up to the tab bar; `tail` rows at the end are whited out, the card the
+# bar cut through in the capture, which would otherwise end in mid-air above the bar)
 SHOTS = [
     ("01-inbox", "store-02-inbox", "Every approval,\nin your pocket", "What your agents ask before they act, oldest first.", None),
     ("02-approval", "store-03-approval", "The whole request,\nbefore you answer", "Who asks, why, and exactly what it would do.", None),
     ("03-decide", "store-04-decide", "Approve or reject\nin one tap", "A note if you want one. The agent carries on, or stops.", None),
     # The first card of the Agents list is the e2e account's test application: dropped.
-    ("04-agents", "store-05-agents", "Your applications,\nlive", "Everything you keep running on Datalayer, and what it does.", (384, 688)),
+    ("04-agents", "store-05-agents", "Your applications,\nlive", "Everything you keep running on Datalayer, and what it does.", (384, 688, 129)),
     ("05-settings", "store-10-settings", "In your name,\non your terms", "Who your applications may reach for you. Notifications carry no content.", None),
 ]
 
 
-def splice(image: Image.Image, drop: tuple[int, int] | None) -> Image.Image:
+def splice(image: Image.Image, drop: tuple[int, int, int] | None) -> Image.Image:
     if not drop:
         return image
+    tail = drop[2]
     footer_top = image.height - 191  # The tab bar (white from row 1729 of 1920), which stays at the bottom.
     top = image.crop((0, 0, image.width, drop[0]))
     rest = image.crop((0, drop[1], image.width, footer_top))
     out = Image.new("RGB", image.size, (255, 255, 255))
     out.paste(top, (0, 0))
     out.paste(rest, (0, drop[0]))
+    if tail:
+        ImageDraw.Draw(out).rectangle((0, drop[0] + rest.height - tail, image.width, footer_top), fill=(255, 255, 255))
     out.paste(image.crop((0, footer_top, image.width, image.height)), (0, footer_top))
     return out
 
