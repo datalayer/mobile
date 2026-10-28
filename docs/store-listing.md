@@ -30,12 +30,47 @@ The app `ai.datalayer.mobile` is already in Play Console, on the **internal test
 |---|---|
 | App name (30) | `Datalayer` |
 | Short description (80) | `Answer your agents' approvals and follow your applications from your phone.` (75 characters; the earlier wording with *running* was 83, over the limit) |
-| Full description (4,000) | The *Description* under *Words* below, pasted as plain text (the console takes no Markdown: drop the `>` and the `**`, keep the dashes as a list) |
+| Full description (4,000) | The plain text in *Full description* right below this table (2,592 characters, written 28 October 2026): paste it whole; the console takes no Markdown, and the block has none |
 | App icon (512 × 512 PNG, under 1 MB) | `visuals/app-icon-512.png` — the Datalayer mark on white (the Play icon is square; Google rounds it) |
 | Feature graphic (1024 × 500 PNG or JPEG, under 15 MB) | `visuals/feature-graphic-1024x500.png` |
 | Phone screenshots (2 to 8; 16:9 or 9:16; 320–3840 px) | The `store-screenshots` artifact of the last green Check run on `main` (`gh run download <run> -n store-screenshots`; the run of 26 October 2026, 40282980922, has it): 1080 × 1920 PNGs. Use, in this order: sign-in, the Inbox with a waiting mail, the complete request, Agents, Activity, a conversation, Settings. Look at each before uploading; the sign-in picture of the e2e build shows *Use an API token instead*, which the store build does not have — crop it or take the store build's own |
 | 7-inch and 10-inch tablet screenshots | None: the app is a phone app on Android (`android.supportsTablet` is not set); leave empty |
 | Video | None |
+
+#### Full description
+
+Plain text for the console's *Full description* field (2,592 of 4,000 characters). The capitalised lines are the section titles (the console has no headings); every claim is shipped in v0.0.3 — remove any a later release drops.
+
+```text
+Datalayer puts the agents and applications you run on Datalayer in your pocket.
+
+Your agents work for you on Datalayer: they read your documents, call tools, talk to the companies and services you connected, and run the applications you built in the Studio. Some of what they do needs your word first. Datalayer asks you on your phone, shows you the whole request, and lets you answer in one tap - wherever you are.
+
+APPROVALS, THE WHOLE REQUEST IN VIEW
+When an agent needs your consent - to send an email, run a tool, reach a company in your name - the request lands in your Inbox, oldest first. You see who asks, what it will do, with which arguments, and for which application, before you answer. Approve or Reject, and the agent carries on or stops. Nothing runs on your behalf without you.
+
+YOUR AGENTS AND APPLICATIONS, LIVE
+The Agents tab lists the applications and agents you keep running on Datalayer, live or paused, with what each one is doing right now. Open one to read its details, the protocols it may speak, and the conversations it has had.
+
+ACTIVITY, WITH THE TIMES
+The Activity tab tells you what each application did, is doing, and has scheduled, with the time of every step - the tools it called, the answers it gave, the approvals it asked for.
+
+CONVERSATIONS YOU CAN FOLLOW AND STOP
+Talk to an application or an agent from your phone. Follow its answer as it streams, stop it when you have read enough, and pick a conversation up where you left it. Under every complete answer, Report lets you say when an answer is offensive, harmful, wrong or misleading.
+
+IN YOUR NAME
+See the companies and services your applications act for you at, and end that at any time from Settings.
+
+NOTIFICATIONS, OPTIONAL AND PRIVATE
+Turn notifications on to hear about a new approval or a finished run. A notification carries no content: tapping it opens the item in the app and reads it again, signed in as you.
+
+YOUR ACCOUNT, YOUR DATA
+Datalayer works with a Datalayer account: sign in with your handle or email and password, or continue with GitHub, Google or LinkedIn. Your applications and conversations are private to your account and the people you share them with. You can delete your account from Settings; the request is honored after a 30-day grace period.
+
+Building applications stays on the web, at datalayer.ai: compose agents with tools, data and rules in the Studio, ship them, and follow them from this app.
+
+Datalayer is free to download and contains no ads and no in-app purchases. Learn more at https://datalayer.ai/docs/mobile-app and reach us at support@datalayer.ai.
+```
 
 ### Grow users → Store presence → Store settings
 
@@ -110,7 +145,7 @@ The app `ai.datalayer.mobile` is already in Play Console, on the **internal test
 
 **Apple keywords (100 characters at most):** agents,AI,approvals,automation,workflow,notebooks,Jupyter,MCP,assistant,runtime
 
-**Description (Apple and Google; 4,000 characters at most):**
+**Description (Apple and Google; 4,000 characters at most).** Google's full description is the longer plain text under *Google Play Console → Main store listing → Full description* above (28 October 2026); the short form below is Apple's, and the same claims:
 
 > Datalayer puts the agents and applications you run on Datalayer in your pocket.
 >
