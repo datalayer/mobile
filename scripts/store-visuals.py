@@ -5,8 +5,11 @@ scaled under it with rounded corners and running off the bottom edge.
 
 Usage: scripts/store-visuals.py <artifact dir> [<out dir>]
 Default out dir: visuals/screenshots. Needs Pillow and Roboto (Debian's
-fonts-roboto). Each output is 1080 x 1920 (9:16, every side >= 1080), as Play
-asks for promotion.
+fonts-roboto). The phone outputs are 1080 x 1920 (9:16, every side >= 1080,
+as Play asks for promotion); the tablet outputs are landscape, 16:9 — the
+caption at the left, the capture at the right — 1920 x 1080 for the 7-inch
+field (`tablet-7/`) and 2560 x 1440 for the 10-inch field (`tablet-10/`),
+since the app is a phone app and a tablet shows it the same.
 """
 import sys
 from pathlib import Path
@@ -34,14 +37,13 @@ SHOTS = [
 def splice(image: Image.Image, drop: tuple[int, int] | None) -> Image.Image:
     if not drop:
         return image
+    footer_top = image.height - 196  # The tab bar, which stays at the bottom.
     top = image.crop((0, 0, image.width, drop[0]))
-    rest = image.crop((0, drop[1], image.width, image.height))
+    rest = image.crop((0, drop[1], image.width, footer_top))
     out = Image.new("RGB", image.size, (255, 255, 255))
     out.paste(top, (0, 0))
     out.paste(rest, (0, drop[0]))
-    # The footer (tab bar) stays at the bottom: paste it back over the tail.
-    footer = image.crop((0, image.height - 196, image.width, image.height))
-    out.paste(footer, (0, image.height - 196))
+    out.paste(image.crop((0, footer_top, image.width, image.height)), (0, footer_top))
     return out
 
 
@@ -89,16 +91,64 @@ def frame(capture: Image.Image, title: str, subtitle: str) -> Image.Image:
     return canvas
 
 
+def frame_wide(capture: Image.Image, title: str, subtitle: str, size: tuple[int, int]) -> Image.Image:
+    """The tablet fields, landscape: the words on the left half, the capture on the right."""
+    width, height = size
+    k = height / 1080  # Everything scales with the 7-inch canvas.
+    canvas = Image.new("RGB", size, GREEN)
+    draw = ImageDraw.Draw(canvas)
+    bold = ImageFont.truetype(FONT_BOLD, int(84 * k))
+    medium = ImageFont.truetype(FONT_MEDIUM, int(38 * k))
+    margin = int(96 * k)
+    column = width // 2 - margin - int(40 * k)
+    y = int(300 * k)
+    for line in title.split("\n"):
+        draw.text((margin, y), line, font=bold, fill=INK)
+        y += int(100 * k)
+    y += int(20 * k)
+    words, line, lines = subtitle.split(), "", []
+    for word in words:
+        trial = f"{line} {word}".strip()
+        if draw.textlength(trial, font=medium) > column:
+            lines.append(line)
+            line = word
+        else:
+            line = trial
+    lines.append(line)
+    for text in lines:
+        draw.text((margin, y), text, font=medium, fill=INK)
+        y += int(52 * k)
+    # The capture: its top at the canvas' upper margin, its foot off the edge.
+    top = int(120 * k)
+    shot_w = int(560 * k)
+    shot = capture.resize((shot_w, int(capture.height * shot_w / capture.width)), Image.LANCZOS)
+    shot = rounded(shot, int(48 * k))
+    x = width - margin - shot_w
+    pad = Image.new("RGBA", (shot.width + 12, shot.height + 12), (0, 0, 0, 0))
+    ImageDraw.Draw(pad).rounded_rectangle((0, 0, pad.width - 1, pad.height - 1), radius=int(54 * k), fill=(0, 0, 0, 60))
+    canvas.paste(pad, (x - 6, top + 10), pad)
+    canvas.paste(shot, (x, top), shot)
+    return canvas
+
+
+TABLETS = {"tablet-7": (1920, 1080), "tablet-10": (2560, 1440)}
+
+
 def main() -> int:
     src = Path(sys.argv[1])
     out = Path(sys.argv[2]) if len(sys.argv) > 2 else Path(__file__).resolve().parent.parent / "visuals" / "screenshots"
     out.mkdir(parents=True, exist_ok=True)
+    for folder in TABLETS:
+        (out / folder).mkdir(exist_ok=True)
     for name, capture, title, subtitle, drop in SHOTS:
         image = Image.open(src / f"{capture}.png").convert("RGB")
         assert image.size == (W, H), (capture, image.size)
-        framed = frame(splice(image, drop), title, subtitle)
-        framed.save(out / f"{name}.png", optimize=True)
+        spliced = splice(image, drop)
+        frame(spliced, title, subtitle).save(out / f"{name}.png", optimize=True)
         print(out / f"{name}.png")
+        for folder, size in TABLETS.items():
+            frame_wide(spliced, title, subtitle, size).save(out / folder / f"{name}.png", optimize=True)
+            print(out / folder / f"{name}.png")
     return 0
 
 
