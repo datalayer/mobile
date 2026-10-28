@@ -29,7 +29,7 @@ The app `ai.datalayer.mobile` is already in Play Console, on the **internal test
 | Field | Value |
 |---|---|
 | App name (30) | `Datalayer` |
-| Short description (80) | `Answer your agents' approvals and follow your running applications from your phone.` (82 characters as written in *Words* below — **use** `Answer your agents' approvals and follow your applications from your phone.` (74), the short description of record from today) |
+| Short description (80) | `Answer your agents' approvals and follow your applications from your phone.` (75 characters; the earlier wording with *running* was 83, over the limit) |
 | Full description (4,000) | The *Description* under *Words* below, pasted as plain text (the console takes no Markdown: drop the `>` and the `**`, keep the dashes as a list) |
 | App icon (512 × 512 PNG, under 1 MB) | `visuals/app-icon-512.png` — the Datalayer mark on white (the Play icon is square; Google rounds it) |
 | Feature graphic (1024 × 500 PNG or JPEG, under 15 MB) | `visuals/feature-graphic-1024x500.png` |
@@ -104,7 +104,7 @@ The app `ai.datalayer.mobile` is already in Play Console, on the **internal test
 
 **Apple subtitle (30 characters at most):** Your agents, in your pocket
 
-**Google short description (80 characters at most):** Answer your agents' approvals and follow your applications from your phone. (74 characters; the earlier wording, with *running*, was 82 and over the limit)
+**Google short description (80 characters at most):** Answer your agents' approvals and follow your applications from your phone. (75 characters; the earlier wording, with *running*, was 83 and over the limit)
 
 **Apple promotional text (170 characters at most):** Approve or reject what your Datalayer agents ask, the whole request in view. Follow your applications' activity, and talk to them, wherever you are.
 
