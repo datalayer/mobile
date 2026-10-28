@@ -37,7 +37,7 @@ SHOTS = [
 def splice(image: Image.Image, drop: tuple[int, int] | None) -> Image.Image:
     if not drop:
         return image
-    footer_top = image.height - 196  # The tab bar, which stays at the bottom.
+    footer_top = image.height - 191  # The tab bar (white from row 1729 of 1920), which stays at the bottom.
     top = image.crop((0, 0, image.width, drop[0]))
     rest = image.crop((0, drop[1], image.width, footer_top))
     out = Image.new("RGB", image.size, (255, 255, 255))
