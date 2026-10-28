@@ -1,4 +1,4 @@
-# Store listing and review answers (draft)
+# Store listing and review answers
 
 What the App Store Connect and Google Play Console records of Datalayer
 say, drafted from the app as it is. The records, the ownership of the app, the
@@ -9,7 +9,81 @@ correct this file with what changed. Privacy and Data safety answers are in
 [`privacy-and-store.md`](privacy-and-store.md). The process is in the README's
 *Publish* section.
 
-Drafted 16 October 2026. On 19 October 2026 the app's name became **Datalayer**, on the phone and in both stores, which is what the store records were already titled, so no listing is renamed.
+Drafted 16 October 2026. On 19 October 2026 the app's name became **Datalayer**, on the phone and in both stores, which is what the store records were already titled, so no listing is renamed. **28 October 2026:** the app was tested on a real Android phone and goes to production on Google Play; the section below is the console's own order, with the value to type in each field. iOS stays off (the Apple answers remain drafts).
+
+## Google Play Console — the values to fill (28 October 2026)
+
+The app `ai.datalayer.mobile` is already in Play Console, on the **internal testing** track as a completed release (v0.0.3, submitted by the tag `v0.0.3` on 26 October 2026). Going to production is: fill every field below, then promote the internal release to Production and send it for review. The fields are listed as the console groups them; *where* is the console's path.
+
+### Dashboard → Set up your app
+
+| Field | Value |
+|---|---|
+| App name | `Datalayer` |
+| Default language | English (United States) — `en-US` |
+| App or game | App |
+| Free or paid | Free (there is nothing to buy in the app) |
+
+### Grow users → Store presence → Main store listing
+
+| Field | Value |
+|---|---|
+| App name (30) | `Datalayer` |
+| Short description (80) | `Answer your agents' approvals and follow your running applications from your phone.` (82 characters as written in *Words* below — **use** `Answer your agents' approvals and follow your applications from your phone.` (74), the short description of record from today) |
+| Full description (4,000) | The *Description* under *Words* below, pasted as plain text (the console takes no Markdown: drop the `>` and the `**`, keep the dashes as a list) |
+| App icon (512 × 512 PNG, under 1 MB) | `visuals/app-icon-512.png` — the Datalayer mark on white (the Play icon is square; Google rounds it) |
+| Feature graphic (1024 × 500 PNG or JPEG, under 15 MB) | `visuals/feature-graphic-1024x500.png` |
+| Phone screenshots (2 to 8; 16:9 or 9:16; 320–3840 px) | The `store-screenshots` artifact of the last green Check run on `main` (`gh run download <run> -n store-screenshots`; the run of 26 October 2026, 40282980922, has it): 1080 × 1920 PNGs. Use, in this order: sign-in, the Inbox with a waiting mail, the complete request, Agents, Activity, a conversation, Settings. Look at each before uploading; the sign-in picture of the e2e build shows *Use an API token instead*, which the store build does not have — crop it or take the store build's own |
+| 7-inch and 10-inch tablet screenshots | None: the app is a phone app on Android (`android.supportsTablet` is not set); leave empty |
+| Video | None |
+
+### Grow users → Store presence → Store settings
+
+| Field | Value |
+|---|---|
+| App category | Productivity |
+| Tags | Up to five of Google's: *Productivity*, *Tools*, *Business* |
+| Store listing contact details — Email | `support@datalayer.ai` (shown on the store page; the same address the app's error boxes name) |
+| Store listing contact details — Phone | Optional; leave empty |
+| Store listing contact details — Website | `https://datalayer.ai` |
+| External marketing | On (the default: Google may feature the app outside Play) |
+
+### Monitor and improve → Policy and programs → App content
+
+| Declaration | Value |
+|---|---|
+| Privacy policy | `https://datalayer.ai/privacy` (answers 200 to any request since the website's function change; checked 28 October 2026) |
+| Ads | **No**, the app contains no ads |
+| App access | **All or some functionality is restricted** → *Add new instructions*: name `Review account`, the review account's username and password (in the console only; see *Review notes* below), and the text of *Review notes* pasted in *Any other instructions* |
+| Content ratings | Start the questionnaire: email `support@datalayer.ai`; category **Utility, Productivity, Communication, or Other**; then **No** to every question (violence, sexuality, language, controlled substances, gambling, user-generated content of a sexual nature, user interaction with *does the app allow users to interact or exchange content* **No** — a person's conversations are with their own applications, and sharing is by invitation, not public —, location sharing **No**, personal information **No**, purchases **No**). Expected result: **Everyone** (ESRB), **PEGI 3**, and their equivalents |
+| Target audience and content — Target age | **18 and over** only; the app is not designed for children; **No** to *Could your app unintentionally appeal to children* |
+| News app | No |
+| COVID-19 contact tracing and status apps | No |
+| Data safety | Fill the form from `privacy-and-store.md` → *Google Play Data safety answers*. In short: **collects data: Yes**; **encrypted in transit: Yes**; **a way to request deletion: Yes** (`https://datalayer.ai/settings/profile/danger`, and *Settings → Delete account* in the app). Types: *Personal info → User IDs* (collected, required, app functionality and account management); *App activity → App interactions* (collected, required, app functionality) and *Other user-generated content* (collected, optional, app functionality); *Device or other IDs* (collected, optional — only with notifications on — app functionality); *App info and performance → Diagnostics* (collected, required while signed in, app functionality and analytics). Nothing is shared with third parties for their own use (Expo's push service is a service provider acting for Datalayer); nothing is sold; no data is collected for advertising |
+| Government apps | No |
+| Financial features | None: *My app doesn't provide any financial features* |
+| Health | None of the listed health features |
+| Advertising ID | **No**, the app does not use the advertising ID (no ads SDK; the generated manifest has no `AD_ID` permission, see `privacy-and-store.md` → *Permissions*) |
+| Generative AI: does the app generate content with AI? | **Yes.** How users can report: *Under every complete answer of an application or an agent, **Report** asks why (Offensive or harmful; Wrong or misleading) and sends the report to Datalayer support.* |
+
+### Test and release → Production (when promoting)
+
+| Field | Value |
+|---|---|
+| Release to promote | The internal testing release of **v0.0.3** (the build tested on the phone, 28 October 2026). If a newer tag was cut since, promote that one |
+| Countries / regions | All countries and regions (the app sells nothing; its services run in the EU and are reached from anywhere) |
+| Release name | `0.0.3` (the console proposes the version) |
+| Release notes (`en-US`) | `Datalayer puts your agents in your pocket: answer the approvals they ask for, follow your running applications and their activity, and talk to them wherever you are.` |
+| Rollout | Full rollout (or a staged 20% first, raised to 100% from *Releases overview* once no crash is reported) |
+| App signing | Play App Signing is on (the upload key is EAS's; Google holds the app signing key) — nothing to change |
+| Target API level | 36 (Android 16), `minSdk` 24 — meets the 2026 requirement for new apps |
+
+### Then
+
+1. *Publishing overview* → **Send for review**. The first review of a new app usually takes a few days; the status is on the Dashboard.
+2. If the developer account is a personal one created after November 2023, Production is unlocked only after a closed test of 14 days with 12 testers; the Dashboard says so, and the same release is then promoted to *Closed testing* first.
+3. After approval, every later tag reaches internal testing by itself (`release.yaml`), and is promoted to Production the same way; the store listing changes with the app only when *Send for review* is pressed again.
+
 
 ## Identity
 
@@ -17,20 +91,20 @@ Drafted 16 October 2026. On 19 October 2026 the app's name became **Datalayer**,
 |---|---|---|
 | Name (App Store Connect *Name*, 30 characters at most; Play *App name*, 30 characters at most) | Datalayer | The name on the phone (`app.config.ts`) and in both stores; _Datalayer Dev_ and _Datalayer Preview_ for the side-by-side builds, which are never listed |
 | iOS bundle id / Android package | `ai.datalayer.mobile` | Decided in `app.config.ts`; kept once a store record exists |
-| Category | Productivity (Apple and Google) | Draft |
-| Age rating | 4+ (Apple), Everyone / PEGI 3 (Google, from the questionnaire below) | Draft |
+| Category | Productivity (Apple and Google) | Decided (Google: 28 October 2026) |
+| Age rating | 4+ (Apple), Everyone / PEGI 3 (Google, from the questionnaire below) | Google: expected from the questionnaire's answers above |
 | Support URL | `https://datalayer.ai/support` | Live for browsers; see the status note below |
 | Privacy policy URL | `https://datalayer.ai/privacy` | Live for browsers; see the status note below |
 | Account deletion URL | `https://datalayer.ai/settings/profile/danger` (the web's *Delete account*; the app has *Settings → Delete account*) | Live for browsers (IAM 1.1.82 on prod1 since 16 October 2026); see the status note below |
 | Marketing URL | `https://datalayer.ai` | Live |
 
-**The URLs' HTTP status (checked 16 October 2026).** datalayer.ai is a single-page site on S3 behind CloudFront. Its viewer-request function serves the page with **200** only to a request whose `Accept` names `text/html`, as browsers and Googlebot send. Any other request — `curl` with its `Accept: */*`, a link checker, a crawler without `text/html` — gets S3's **404** (`NoSuchKey`) for `/support`, `/privacy`, `/settings/profile/danger` and `/docs/mobile-app`. Google Play's privacy-policy check and App Review open the pages as browsers, but a check that reads the status code with `*/*` would fail the submission. Before submitting, either the function also serves the page to extensionless paths outside `/.well-known/` (which must keep serving `apple-app-site-association` and `assetlinks.json` as files), or each URL is confirmed 200 with the store's own checker. That change to the production distribution is a website deploy, the website owner's.
+**The URLs' HTTP status (checked 28 October 2026).** `/support`, `/privacy`, `/settings/profile/danger`, `/docs/mobile-app` and `/terms` on datalayer.ai answer **200** to a browser's request and to one with `Accept: */*` alike (on 16 October the CloudFront function answered 404 to the latter; it no longer does), so a store checker that reads the status code passes.
 
 ## Words
 
 **Apple subtitle (30 characters at most):** Your agents, in your pocket
 
-**Google short description (80 characters at most):** Answer your agents' approvals and follow your running applications from your phone.
+**Google short description (80 characters at most):** Answer your agents' approvals and follow your applications from your phone. (74 characters; the earlier wording, with *running*, was 82 and over the limit)
 
 **Apple promotional text (170 characters at most):** Approve or reject what your Datalayer agents ask, the whole request in view. Follow your applications' activity, and talk to them, wherever you are.
 
@@ -113,7 +187,7 @@ Datalayer charges nothing in the app: there are no in-app purchases, subscriptio
 Taken on real release builds, with the review account, never with customer data:
 
 - iPhone 6.9" (Apple requires the largest size and scales it down) and iPad 13" (the app ships for iPad: `ios.supportsTablet` is `true` in `app.config.ts`);
-- Android phone, 2 to 8, 16:9 or 9:16; a 1024 × 500 feature graphic.
+- Android phone, 2 to 8, 16:9 or 9:16; the 1024 × 500 feature graphic is `visuals/feature-graphic-1024x500.png` and the 512 × 512 icon `visuals/app-icon-512.png` (both made 28 October 2026 from the Datalayer mark).
 
 Suggested set: Inbox with one approval; the full approval with *Approve*/*Reject*; Agents; an application's Activity; a conversation streaming; *In your name*; Settings with notifications.
 
