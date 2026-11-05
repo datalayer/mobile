@@ -32,7 +32,7 @@ for the side-by-side variants); the Expo project keeps its slug
 | Account | Cost baseline | Required human action |
 |---|---:|---|
 | Expo | Free tier (the `datalayer` account's plan on 19 October 2026) covers a limited number of builds a month; the app uses only Expo's built-in environments (`staging` builds on `preview`) and no over-the-air updates | Organization owner invites the release owner and creates a least-privilege robot token for CI |
-| Apple Developer Program | US$99/year in the US; verify the local price when enrolling | Account Holder accepts agreements, registers the bundle id and grants App Manager/Developer roles |
+| Apple Developer Program | US$99/year in the US; verify the local price when enrolling. Datalayer is enrolled since 5 November 2026 | Account Holder accepts agreements, registers the bundle id and grants App Manager/Developer roles |
 | App Store Connect | Included with the Apple program | App Manager creates the app record, review account and TestFlight groups |
 | Google Play Console | US$25 one-time registration fee; verify the local price when enrolling | Account owner completes verification, creates the app and grants the release manager least privilege |
 
@@ -71,9 +71,21 @@ The push-specific leak response is in `privacy-and-store.md`.
   key as the repository secret `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT`. The service
   account is invited in Play Console with release permissions on
   `ai.datalayer.mobile` only.
-- **Apple App Store**: off. Apple has not yet validated Datalayer's developer
-  account; the release workflow builds and submits nothing for iOS until it
-  has (the workflow's header and the README say how to turn it back on).
+- **Apple App Store**: on since 5 November 2026 (Datalayer is enrolled in the
+  Apple Developer Program; iOS was off from 20 October while Apple validated
+  the account). The same tag builds the production `.ipa` with EAS and submits
+  it with EAS Submit to App Store Connect, which processes it for TestFlight;
+  App Review and the release are done by hand in App Store Connect. Still the
+  Account Holder's, before the first iOS tag: the App Store Connect app id and
+  Apple team id in `eas.json` (`submit.production.ios`; the release refuses the
+  placeholders rather than skip iOS), the distribution certificate and
+  provisioning profile and the App Store Connect API key in EAS
+  (`eas credentials --platform ios`; EAS Submit uses the key kept there, so no
+  repository secret carries it), and EAS's iOS build number set above the
+  build uploaded by hand from Xcode on 19 October 2026
+  (`eas build:version:set --platform ios`). On iOS the app offers the
+  Datalayer account only, no third-party sign-in (Apple guideline 4.8;
+  `store-listing.md`).
 
 ## Readiness gate
 

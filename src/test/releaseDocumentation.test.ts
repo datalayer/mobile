@@ -96,9 +96,16 @@ describe('the mobile release runbook', () => {
     expect(release.indexOf('The release secrets are set')).toBeLessThan(release.indexOf('actions/checkout'));
     expect(release).toContain('GITHUB_STEP_SUMMARY');
     const readme = read('README.md');
-    for (const required of ['### Releasing', 'DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT', 'internal testing', '**iOS is off.**']) {
+    for (const required of ['### Releasing', 'DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT', 'internal testing', '**iOS is on (5 November 2026).**', 'eas build:version:set --platform ios']) {
       expect(readme).toContain(required);
     }
-    expect(read('docs/release-prerequisites.md')).toContain('DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT');
+    expect(readme).not.toContain('iOS is off');
+    const prerequisites = read('docs/release-prerequisites.md');
+    expect(prerequisites).toContain('DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT');
+    expect(prerequisites).toContain('**Apple App Store**: on since 5 November 2026');
+    // Apple guideline 4.8: iOS offers the Datalayer account only, so it does not apply.
+    const listing = read('docs/store-listing.md');
+    expect(listing).toContain('| Sign-in (Guideline 4.8) | **Does not apply (decided 5 November 2026).**');
+    expect(listing).not.toContain('iOS stays off');
   });
 });

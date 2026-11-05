@@ -9,7 +9,7 @@ correct this file with what changed. Privacy and Data safety answers are in
 [`privacy-and-store.md`](privacy-and-store.md). The process is in the README's
 *Publish* section.
 
-Drafted 16 October 2026. On 19 October 2026 the app's name became **Datalayer**, on the phone and in both stores, which is what the store records were already titled, so no listing is renamed. **28 October 2026:** the app was tested on a real Android phone and goes to production on Google Play; the section below is the console's own order, with the value to type in each field. iOS stays off (the Apple answers remain drafts).
+Drafted 16 October 2026. On 19 October 2026 the app's name became **Datalayer**, on the phone and in both stores, which is what the store records were already titled, so no listing is renamed. **28 October 2026:** the app was tested on a real Android phone and goes to production on Google Play; the section below is the console's own order, with the value to type in each field. **5 November 2026:** Datalayer is enrolled in the Apple Developer Program and iOS is on: a tag submits the build to App Store Connect, and on iOS the app signs in with the Datalayer account only (the Apple answers below).
 
 ## Google Play Console — the values to fill (28 October 2026)
 
@@ -180,7 +180,7 @@ Datalayer charges nothing in the app: there are no in-app purchases, subscriptio
 
 > Sign in:
 > 1. Open the app. The sign-in screen is the app's own.
-> 2. Enter the username (handle) and password given with these notes in **Handle or email** and **Password**, and press **Sign in**. Do not use *Continue with GitHub*, *Google* or *LinkedIn*: the review account signs in with its username and password only.
+> 2. Enter the username (handle) and password given with these notes in **Handle or email** and **Password**, and press **Sign in**. On Android, do not use *Continue with GitHub*, *Google* or *LinkedIn*: the review account signs in with its username and password only (on iOS there is no such button).
 > 3. The app opens on the Inbox, signed in.
 >
 > What you will see:
@@ -197,7 +197,7 @@ Datalayer charges nothing in the app: there are no in-app purchases, subscriptio
 | Question | Draft answer | Why |
 |---|---|---|
 | Export compliance: does the app use encryption? | It uses only encryption exempt from export documentation (HTTPS through the operating system); `ITSAppUsesNonExemptEncryption` is `false` | `app.config.ts`: `ios.config.usesNonExemptEncryption: false`; the app implements no cryptography of its own |
-| Sign-in (Guideline 4.8) | **Open again (24 October 2026).** The user decided that day that the app signs in inside itself, with a Datalayer handle or email and password and with *Continue with GitHub*, *Google* and *LinkedIn*; the 19 October answer (Datalayer-only, one *Sign in with Datalayer* button) no longer holds. An app that offers a third-party or social login must also offer an equivalent privacy-preserving login (in practice *Sign in with Apple*), unless an exception applies. To decide before any iOS submission: add *Sign in with Apple*, or hide the three providers on iOS | iOS is off for now (Android only); Google Play has no such rule. |
+| Sign-in (Guideline 4.8) | **Does not apply (decided 5 November 2026).** On iOS the app offers no third-party or social login: the sign-in screen has the Datalayer handle or email and password only, so the guideline, which asks an app offering a third-party login to offer an equivalent privacy-preserving one (*Sign in with Apple*), is not engaged. *Continue with GitHub*, *Google* and *LinkedIn* are Android's (`signInProvidersFor` in `src/auth/oauth.ts` gives iOS none); Google Play has no such rule. *Sign in with Apple* comes in a later version, and the providers return to iOS with it | The user, 5 November 2026; it replaces the 24 October answer (providers on both platforms), left open until Apple validated the account |
 | Account deletion (Guideline 5.1.1(v)) | In the app: *Settings → Delete account*, a request to IAM with a 30-day grace period, also on the web | Decided by the user 16 October 2026 |
 | User-generated content (Guideline 1.2) | No public content; a person's applications and conversations are private to their account and the people it is shared with | — |
 | Content rights | No third-party content is shown outside what the person's own applications produce | — |
@@ -221,7 +221,7 @@ Datalayer charges nothing in the app: there are no in-app purchases, subscriptio
 
 Taken on real release builds, with the review account, never with customer data:
 
-- iPhone 6.9" (Apple requires the largest size and scales it down) and iPad 13" (the app ships for iPad: `ios.supportsTablet` is `true` in `app.config.ts`);
+- iPhone 6.9" (Apple requires the largest size and scales it down) and iPad 13" (the app ships for iPad: `ios.supportsTablet` is `true` in `app.config.ts`). Still to take, on a TestFlight build of the first iOS tag (5 November 2026: iOS is on; CI captures Android only); the iOS sign-in screen shows the handle-and-password form alone, no provider button, which is what the screenshot must show;
 - Android phone, 2 to 8, 16:9 or 9:16; the 1024 × 500 feature graphic is `visuals/feature-graphic-1024x500.png` and the 512 × 512 icon `visuals/app-icon-512.png` (both made 28 October 2026 from the Datalayer mark).
 
 Suggested set: Inbox with one approval; the full approval with *Approve*/*Reject*; Agents; an application's Activity; a conversation streaming; *In your name*; Settings with notifications.
@@ -236,4 +236,4 @@ Suggested set: Inbox with one approval; the full approval with *Approve*/*Reject
 - signing and submit credentials in EAS (the Android upload key the first versions were signed with, the iOS distribution certificate and profile, the App Store Connect API key, the Play service account), and the App Store Connect app id and Apple Team id in `eas.json` (placeholders until then);
 - the review account's handle and password in both consoles, and a waiting approval on the day of review (a new one when the last reviewer answered it; the account and its application exist);
 - the screenshots on real builds, and the submission;
-- confirming the in-app **Report** above as Google's AI-generated content answer; and, for Apple 4.8, *Sign in with Apple* or no third-party provider on iOS (see the Apple answers).
+- confirming the in-app **Report** above as Google's AI-generated content answer. Apple 4.8 is settled: no third-party provider on iOS (see the Apple answers), nothing to answer in the console.

@@ -37,7 +37,7 @@ What each way of running the app needs:
 | `make build-dev-simulator`, built by EAS                              | **yes**      | no                                                                              | no                             | to run the Simulator |
 | `make build-dev-ios`, built by EAS for a real iPhone                  | **yes**      | **yes** (the iPhone registered with `eas device:create`)                        | no                             | no                   |
 | `make build-preview` / `build-staging`                                | **yes**      | **yes** for iOS                                                                 | for the staging track          | no                   |
-| `make publish-ios` / `publish-android` (CI releases Android only)     | **yes**      | **yes**                                                                         | **yes**                        | no                   |
+| `make publish-ios` / `publish-android` (a tag releases both in CI)    | **yes**      | **yes**                                                                         | **yes**                        | no                   |
 
 - **Expo account**: free at expo.dev. The free plan gives a limited number of cloud builds a month in a slower queue; paid plans give more and faster ones (see expo.dev/pricing). Then `eas login`.
 - **This project on Expo**: [`@datalayer/datalayer`](https://expo.dev/accounts/datalayer/projects/datalayer). `app.config.ts` names its owner (`datalayer`), slug and project id (`extra.eas.projectId`), so a cloud build needs your Expo account to be a member of the `datalayer` account; `eas init` is not needed. `npx eas-cli project:info` shows the project.
@@ -159,7 +159,7 @@ app's own, and Doctor there reports that duplicate; read CI's run instead.
 elsewhere while it is open, the route a tapped notification opens, a prompt
 streamed and stopped, and pause/reset with a second account refused. CI runs
 them (`e2e-android` on every run; `e2e-ios`, on main on `macos-15`, is off for now
-until Apple validates the developer account and the Simulator sign-in is fixed) on an `e2e`
+until the Simulator sign-in is fixed) on an `e2e`
 build it makes itself: `expo prebuild`, then Gradle or `xcodebuild`; nothing is
 built on a laptop. Maestro may run the five flows in any order on the one
 shared emulator or simulator, so every flow prepares authentication itself;
@@ -186,7 +186,7 @@ One promotion pipeline, from a committed and checked state to the stores. The Ma
 
 ### Releasing
 
-In CI, a release is a tag, and today it releases **Android only**, to Google Play's **internal testing** track. Set `version` in `app.config.ts`, commit and push, wait for that commit's Check to be green, then tag and push the tag:
+In CI, a release is a tag, and it releases to both stores: Google Play's **internal testing** track and App Store Connect, for **TestFlight**. Set `version` in `app.config.ts`, commit and push, wait for that commit's Check to be green, then tag and push the tag:
 
 ```bash
 git tag v0.1.0 && git push origin v0.1.0
@@ -194,15 +194,15 @@ git tag v0.1.0 && git push origin v0.1.0
 
 `.github/workflows/release.yaml` then:
 
-1. refuses to start without the repository secrets `EXPO_TOKEN` (an Expo robot token of the `datalayer` account) and `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT` (the Google Play service account's JSON key, below), and refuses a tag whose commit's Check run did not pass the jobs an Android release rests on (`check`, `doctor`, `manifests`, `hermes`, `e2e-account`, `e2e-android`; while iOS is off, `e2e-ios` and the store screenshots do not block it);
+1. refuses to start without the repository secrets `EXPO_TOKEN` (an Expo robot token of the `datalayer` account) and `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT` (the Google Play service account's JSON key, below), refuses `submit.production.ios` in `eas.json` still holding its placeholders (below), and refuses a tag whose commit's Check run did not pass the jobs a release rests on (`check`, `doctor`, `manifests`, `hermes`, `e2e-account`, `e2e-android`; `e2e-ios`, off until the Simulator sign-in is fixed, and the store screenshots do not block it);
 2. checks that the tag names `version`, runs `npm run check` and `npm run check:bundle`;
-3. has EAS build the production `.aab` (`eas build --platform android --profile production --non-interactive --freeze-credentials --wait`; EAS numbers it, `versionCode` above the last);
-4. submits that build with EAS Submit (`eas submit --platform android --profile production --id <build> --non-interactive`) to the internal testing track as a **completed** release (`eas.json`, `submit.production.android`: `track: internal`, `releaseStatus: completed`): the internal testers get it at once;
-5. writes the EAS build id, version, `versionCode` and EAS submission id in the run's summary, and creates the GitHub release with them.
+3. has EAS build the production `.aab` and `.ipa` (`eas build --platform android|ios --profile production --non-interactive --freeze-credentials --wait`, one after the other, both before anything is submitted; EAS numbers them, `versionCode` and `buildNumber` above the last);
+4. submits the `.aab` with EAS Submit (`eas submit --platform android --profile production --id <build> --non-interactive --wait`) to the internal testing track as a **completed** release (`eas.json`, `submit.production.android`: `track: internal`, `releaseStatus: completed`): the internal testers get it at once; then the `.ipa` (`eas submit --platform ios ...`) to App Store Connect (`submit.production.ios`), which processes it for TestFlight;
+5. writes the EAS build ids, version, `versionCode`, `buildNumber` and EAS submission ids in the run's summary, and creates the GitHub release with them.
 
-Promotion to production is started by hand: Actions → *Promote to production* → *Run workflow*, with the `versionCode` the internal testers ran and a rollout fraction (below 1 is a staged rollout; run it again to raise it). It promotes that same bundle and refuses a `versionCode` the internal track does not hold; Google reviews a production release before it reaches people.
+Promotion to production on Google Play is started by hand: Actions → *Promote to production* → *Run workflow*, with the `versionCode` the internal testers ran and a rollout fraction (below 1 is a staged rollout; run it again to raise it). It promotes that same bundle and refuses a `versionCode` the internal track does not hold; Google reviews a production release before it reaches people. On the App Store, the release owner tests the build in TestFlight, adds it to the version record in App Store Connect and submits it for App Review by hand (*What is needed to publish*, below).
 
-**iOS is off.** Apple has not yet validated Datalayer's developer account, so the release workflow builds and submits nothing for iOS. To turn it back on: fill `submit.production.ios` in `eas.json` (the App Store Connect app id and Apple team id), put the distribution certificate and App Store Connect API key in EAS (`eas credentials --platform ios`), and add the iOS build and submit steps beside the Android ones in `release.yaml` (its header says how).
+**iOS is on (5 November 2026).** Datalayer is enrolled in the Apple Developer Program, so a tag builds and submits iOS again (it was off from 20 October 2026, while Apple validated the account). Besides what Android needs, an iOS release needs: `submit.production.ios` in `eas.json` filled with the App Store Connect app id (`ascAppId`, the numeric Apple ID of the app record) and the Apple team id (`appleTeamId`) — the placeholders `ASC_APP_ID_PLACEHOLDER` and `APPLE_TEAM_ID_PLACEHOLDER` stand there until the account holder gives them, and `release.yaml` refuses them before anything is built, so a release never skips iOS silently; the iOS distribution certificate and provisioning profile in EAS (`eas credentials --platform ios`, signed in with the Apple account; `--freeze-credentials` never creates them); the App Store Connect API key in EAS (EAS Submit reads the key from `eas.json`'s `ascApiKeyPath`, `ascApiKeyId` and `ascApiKeyIssuerId` when they are set, and otherwise, as here, from the key stored in EAS credentials for the project, put there with `eas credentials --platform ios` → *App Store Connect API Key* or by a first interactive `eas submit`; with `--non-interactive` and no key in EAS, the submit fails instead of asking, so no repository secret carries it); and, once, before the first tag, EAS's iOS build number set above the one already in App Store Connect — the first build was uploaded by hand from Xcode on 19 October 2026 — with `eas build:version:set --platform ios` (read the number in App Store Connect → *TestFlight*). On iOS the app signs in with the Datalayer account only, no third-party provider (Apple guideline 4.8; `docs/store-listing.md`).
 
 **The service account key.** EAS Submit sends the bundle to Google Play with a Google Cloud service account that Play Console has invited with release permissions on `ai.datalayer.mobile` (Play Console → *Users and permissions*). A Play account owner creates its JSON key and stores the whole JSON as the repository secret `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT` (Settings → *Secrets and variables* → *Actions*); it is never committed. The workflow writes it to the runner's temporary directory, outside the checkout (EAS builds only a clean tree), points `DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT_KEY_PATH` at it (`eas.json` reads `serviceAccountKeyPath` from that variable), and removes it when the job ends. Where the variable is unset, as for `make publish-android` on a laptop, EAS Submit uses the service account key stored in EAS (`eas credentials --platform android`), if any.
 
@@ -245,9 +245,10 @@ Common preparation:
 Apple App Store:
 
 1. Enrol the organization in the [Apple Developer
-   Program](https://developer.apple.com/programs/) and accept the current
-   agreements. In Certificates, Identifiers & Profiles, register
-   `ai.datalayer.mobile` and its associated-domain and push capabilities.
+   Program](https://developer.apple.com/programs/) (done: Datalayer is
+   enrolled since 5 November 2026) and accept the current agreements. In
+   Certificates, Identifiers & Profiles, register `ai.datalayer.mobile` and
+   its associated-domain and push capabilities.
 2. In [App Store Connect](https://appstoreconnect.apple.com/), create the app
    record before the first upload, assign least-privilege Account Holder/Admin,
    App Manager and Developer roles, and complete any applicable agreements,
@@ -256,17 +257,22 @@ Apple App Store:
    provisioning profile and APNs key. Add an App Store Connect API key to EAS
    for non-interactive submission; keep a recovery owner for every credential.
    `eas.json` names the App Store Connect app id and the Apple Team id for
-   submission (`submit.staging.ios`, `submit.production.ios`); until they are
-   filled in, `ASC_APP_ID_PLACEHOLDER` and `APPLE_TEAM_ID_PLACEHOLDER` stand
-   there and an iOS submission must not be started.
+   submission (`submit.staging.ios`, `submit.production.ios`); until the
+   account holder fills them in, `ASC_APP_ID_PLACEHOLDER` and
+   `APPLE_TEAM_ID_PLACEHOLDER` stand there, and a tag refuses to build
+   (`release.yaml`) rather than skip the App Store. Before the first tag, set
+   EAS's iOS build number above the one uploaded by hand from Xcode on
+   19 October 2026 (`eas build:version:set --platform ios`).
 4. Complete the product page, age rating, App Privacy, accessibility,
    encryption/export, content-rights, sign-in and account-deletion answers.
    Put working demo credentials and the exact review journey in App Review
    Information. The draft answers live in `docs/store-listing.md`.
-5. Build and submit the production `.ipa`, wait for processing, exercise that
-   exact build with internal TestFlight and then any required external Beta App
-   Review. Select the tested build in the version record, add it for review,
-   submit it, and use manual or phased release only after the release gate.
+5. A tag builds and submits the production `.ipa` (Releasing, above; `make
+   publish-ios` does the same from a laptop). Wait for processing, exercise
+   that exact build with internal TestFlight and then any required external
+   Beta App Review. Select the tested build in the version record, add it for
+   review, submit it, and use manual or phased release only after the release
+   gate.
 
 Google Play:
 
@@ -325,7 +331,7 @@ commit → npm run check → preview build → staging (TestFlight, Play interna
 
 Before any store build:
 
-- `version` in `app.config.ts` is the user-facing version; Android `versionCode` and iOS `buildNumber` are managed by EAS (`appVersionSource: remote`, `autoIncrement` on `staging` and `production`) and only ever increase. The first store versions were built locally, outside EAS: before the first EAS store build, set EAS's numbers to the highest ones already uploaded to each store (`eas build:version:set --platform android` and `--platform ios`, read from Play Console → *App bundle explorer* and App Store Connect → *TestFlight*), so the next build is above them.
+- `version` in `app.config.ts` is the user-facing version; Android `versionCode` and iOS `buildNumber` are managed by EAS (`appVersionSource: remote`, `autoIncrement` on `staging` and `production`) and only ever increase. The first store versions were built locally, outside EAS: before the first EAS store build on a platform, set EAS's number to the highest one already uploaded to its store (`eas build:version:set --platform android` and `--platform ios`, read from Play Console → *App bundle explorer* and App Store Connect → *TestFlight*), so the next build is above it. Android's was set before the first tag (versionCode 5, 20 October 2026); iOS's is still to set, above the build uploaded by hand from Xcode on 19 October 2026, before the first iOS tag.
 - The build is made from a clean, pushed commit by EAS, never from a working tree. Record the commit, the EAS build id, the runtime version and the lockfile the release resolved (the `release-lockfile` artifact and its checksum; no lockfile is committed).
 - Signing and submit credentials live in EAS and the platform consoles, with named owners. Nothing is committed here.
 - Store listing, screenshots, privacy and data-safety answers, support and privacy-policy URLs, the account-deletion route and a review account without real customer data are current.
@@ -333,7 +339,7 @@ Before any store build:
 
 Apple (`make publish-ios`):
 
-1. `eas build --platform ios --profile production --auto-submit` produces the store `.ipa` and uploads it to App Store Connect.
+1. `eas build --platform ios --profile production --auto-submit` produces the store `.ipa` and uploads it to App Store Connect; a tag does the same in CI (Releasing, above).
 2. Internal TestFlight testers first, external testers after Beta App Review when needed.
 3. Complete App Privacy, export compliance, sign-in and account-deletion answers as Apple requires on the submission date.
 4. Select the tested build for App Review. Release manually or phased; keep the minimum-version kill switch (below) ready to stop a defective client.
