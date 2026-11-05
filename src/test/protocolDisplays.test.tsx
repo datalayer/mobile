@@ -41,12 +41,13 @@ describe('protocol displays on the phone', () => {
   it('draws an operation to confirm verbatim and sends the decision to Approvals', async () => {
     const display = protocolDisplayOf(wire('confirm', {
       company: 'shop.example', summary: 'Buy 2 tents for 300 EUR', terms: { total: { value: 30000, currency: 'EUR' } },
-      operation_ref: 'op-1', revision: 2, does: 'buy', was: { revision: 1, terms: {} }, only_the_person: true
+      operation_ref: 'op-1', revision: '2', does: 'buy', was: { revision: '1', terms: {} }, differences: ['quantity'],
+      expires_at: '2026-11-05T16:00:00+00:00', session: { signed_in: false }
     }, 'appr-1-confirm'))!;
     const { drawn, actions } = await draw(display);
     expect(drawn.getByText('Buy 2 tents for 300 EUR')).toBeTruthy();
     expect(drawn.getByText('total: {"value":30000,"currency":"EUR"}')).toBeTruthy();
-    expect(drawn.getByText('Version 2, changed since version 1 · It moves money · Only you can decide it')).toBeTruthy();
+    expect(drawn.getByText('Version 2, changed since version 1 · It moves money · You are not signed in there · Not in the summary: quantity')).toBeTruthy();
     await fireEvent.press(drawn.getByTestId('display-review'));
     expect(actions.onOpenApproval).toHaveBeenCalledWith('appr-1');
   });
@@ -54,10 +55,10 @@ describe('protocol displays on the phone', () => {
   it('labels each reply by who wrote it, says who answers now, and shows an unknown display by its text', async () => {
     const replies = protocolDisplayOf(wire('replies', {
       company: 'shop.example', conversation: 'c1', status: 'queued', responder: 'human',
-      replies: [{ sender: 'agent', text: 'Let me find someone.' }, { sender: 'human', text: 'Hi, I am Sam.' }]
+      replies: [{ author: 'agent', text: 'Let me find someone.' }, { author: 'human', name: 'Sam', text: 'Hi, I am Sam.' }]
     }))!;
     const first = await draw(replies);
-    expect(first.drawn.getByLabelText('shop.example, one of its people: Hi, I am Sam.')).toBeTruthy();
+    expect(first.drawn.getByLabelText('shop.example, one of its people (Sam): Hi, I am Sam.')).toBeTruthy();
     expect(first.drawn.getByText('Waiting for one of the company’s people.')).toBeTruthy();
     const odd = protocolDisplayOf({ type: 'application/vnd.example.chart+json', version: 1, id: 'x', text: 'A chart of sales.', data: { html: '<b>x</b>' } })!;
     const second = await draw(odd);

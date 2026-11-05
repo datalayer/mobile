@@ -81,7 +81,7 @@ describe('a Direct Conversation on the phone', () => {
   it('opens from what a company answered', async () => {
     const replies = protocolDisplayOf({
       type: 'application/vnd.datalayer.pap.replies+json', version: 2, id: 'r', text: 't',
-      data: { company: 'shop.example', conversation: 'conv_1', replies: [{ sender: 'agent', text: 'Hi.' }], status: 'idle' }
+      data: { company: 'shop.example', conversation: 'conv_1', replies: [{ author: 'agent', text: 'Hi.' }], status: 'idle' }
     })!;
     const onOpenDirect = jest.fn();
     const store = { read: async () => DEFAULT_PREFERENCE, write: async () => undefined };

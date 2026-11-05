@@ -132,7 +132,8 @@ function Body({ display, onOpenSignIn, onOpenApproval, onSignedIn, onOpenDirect,
             {[
               `Version ${display.revision}${display.was ? `, changed since version ${display.was.revision}` : ''}`,
               display.does ? DOES[display.does] : 'What it does is not said',
-              display.onlyThePerson ? 'Only you can decide it' : ''
+              display.signedIn === false ? 'You are not signed in there' : '',
+              display.differences.length ? `Not in the summary: ${display.differences.join(', ')}` : ''
             ]
               .filter(Boolean)
               .join(' · ')}
@@ -144,8 +145,8 @@ function Body({ display, onOpenSignIn, onOpenApproval, onSignedIn, onOpenDirect,
       return (
         <>
           {display.replies.map((reply, index) => (
-            <View key={index} accessible accessibilityLabel={`${replyAuthor(display.company, reply.sender)}: ${reply.text}`}>
-              <Text size="small" tone="muted">{replyAuthor(display.company, reply.sender)}</Text>
+            <View key={index} accessible accessibilityLabel={`${replyAuthor(display.company, reply.author, reply.name)}: ${reply.text}`}>
+              <Text size="small" tone="muted">{replyAuthor(display.company, reply.author, reply.name)}</Text>
               <Text selectable>{reply.text}</Text>
             </View>
           ))}
