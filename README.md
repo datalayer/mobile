@@ -395,6 +395,18 @@ Both are `major.minor.patch`, as `version` in `app.config.ts`; unset, `up.sh`
 serves `0.0.1`. Raise them only once the fixed build is live in both stores,
 or people are left with nothing to update to.
 
+### Watching the app from its servers
+
+A platform administrator reads how the app is doing at
+`https://datalayer.ai/admin/mobile`, over the last seven days: sign-ins from
+inside the app and why they were refused (IAM counts them by password or
+provider), app opens (the app's read of the minimum version at launch and on
+coming to the foreground), and what became of each push (ai-agents counts
+them: accepted by the provider, delivered, retried, failed with why, expired,
+or the device gone). The numbers are the OTEL service's `mobile` dashboard;
+the app itself reports nothing, and no count carries a person, a token or a
+message.
+
 ### Halt, rollback and recovery
 
 Halt a rollout for wrong-account data, incomplete or stale approval context,
