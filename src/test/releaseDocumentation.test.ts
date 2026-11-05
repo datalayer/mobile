@@ -52,11 +52,12 @@ describe('the mobile release runbook', () => {
   it('releases only a commit whose Check passed, with a pinned EAS CLI and the resolved lockfile kept', () => {
     const release = read('.github/workflows/release.yaml');
     expect(release).toContain('--workflow check.yaml --commit "$GITHUB_SHA"');
-    expect(release.indexOf("The tagged commit's Check passed")).toBeLessThan(release.indexOf('eas build'));
+    expect(release.indexOf("The tagged commit's Check passed")).toBeLessThan(release.indexOf('eas build --platform'));
     expect(release).toMatch(/eas-version: \d+\.\d+\.\d+\n/);
-    // While iOS is off, an Android release rests on these jobs, not on e2e-ios.
+    // e2e-ios is still off in check.yaml (the Simulator sign-in), so a release does not rest on it.
     expect(release).toContain('RELEASE_JOBS: check doctor manifests hermes e2e-account e2e-android');
     expect(release).not.toMatch(/RELEASE_JOBS:.*e2e-ios/);
+    expect(read('.github/workflows/check.yaml')).toMatch(/e2e-ios:\n    needs: e2e-account\n    if: false &&/);
     expect(release).toContain('name: release-lockfile');
     expect(read('.gitignore').split('\n')).toContain('package-lock.json');
     const readme = read('README.md');
@@ -64,17 +65,31 @@ describe('the mobile release runbook', () => {
     expect(readme).toContain('does not block merging');
   });
 
-  it('releases Android only, to the internal track, with the Play key from a secret written outside the checkout', () => {
+  it('releases both stores, Android to the internal track with the Play key from a secret written outside the checkout, iOS to App Store Connect', () => {
     const release = read('.github/workflows/release.yaml');
     const commands = release.split('\n').filter(line => !line.trim().startsWith('#'));
     const eas = commands.filter(line => /\beas (build|submit)\b/.test(line));
-    expect(eas.length).toBe(2);
+    expect(eas.map(line => line.trim().split(' ').slice(0, 4).join(' '))).toEqual([
+      'eas build --platform android',
+      'eas build --platform ios',
+      'eas submit --platform android',
+      'eas submit --platform ios'
+    ]);
     for (const line of eas) {
-      expect(line).toContain('--platform android');
+      expect(line).toContain('--profile production');
       expect(line).toContain('--non-interactive');
+      expect(line).toContain('--wait');
     }
-    expect(eas[0]).toContain('--freeze-credentials');
-    expect(commands.join('\n')).not.toMatch(/--platform (ios|all)\b/);
+    for (const build of eas.slice(0, 2)) {
+      expect(build).toContain('--freeze-credentials');
+    }
+    expect(commands.join('\n')).not.toMatch(/--platform all\b/);
+    // Both are built before either is submitted; the iOS submit takes the iOS build's id.
+    expect(release.indexOf('eas build --platform ios')).toBeLessThan(release.indexOf('eas submit --platform android'));
+    expect(eas[3]).toContain('--id "$IOS_BUILD_ID"');
+    // Placeholders in submit.production.ios stop the release before anything is built, never silently.
+    expect(release.indexOf('The App Store Connect ids are in eas.json')).toBeLessThan(release.indexOf('eas build --platform'));
+    expect(release).toContain('ASC_APP_ID_PLACEHOLDER');
     expect(release).toContain('secrets.DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT }}');
     expect(release).toContain('$RUNNER_TEMP/play-service-account.json');
     expect(release).toContain('DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT_KEY_PATH=$key');

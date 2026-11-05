@@ -9,7 +9,9 @@
 #
 # Google reviews a production release before it reaches people; the store
 # listing, content rating and Data safety form must be complete in Play Console.
-# iOS is off until Apple validates the developer account (release.yaml).
+# The App Store has no promotion here: a tag submits the `.ipa` to App Store
+# Connect for TestFlight (release.yaml), and App Review and the release are the
+# release owner's, by hand in App Store Connect.
 #
 # Needs the repository secret DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT (the Google
 # Play service account's JSON key, with "Release to production" on the app).

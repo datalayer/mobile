@@ -2,18 +2,40 @@
 # Distributed under the terms of the Modified BSD License.
 
 # A release, on a version tag (`v1.2.3`): the checks, then EAS builds the
-# store `.aab` from this commit and EAS Submit sends it to Google Play's
-# internal testing track as a completed release (eas.json, submit.production):
-# the internal testers get it at once. Promotion to closed testing and
-# production is the release owner's, by hand in Play Console (README, Releasing).
+# store `.aab` and `.ipa` from this commit and EAS Submit sends the `.aab` to
+# Google Play's internal testing track as a completed release (eas.json,
+# submit.production.android), the internal testers get it at once, and the
+# `.ipa` to App Store Connect (submit.production.ios), where it is processed
+# for TestFlight. Promotion to closed testing and production on Google Play, and
+# TestFlight testing and App Review on the App Store, are the release owner's,
+# by hand in the consoles (README, Releasing).
 #
-# iOS is off. Apple has not yet validated Datalayer's developer account, so this
-# workflow builds and submits nothing for iOS: no `.ipa`, no App Store Connect.
-# To turn iOS back on once the account is validated: put the App Store Connect
-# app id and team id in eas.json (submit.production.ios), the distribution
-# certificate and the App Store Connect API key in EAS (`eas credentials
-# --platform ios`), then add an iOS build and submit beside the Android ones
-# below (`--platform ios`, the same flags) and their ids to the summary.
+# iOS is on since 5 November 2026 (Datalayer is enrolled in the Apple Developer
+# Program; iOS was off from 20 October while Apple validated the account). An
+# iOS release needs, besides what Android needs:
+# - submit.production.ios in eas.json filled with the App Store Connect app id
+#   (ascAppId, the numeric Apple ID of the app record) and the Apple team id
+#   (appleTeamId). The placeholders ASC_APP_ID_PLACEHOLDER and
+#   APPLE_TEAM_ID_PLACEHOLDER stand there until the account holder gives them:
+#   the step "The App Store Connect ids are in eas.json" refuses them, loudly,
+#   before anything is built, so a release never skips iOS silently;
+# - the iOS distribution certificate and provisioning profile in EAS
+#   (`eas credentials --platform ios`, signed in with the Apple account);
+#   --freeze-credentials never creates them;
+# - the App Store Connect API key in EAS. EAS Submit's iOS configuration
+#   (docs.expo.dev/submit/eas-json) takes the key from eas.json
+#   (ascApiKeyPath, ascApiKeyId, ascApiKeyIssuerId) or, when those are not set,
+#   as here, from the key stored in EAS credentials for the project (put there
+#   with `eas credentials --platform ios` → App Store Connect API Key, or by a
+#   first interactive `eas submit`). With --non-interactive and no key in EAS,
+#   the submit fails instead of asking. So no repository secret carries it:
+#   the `.ipa` goes up with EAS's stored key, as the `.aab` goes with the
+#   Play service account's; EXPO_ASC_API_KEY_PATH and the EXPO_APPLE_* variables
+#   are not used;
+# - EAS's iOS build number above the one already in App Store Connect (the
+#   first build was uploaded by hand from Xcode on 19 October 2026):
+#   `eas build:version:set --platform ios` once, before the first tag (README,
+#   Publish).
 #
 # Needs the repository secrets EXPO_TOKEN (an Expo robot token) and
 # DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT (the Google Play service account's JSON
@@ -23,11 +45,12 @@
 # workflow on 20 October 2026; each tag adds the next versionCode.
 #
 # Before anything is built, the tagged commit's Check run must have passed the
-# jobs an Android release rests on: check, doctor, manifests (the generated
-# privacy manifest, Info.plist and Android permissions), hermes, e2e-account and
-# the Android Maestro flows (e2e-android). While iOS is off, e2e-ios and the
-# store screenshots do not block a release (the user's decision, 20 October
-# 2026); add e2e-ios back to RELEASE_JOBS when iOS is turned back on.
+# jobs a release rests on: check, doctor, manifests (the generated privacy
+# manifest, Info.plist and Android permissions), hermes, e2e-account and the
+# Android Maestro flows (e2e-android). The iOS Maestro flows (e2e-ios) stay off
+# in check.yaml until the Simulator sign-in is fixed (its `if: false &&`), so
+# they and the store screenshots do not block a release; add e2e-ios to
+# RELEASE_JOBS when that job runs again.
 # The repository commits no lockfile (the monorepo's rule): the lockfile this
 # install resolved is kept as the release's artifact, its checksum in the notes.
 # EAS installs with `npm install` too (eas.json's base profile:
@@ -70,7 +93,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: The tagged commit's Check passed, the jobs an Android release rests on
+      # iOS is on: a release goes to both stores, so the placeholders stop it before any
+      # build, never silently skipping the App Store (top of this file).
+      - name: The App Store Connect ids are in eas.json
+        run: |
+          node -e '
+            const ios = require("./eas.json").submit.production.ios;
+            const problems = [];
+            if (!/^\d+$/.test(ios.ascAppId ?? "")) problems.push(`ascAppId is "${ios.ascAppId}", not the App Store Connect app id (the numeric Apple ID of the app record)`);
+            if (!/^[A-Z0-9]{10}$/.test(ios.appleTeamId ?? "")) problems.push(`appleTeamId is "${ios.appleTeamId}", not the Apple team id`);
+            if (problems.length) {
+              console.error("An iOS release needs submit.production.ios in eas.json filled by the account holder: " + problems.join("; ") + ". Nothing was built.");
+              process.exit(1);
+            }
+          '
+      - name: The tagged commit's Check passed, the jobs a release rests on
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_JOBS: check doctor manifests hermes e2e-account e2e-android
@@ -137,11 +174,12 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
       # --freeze-credentials: CI uses the signing credentials kept in EAS and never creates any; a missing
       # one fails the build. The Android upload key (the keystore EAS holds for ai.datalayer.mobile,
-      # Play App Signing's upload key) is put in EAS by an account holder (`eas credentials`).
-      # Android only: iOS waits for Apple's validation of the account (top of this file).
+      # Play App Signing's upload key) and the iOS distribution certificate and provisioning profile
+      # are put in EAS by an account holder (`eas credentials`). Both platforms are built before
+      # either is submitted: a build that fails leaves nothing half-released.
       - name: Build the Android store bundle
         run: |
-          eas build --platform android --profile production --non-interactive --freeze-credentials --wait --json > "$RUNNER_TEMP/builds.json"
+          eas build --platform android --profile production --non-interactive --freeze-credentials --wait --json > "$RUNNER_TEMP/builds-android.json"
           node -e '
             const [build] = require(process.argv[1]);
             if (!build || build.platform !== "ANDROID" || build.status !== "FINISHED") {
@@ -151,24 +189,53 @@ jobs:
             const fs = require("fs");
             fs.appendFileSync(process.env.GITHUB_ENV, `BUILD_ID=${build.id}\n`);
             fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, [
-              "### Google Play release",
+              "### Store releases",
               "",
               `- Tag: ${process.env.GITHUB_REF_NAME} (${process.env.GITHUB_SHA})`,
-              `- EAS build: ${build.id}, version ${build.appVersion}, versionCode ${build.appBuildVersion}`,
+              `- EAS Android build: ${build.id}, version ${build.appVersion}, versionCode ${build.appBuildVersion}`,
               `- Bundle: ${build.artifacts?.applicationArchiveUrl ?? build.artifacts?.buildUrl ?? "see EAS"}`,
               ""
             ].join("\n"));
-          ' "$RUNNER_TEMP/builds.json"
-      - name: Submit it to Google Play's internal testing track
+          ' "$RUNNER_TEMP/builds-android.json"
+      - name: Build the iOS store archive
+        run: |
+          eas build --platform ios --profile production --non-interactive --freeze-credentials --wait --json > "$RUNNER_TEMP/builds-ios.json"
+          node -e '
+            const [build] = require(process.argv[1]);
+            if (!build || build.platform !== "IOS" || build.status !== "FINISHED") {
+              console.error("EAS did not finish an iOS build: " + JSON.stringify(build && { id: build.id, status: build.status }));
+              process.exit(1);
+            }
+            const fs = require("fs");
+            fs.appendFileSync(process.env.GITHUB_ENV, `IOS_BUILD_ID=${build.id}\n`);
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, [
+              `- EAS iOS build: ${build.id}, version ${build.appVersion}, build number ${build.appBuildVersion}`,
+              `- Archive: ${build.artifacts?.applicationArchiveUrl ?? build.artifacts?.buildUrl ?? "see EAS"}`,
+              ""
+            ].join("\n"));
+          ' "$RUNNER_TEMP/builds-ios.json"
+      - name: Submit the bundle to Google Play's internal testing track
         run: |
           set -o pipefail
           eas submit --platform android --profile production --id "$BUILD_ID" --non-interactive --wait 2>&1 | tee "$RUNNER_TEMP/submit.log"
           url="$(grep -oE 'https://expo\.dev/accounts/[^ ]+/submissions/[0-9a-f-]+' "$RUNNER_TEMP/submit.log" | head -1)"
           echo "SUBMISSION_URL=${url}" >> "$GITHUB_ENV"
           {
-            echo "- EAS submission: ${url##*/} (${url:-see EAS})"
+            echo "- EAS Android submission: ${url##*/} (${url:-see EAS})"
             echo "- Google Play: internal testing track, completed release; promote it by hand in Play Console"
-            echo "- iOS: not built or submitted (waiting for Apple's validation of the account)"
+          } >> "$GITHUB_STEP_SUMMARY"
+      # EAS Submit uploads the archive with the App Store Connect API key kept in EAS (top of this
+      # file); App Store Connect processes it for TestFlight. --wait: a submission that App Store
+      # Connect refuses (a build number not above the last, a missing agreement) fails this step.
+      - name: Submit the archive to App Store Connect
+        run: |
+          set -o pipefail
+          eas submit --platform ios --profile production --id "$IOS_BUILD_ID" --non-interactive --wait 2>&1 | tee "$RUNNER_TEMP/submit-ios.log"
+          url="$(grep -oE 'https://expo\.dev/accounts/[^ ]+/submissions/[0-9a-f-]+' "$RUNNER_TEMP/submit-ios.log" | head -1)"
+          echo "IOS_SUBMISSION_URL=${url}" >> "$GITHUB_ENV"
+          {
+            echo "- EAS iOS submission: ${url##*/} (${url:-see EAS})"
+            echo "- App Store Connect: processed for TestFlight; test it there, then add it to the version record and submit it for App Review by hand"
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Remove the service account key
         if: always()
@@ -178,12 +245,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           notes="$(node -e '
-            const builds = require(process.env.RUNNER_TEMP + "/builds.json");
+            const temp = process.env.RUNNER_TEMP;
+            const builds = [...require(temp + "/builds-android.json"), ...require(temp + "/builds-ios.json")];
             for (const b of builds) {
               console.log(`- ${b.platform}: build ${b.appBuildVersion} (${b.id}) — ${b.artifacts?.buildUrl ?? "see EAS"}`);
             }
           ')"
-          gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes "Submitted to Google Play internal testing (EAS submission ${SUBMISSION_URL##*/}). iOS is not released yet: it waits for Apple's validation of the developer account.
+          gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes "Submitted to Google Play internal testing (EAS submission ${SUBMISSION_URL##*/}) and to App Store Connect for TestFlight (EAS submission ${IOS_SUBMISSION_URL##*/}).
 
           ${notes}
 
