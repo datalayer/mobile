@@ -100,10 +100,11 @@ describe('the Expo project and the app it builds', () => {
     });
   });
 
-  it('names the App Store Connect app and Apple team for submission, as placeholders until they are known', () => {
+  it('names the App Store Connect app (6831191443) and the Apple team for submission, and what the record was created with', () => {
     for (const ios of [eas.submit.staging.ios, eas.submit.production.ios]) {
-      expect(ios.ascAppId).toMatch(/^(ASC_APP_ID_PLACEHOLDER|\d+)$/);
-      expect(ios.appleTeamId).toMatch(/^(APPLE_TEAM_ID_PLACEHOLDER|[A-Z0-9]{10})$/);
+      expect(ios.ascAppId).toBe('6831191443');
+      expect(ios.appleTeamId).toBe('3L9V98P2B6');
+      expect(ios).toMatchObject({ companyName: 'Datalayer', appName: 'Datalayer', sku: 'ai.datalayer.mobile', language: 'en-US' });
     }
   });
 });

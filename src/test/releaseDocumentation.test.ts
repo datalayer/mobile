@@ -87,9 +87,9 @@ describe('the mobile release runbook', () => {
     // Both are built before either is submitted; the iOS submit takes the iOS build's id.
     expect(release.indexOf('eas build --platform ios')).toBeLessThan(release.indexOf('eas submit --platform android'));
     expect(eas[3]).toContain('--id "$IOS_BUILD_ID"');
-    // Placeholders in submit.production.ios stop the release before anything is built, never silently.
+    // Ids missing from submit.production.ios stop the release before anything is built, never silently.
     expect(release.indexOf('The App Store Connect ids are in eas.json')).toBeLessThan(release.indexOf('eas build --platform'));
-    expect(release).toContain('ASC_APP_ID_PLACEHOLDER');
+    expect(release).toContain('not the App Store Connect app id');
     expect(release).toContain('secrets.DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT }}');
     expect(release).toContain('$RUNNER_TEMP/play-service-account.json');
     expect(release).toContain('DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT_KEY_PATH=$key');

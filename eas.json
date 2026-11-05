@@ -96,8 +96,12 @@
   "submit": {
     "staging": {
       "ios": {
-        "ascAppId": "ASC_APP_ID_PLACEHOLDER",
-        "appleTeamId": "3L9V98P2B6"
+        "ascAppId": "6831191443",
+        "appleTeamId": "3L9V98P2B6",
+        "companyName": "Datalayer",
+        "appName": "Datalayer",
+        "sku": "ai.datalayer.mobile",
+        "language": "en-US"
       },
       "android": {
         "track": "internal",
@@ -106,8 +110,12 @@
     },
     "production": {
       "ios": {
-        "ascAppId": "ASC_APP_ID_PLACEHOLDER",
-        "appleTeamId": "3L9V98P2B6"
+        "ascAppId": "6831191443",
+        "appleTeamId": "3L9V98P2B6",
+        "companyName": "Datalayer",
+        "appName": "Datalayer",
+        "sku": "ai.datalayer.mobile",
+        "language": "en-US"
       },
       "android": {
         "serviceAccountKeyPath": "$DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT_KEY_PATH",

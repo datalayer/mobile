@@ -15,10 +15,10 @@
 # iOS release needs, besides what Android needs:
 # - submit.production.ios in eas.json filled with the App Store Connect app id
 #   (ascAppId, the numeric Apple ID of the app record) and the Apple team id
-#   (appleTeamId). The placeholders ASC_APP_ID_PLACEHOLDER and
-#   APPLE_TEAM_ID_PLACEHOLDER stand there until the account holder gives them:
-#   the step "The App Store Connect ids are in eas.json" refuses them, loudly,
-#   before anything is built, so a release never skips iOS silently;
+#   (appleTeamId), filled on 5 November 2026 (the app record Datalayer,
+#   6831191443, team 3L9V98P2B6). The step "The App Store Connect ids are in
+#   eas.json" refuses anything but a numeric app id and a ten-character team
+#   id, loudly, before anything is built, so a release never skips iOS silently;
 # - the iOS distribution certificate and provisioning profile in EAS
 #   (`eas credentials --platform ios`, signed in with the Apple account);
 #   --freeze-credentials never creates them;
