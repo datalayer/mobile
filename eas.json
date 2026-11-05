@@ -97,7 +97,7 @@
     "staging": {
       "ios": {
         "ascAppId": "ASC_APP_ID_PLACEHOLDER",
-        "appleTeamId": "APPLE_TEAM_ID_PLACEHOLDER"
+        "appleTeamId": "3L9V98P2B6"
       },
       "android": {
         "track": "internal",
@@ -107,7 +107,7 @@
     "production": {
       "ios": {
         "ascAppId": "ASC_APP_ID_PLACEHOLDER",
-        "appleTeamId": "APPLE_TEAM_ID_PLACEHOLDER"
+        "appleTeamId": "3L9V98P2B6"
       },
       "android": {
         "serviceAccountKeyPath": "$DATALAYER_MOBILE_PLAY_SERVICE_ACCOUNT_KEY_PATH",
