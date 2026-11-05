@@ -26,10 +26,24 @@ export const SCOPES = ['openid', 'profile', 'email', 'offline_access'] as const;
 /** IAM's in-app sign-in, under the services' run URL. */
 export const MOBILE_SIGN_IN_PATH = '/api/iam/v1/oauth2/mobile';
 
-/** The providers the sign-in screen offers, each through IAM. */
+/** The providers IAM signs the app in with, each in a browser tab opened at IAM. */
 export const SIGN_IN_PROVIDERS = ['github', 'google', 'linkedin'] as const;
 
 export type SignInProvider = (typeof SIGN_IN_PROVIDERS)[number];
+
+/**
+ * The providers the sign-in screen offers on a platform (`Platform.OS`).
+ *
+ * On iOS, none: Apple's guideline 4.8 wants an app that offers a third-party
+ * login to offer Sign in with Apple as well, and the app does not yet (the
+ * user, 5 November 2026), so iOS signs in with the Datalayer account only, a
+ * handle or email and password. Android keeps the three. The provider code
+ * paths stay whole for Android and for the iOS version that adds Sign in with
+ * Apple: this is the one place that hides them.
+ */
+export function signInProvidersFor(platform: string): readonly SignInProvider[] {
+  return platform === 'ios' ? [] : SIGN_IN_PROVIDERS;
+}
 
 export type PasswordSignIn = {
   /** A handle or an email. */

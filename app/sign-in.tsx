@@ -4,10 +4,10 @@
  */
 
 import { useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Platform, StyleSheet, TextInput, View } from 'react-native';
 import { useSession } from '../src/auth/SessionProvider';
 import type { SignInProvider } from '../src/auth/oauth';
-import { PROVIDER_BUTTONS, signInOutcomeOf } from '../src/auth/signInWords';
+import { providerButtonsFor, signInOutcomeOf } from '../src/auth/signInWords';
 import { Button, Screen, Text } from '../src/components/primitives';
 import { PasswordToggle } from '../src/components/PasswordToggle';
 import { Wordmark } from '../src/identity/Wordmark';
@@ -19,9 +19,14 @@ type Way = 'password' | 'token';
 /**
  * Signing in happens here, in the app (the user, 24 October 2026): a handle or
  * email and password, or GitHub, Google or LinkedIn in a browser tab that opens
- * at the provider and comes back. A pasted API token only in development, e2e
- * and preview builds.
+ * at the provider and comes back. On iOS the providers are not offered: the
+ * Datalayer account only, until the app signs in with Apple too (Apple
+ * guideline 4.8; the user, 5 November 2026; `signInProvidersFor`). A pasted API
+ * token only in development, e2e and preview builds.
  */
+
+/** The provider buttons this platform offers; none on iOS. */
+const PROVIDER_BUTTONS = providerButtonsFor(Platform.OS);
 export default function SignIn() {
   const session = useSession();
   const { colors, radius } = useNativeTheme();
@@ -162,7 +167,7 @@ export default function SignIn() {
           }}
         />
       ) : null}
-      {way === 'password' ? (
+      {way === 'password' && PROVIDER_BUTTONS.length > 0 ? (
         <View style={styles.providers}>
           <Text tone="muted" style={styles.or}>
             or

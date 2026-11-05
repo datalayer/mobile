@@ -4,7 +4,7 @@
  */
 
 import { isProblem } from '@datalayer/core/lib/portable';
-import { OAuthFailure, SIGN_IN_PROVIDERS, type SignInProvider } from './oauth';
+import { OAuthFailure, signInProvidersFor, type SignInProvider } from './oauth';
 
 const PROVIDER_NAMES: Record<SignInProvider, string> = {
   github: 'GitHub',
@@ -12,11 +12,16 @@ const PROVIDER_NAMES: Record<SignInProvider, string> = {
   linkedin: 'LinkedIn'
 };
 
-/** The sign-in screen's provider buttons, in order. */
-export const PROVIDER_BUTTONS: readonly { provider: SignInProvider; label: string }[] = SIGN_IN_PROVIDERS.map(provider => ({
-  provider,
-  label: `Continue with ${PROVIDER_NAMES[provider]}`
-}));
+export type ProviderButton = { provider: SignInProvider; label: string };
+
+/**
+ * The sign-in screen's provider buttons on a platform (`Platform.OS`), in
+ * order: none on iOS, where the app offers the Datalayer account only
+ * (`signInProvidersFor`, Apple guideline 4.8).
+ */
+export function providerButtonsFor(platform: string): readonly ProviderButton[] {
+  return signInProvidersFor(platform).map(provider => ({ provider, label: `Continue with ${PROVIDER_NAMES[provider]}` }));
+}
 
 /**
  * What a failed sign-in says, and whether IAM asked for the authenticator's

@@ -19,9 +19,10 @@ import {
   redirectUriOf,
   refreshCredential,
   revoke,
+  signInProvidersFor,
   type OAuthConfig
 } from '../auth/oauth';
-import { PROVIDER_BUTTONS, signInOutcomeOf } from '../auth/signInWords';
+import { providerButtonsFor, signInOutcomeOf } from '../auth/signInWords';
 import { credentialFromKept } from '../auth/tokenStore';
 
 const ISSUER = 'https://prod1.datalayer.run/api/iam/v1/oauth';
@@ -187,11 +188,19 @@ describe('signing in inside the app', () => {
     for (const provider of SIGN_IN_PROVIDERS) {
       expect(providerAuthorizationEndpoint(RUN, provider)).not.toMatch(/datalayer\.ai/);
     }
-    expect(PROVIDER_BUTTONS.map(button => button.label)).toEqual([
+  });
+
+  it('offers the three providers on Android, and none on iOS: the Datalayer account only (Apple guideline 4.8)', () => {
+    expect(signInProvidersFor('android')).toEqual(['github', 'google', 'linkedin']);
+    expect(providerButtonsFor('android').map(button => button.label)).toEqual([
       'Continue with GitHub',
       'Continue with Google',
       'Continue with LinkedIn'
     ]);
+    expect(signInProvidersFor('ios')).toEqual([]);
+    expect(providerButtonsFor('ios')).toEqual([]);
+    // The web preview is a development aid: it shows what Android does.
+    expect(providerButtonsFor('web')).toHaveLength(3);
   });
 
   it('makes a PKCE pair whose challenge is the S256 of its verifier', async () => {
