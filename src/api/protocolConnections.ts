@@ -16,9 +16,16 @@ export type ProtocolConsent = {
   expiresAt: string;
 };
 
+/**
+ * Where the person's conversation at the company stands, as IAM keeps it beside the
+ * connection (PAP 0.4 §8.7): whether the company is working, whether a person is being
+ * found for it, who answers, whether it is closed, and when this was recorded.
+ */
 export type ProtocolSession = {
-  status: 'working' | 'idle' | 'queued' | 'closed';
+  working: boolean;
+  handoff: 'none' | 'pending';
   responder: 'agent' | 'human';
+  closed: boolean;
   at: string;
 };
 
@@ -36,7 +43,6 @@ export type ProtocolConnection = {
 
 const BASE = '/api/iam/v1/pap/my/connections';
 const SIGN_INS = new Set(['direct', 'device', 'mediated']);
-const STATUSES = new Set(['working', 'idle', 'queued', 'closed']);
 
 const strings = (value: unknown): string[] | null =>
   Array.isArray(value) && value.every(item => typeof item === 'string') ? (value as string[]) : null;
@@ -61,10 +67,14 @@ function consentOf(value: unknown): ProtocolConsent | null {
 function sessionOf(value: unknown): ProtocolSession | null {
   if (value === null || value === undefined) return null;
   const raw = record(value);
-  if (!STATUSES.has(String(raw.status)) || (raw.responder !== 'agent' && raw.responder !== 'human') || !validDate(raw.at)) {
+  if (
+    typeof raw.working !== 'boolean' || typeof raw.closed !== 'boolean' ||
+    (raw.handoff !== 'none' && raw.handoff !== 'pending') ||
+    (raw.responder !== 'agent' && raw.responder !== 'human') || !validDate(raw.at)
+  ) {
     throw new Error('The protocol Session held for this connection is malformed.');
   }
-  return { status: raw.status as ProtocolSession['status'], responder: raw.responder, at: raw.at };
+  return { working: raw.working, handoff: raw.handoff, responder: raw.responder, closed: raw.closed, at: raw.at };
 }
 
 export function protocolConnectionOf(value: unknown): ProtocolConnection {
@@ -123,6 +133,7 @@ export function consentWords(consent: ProtocolConsent | null, now = Date.now()):
 
 export function sessionWords(session: ProtocolSession | null): string {
   if (!session) return 'No conversation yet.';
-  const status = { working: 'Working on it', idle: 'Waiting for the next message', queued: 'Queued', closed: 'Closed' }[session.status];
+  if (!session.closed && session.handoff === 'pending') return 'Finding a person at the company to answer.';
+  const status = session.closed ? 'Closed' : session.working ? 'Working on it' : 'Waiting for the next message';
   return `${status}, answered by ${session.responder === 'agent' ? 'its agent' : 'a person'}.`;
 }

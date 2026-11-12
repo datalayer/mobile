@@ -6,7 +6,7 @@
 /** A deliberately small, redacted projection of the shared protocol audit ledger. */
 
 import type { Client } from './client';
-import { count, record, records, segment, text, type Raw } from './fields';
+import { record, records, segment, text, type Raw } from './fields';
 
 export type Protocol = 'pap' | 'pact' | 'ucp' | 'acp';
 export type ProtocolActivityKind = 'consent' | 'operation' | 'purchase' | 'signed_request' | 'receipt';
@@ -22,7 +22,11 @@ export type ProtocolActivityRow = {
   title: string;
   outcome: string;
   operationRef: string;
-  revision: number | null;
+  /** Opaque, the company's (Operations 3). */
+  revision: string | null;
+  /** Who approved the operation: the person, or their agent on a standing permission they gave. */
+  approver: 'user' | 'agent' | null;
+  approvalReference: string;
   amount: number | null;
   currency: string;
 };
@@ -63,6 +67,9 @@ const WORDS: Record<string, { kind: ProtocolActivityKind; title: string }> = {
   'acp.request.signed': { kind: 'signed_request', title: 'Request signed' }
 };
 
+/** A company that will not act on an approval it was sent (Operations 3, `approval_declined`). */
+const APPROVAL_DECLINED = { kind: 'operation', title: 'Approval declined by the company' } as const;
+
 const PROTOCOLS = ['pap', 'pact', 'ucp', 'acp'] as const;
 const OUTCOMES: Record<string, string> = { ok: 'Succeeded', error: 'Failed', is_error: 'Failed' };
 
@@ -90,17 +97,18 @@ const outcomeOf = (raw: Raw): string => {
  */
 export function protocolActivityRowOf(raw: Raw): ProtocolActivityRow | null {
   const method = text(raw.method);
-  const words = WORDS[method];
   const protocol = PROTOCOLS.find(value => method.startsWith(`${value}.`));
   const info = record(raw.client_info ?? raw.clientInfo);
+  const words = method === 'pap.error' && text(info.code) === 'approval_declined' ? APPROVAL_DECLINED : WORDS[method];
   const role = text(info.role);
   const uid = text(raw.uid);
   const at = text(raw.at);
   const appUid = text(raw.app_uid ?? raw.appUid);
   if (!words || !protocol || !uid || !at || !appUid || (role !== 'personal_agent' && role !== 'company')) return null;
 
-  const revisionValue = count(info.revision);
-  const revision = Number.isInteger(revisionValue) && revisionValue > 0 ? revisionValue : null;
+  const revision = /^[A-Za-z0-9_-]{1,256}$/.test(text(info.revision)) ? text(info.revision) : null;
+  const approver = info.approver === 'user' || info.approver === 'agent' ? info.approver : null;
+  const approvalReference = approver && /^[A-Za-z0-9_-]{1,128}$/.test(text(info.approval_reference)) ? text(info.approval_reference) : '';
   const amountValue = info.amount;
   const amount = typeof amountValue === 'number' && Number.isInteger(amountValue) && amountValue >= 0 ? amountValue : null;
   const currency = text(info.currency);
@@ -116,6 +124,8 @@ export function protocolActivityRowOf(raw: Raw): ProtocolActivityRow | null {
     outcome: outcomeOf(raw),
     operationRef: text(info.operation_id),
     revision,
+    approver,
+    approvalReference,
     amount: amount !== null && /^[A-Z]{3}$/.test(currency) ? amount : null,
     currency: amount !== null && /^[A-Z]{3}$/.test(currency) ? currency : ''
   };
@@ -138,6 +148,8 @@ export const protocolActivityDetail = (row: ProtocolActivityRow): string => {
   const exact = [
     row.operationRef ? `Reference ${row.operationRef}` : '',
     row.revision !== null ? `revision ${row.revision}` : '',
+    row.approver === 'user' ? 'approved by you' : row.approver === 'agent' ? 'approved by your agent on your standing permission' : '',
+    row.approvalReference ? `approval ${row.approvalReference}` : '',
     row.amount !== null ? `${row.currency} ${(row.amount / 100).toFixed(2)}` : ''
   ].filter(Boolean);
   return [row.counterpart, ...exact].join(' · ');

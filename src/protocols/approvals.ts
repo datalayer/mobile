@@ -12,14 +12,16 @@ export type TermRow = { label: string; value: string };
 export type PapOperation = {
   kind: 'pap-operation';
   company: string;
-  summary: string;
+  /** The company's own words; null when it wrote none (Operations 3): its terms say it. */
+  summary: string | null;
   action: string;
   terms: TermRow[];
-  revision: number;
+  /** Opaque, the company's (Operations 3). */
+  revision: string;
   reference: string;
   expiresAt: string;
   session: { reference: string; signedIn: boolean } | null;
-  previousRevision: number | null;
+  previousRevision: string | null;
   changes: { label: string; before: string; after: string }[];
 };
 
@@ -46,6 +48,10 @@ const integer = (value: unknown): number | null => {
   const parsed = typeof value === 'number' ? value : typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : NaN;
   return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : null;
 };
+
+/** An operation's revision: opaque, in the characters of the protocol's IDs (Operations 3). */
+const revisionOf = (value: unknown): string | null =>
+  typeof value === 'string' && /^[A-Za-z0-9_-]{1,256}$/.test(value) ? value : null;
 
 const labelOf = (key: string): string => {
   const words = key.replace(/[_-]+/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').trim().toLowerCase();
@@ -106,13 +112,15 @@ const actionOf = (value: unknown): string | null =>
 export function papOperationOf(approval: Approval): PapOperation | null {
   if (approval.toolName !== 'pap_confirm' || approval.runtimeName !== 'pap') return null;
   const args = approval.toolArgs;
-  const company = nonEmpty(args.company);
-  const summary = nonEmpty(args.summary);
+  const company = nonEmpty(args.company_name);
+  // The gateway always sends a summary: the company's own when `summary_given`, else its terms' values.
+  if (typeof args.summary_given !== 'boolean') return null;
+  const summary = args.summary_given ? nonEmpty(args.summary) : null;
   const reference = nonEmpty(args.operation_ref);
-  const revision = integer(args.revision);
+  const revision = revisionOf(args.revision);
   const terms = asRecord(args.terms);
   const action = actionOf(args.class);
-  if (!company || !summary || !reference || revision === null || !terms || !action) return null;
+  if (!company || (args.summary_given && !summary) || !reference || revision === null || !terms || !action) return null;
 
   const rawSession = asRecord(args.session);
   const sessionReference = rawSession ? nonEmpty(rawSession.ref) : null;
@@ -121,7 +129,7 @@ export function papOperationOf(approval: Approval): PapOperation | null {
       ? { reference: sessionReference, signedIn: rawSession.signed_in }
       : null;
   const was = asRecord(args.was);
-  const previousRevision = was ? integer(was.revision) : null;
+  const previousRevision = was ? revisionOf(was.revision) : null;
 
   return {
     kind: 'pap-operation', company, summary, action, terms: rowsOf(terms), revision, reference,
