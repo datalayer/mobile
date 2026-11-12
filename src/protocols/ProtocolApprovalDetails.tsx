@@ -30,10 +30,14 @@ export function ProtocolApprovalDetails({ proposal }: { proposal: ProtocolApprov
   return (
     <View style={{ gap: SPACE.sm }}>
       <SectionTitle>{`${proposal.company} asks you to confirm`}</SectionTitle>
-      <Field label="In the company’s own words" value={proposal.summary} />
+      {proposal.summary !== null ? (
+        <Field label="In the company’s own words" value={proposal.summary} />
+      ) : (
+        <Text tone="muted" size="small">The company wrote no summary: its terms say what you approve.</Text>
+      )}
       <Field label="What it does" value={proposal.action} />
       {proposal.terms.map(term => <Field key={term.label} label={term.label} value={term.value} />)}
-      <Field label="Revision" value={String(proposal.revision)} />
+      <Field label="Revision" value={proposal.revision} />
       <Field label="Reference" value={proposal.reference} />
       {proposal.expiresAt ? <Field label="Answer before" value={absoluteTime(proposal.expiresAt)} /> : null}
       {proposal.session ? <Field label="Session at the company" value={`${proposal.session.reference} · ${proposal.session.signedIn ? 'signed in as you' : 'not signed in'}`} /> : null}

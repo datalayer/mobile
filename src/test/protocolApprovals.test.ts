@@ -8,22 +8,32 @@ import { isKnownProtocolApproval, papOperationOf, protocolPurchaseOf } from '../
 import { deploymentProtocolsOf, identityLinesOf, IDENTITY_UNREAD, protocolLinesOf } from '../protocols/deployments';
 
 describe('protocol approvals on mobile', () => {
+  /**
+   * A pap_confirm approval's tool_args as the MCP gateway asks it today (PAP 0.4, Operations 3):
+   * the company's domain and name, its summary or its terms' values (`summary_given`), an opaque
+   * revision, the approval's reference, the Session by its one-way reference, the revision replaced.
+   */
+  const papArgs = {
+    company: 'air.example', company_name: 'Example Air',
+    summary: 'Move your flight to Tuesday for USD 25.00', summary_given: true,
+    terms: { flight: 'DL42', day: 'Tuesday', fee: { amount: '25', currency: 'usd' } },
+    reference: 'apr_Q2x9', operation_ref: 'op_92', revision: 'rev_3', expires_at: '2026-10-14T12:00:00+00:00',
+    digest: 'b1946ac92492d2347c6235b4d2611184', differences: [], class: 'write',
+    session: { ref: '3f2a9c01be47', signed_in: true }, disclosures: [],
+    was: { revision: 'rev_2', terms: { flight: 'DL42', day: 'Monday', fee: { amount: '20', currency: 'USD' } } }
+  };
+  const papApproval = (toolArgs: Record<string, unknown>) => approvalOf({
+    id: 'pap-1', agent_id: 'travel', runtime_name: 'pap', tool_name: 'pap_confirm', status: 'pending',
+    expires_at: '2026-10-14T12:00:00Z', tool_args: toolArgs
+  });
+
   it('reads an exact PAP operation, its revision, session and changed terms', () => {
-    const approval = approvalOf({
-      id: 'pap-1', agent_id: 'travel', runtime_name: 'pap', tool_name: 'pap_confirm', status: 'pending',
-      expires_at: '2026-10-14T12:00:00Z',
-      tool_args: {
-        company: 'Example Air', summary: 'Move your flight to Tuesday for USD 25.00', class: 'write',
-        operation_ref: 'op_92', revision: 3,
-        terms: { flight: 'DL42', day: 'Tuesday', fee: { amount: '25', currency: 'usd' } },
-        session: { ref: '3f2a9c01be47', signed_in: true },
-        was: { revision: 2, terms: { flight: 'DL42', day: 'Monday', fee: { amount: '20', currency: 'USD' } } }
-      }
-    });
+    const approval = papApproval(papArgs);
 
     expect(papOperationOf(approval)).toEqual(expect.objectContaining({
-      kind: 'pap-operation', company: 'Example Air', action: 'Create or change', revision: 3,
-      reference: 'op_92', expiresAt: '2026-10-14T12:00:00Z', previousRevision: 2,
+      kind: 'pap-operation', company: 'Example Air', summary: 'Move your flight to Tuesday for USD 25.00',
+      action: 'Create or change', revision: 'rev_3',
+      reference: 'op_92', expiresAt: '2026-10-14T12:00:00Z', previousRevision: 'rev_2',
       session: { reference: '3f2a9c01be47', signedIn: true }
     }));
     expect(papOperationOf(approval)?.terms).toContainEqual({ label: 'Fee', value: 'USD 25.00' });
@@ -33,10 +43,20 @@ describe('protocol approvals on mobile', () => {
     ]));
   });
 
+  it('shows the terms, not a summary, when the company wrote none', () => {
+    const operation = papOperationOf(papApproval({ ...papArgs, summary: 'DL42 · Tuesday · USD 25.00', summary_given: false }));
+    expect(operation?.summary).toBeNull();
+    expect(operation?.terms.map(term => term.label)).toEqual(['Flight', 'Day', 'Fee']);
+  });
+
   it.each([
-    ['missing revision', { company: 'C', summary: 'S', class: 'buy', operation_ref: 'op', terms: {} }],
-    ['unknown action class', { company: 'C', summary: 'S', class: 'teleport', operation_ref: 'op', revision: 1, terms: {} }],
-    ['missing exact terms', { company: 'C', summary: 'S', class: 'buy', operation_ref: 'op', revision: 1 }]
+    ['missing revision', { ...papArgs, revision: undefined }],
+    ['a numbered revision of Operations 2', { ...papArgs, revision: 3 }],
+    ['no word on its summary', { ...papArgs, summary_given: undefined }],
+    ['a given summary that is empty', { ...papArgs, summary: ' ' }],
+    ['no company name', { ...papArgs, company_name: undefined }],
+    ['unknown action class', { ...papArgs, class: 'teleport' }],
+    ['missing exact terms', { ...papArgs, terms: undefined }]
   ])('fails a malformed PAP projection closed: %s', (_name, toolArgs) => {
     const approval = approvalOf({ runtime_name: 'pap', tool_name: 'pap_confirm', tool_args: toolArgs });
     expect(isKnownProtocolApproval(approval)).toBe(true);

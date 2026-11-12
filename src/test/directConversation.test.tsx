@@ -18,7 +18,7 @@ import { ProtocolDisplayCard } from '../features/conversations/ProtocolDisplayCa
 import { DEFAULT_PREFERENCE, ThemeProvider } from '../theme/ThemeProvider';
 
 const answer = (over: Partial<DirectAnswer> = {}): DirectAnswer => ({
-  directConversation: 'dc_1', replies: [], status: 'working', responder: 'human', cursor: 'c1', display: null, ...over
+  directConversation: 'dc_1', replies: [], working: true, handoff: 'none', responder: 'human', closed: false, cursor: 'c1', display: null, ...over
 });
 
 function fakeClient() {
@@ -31,7 +31,7 @@ function fakeClient() {
     }),
     read: jest.fn(async (_target, cursor: string) => {
       calls.push(`read:${cursor}`);
-      return answer({ replies: [{ from: 'agent', text: 'Closing now.' }], status: 'closed', cursor: 'c2' });
+      return answer({ replies: [{ from: 'agent', text: 'Closing now.' }], working: false, closed: true, cursor: 'c2' });
     })
   } as unknown as DirectClient;
   return { client, calls };

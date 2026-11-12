@@ -23,7 +23,10 @@ const operation = {
     domain: 'northstar.example',
     company: 'https://northstar.example/private/orders/42?token=secret',
     operation_id: 'return-42',
-    revision: 3,
+    revision: 'rev_3',
+    // Who approved, on the row (Operations 3, datalayer_common.pap_events): the person, and the approval's reference.
+    approver: 'user',
+    approval_reference: 'apr_Q2x9',
     code: 'authorization_code_that_must_not_render',
     key_id: 'key-that-must-not-render',
     access_token: 'token-that-must-not-render',
@@ -46,7 +49,9 @@ describe('protocol Activity', () => {
       title: 'Change confirmed',
       outcome: 'Allowed · Succeeded',
       operationRef: 'return-42',
-      revision: 3,
+      revision: 'rev_3',
+      approver: 'user',
+      approvalReference: 'apr_Q2x9',
       amount: null,
       currency: ''
     });
@@ -54,7 +59,23 @@ describe('protocol Activity', () => {
     for (const secret of ['private/orders', 'authorization_code', 'key-that', 'token-that', 'proof-that', 'orders:write', 'trace_id', 'password']) {
       expect(rendered).not.toContain(secret);
     }
-    expect(protocolActivityDetail(row!)).toBe('northstar.example · Reference return-42 · revision 3');
+    expect(protocolActivityDetail(row!)).toBe('northstar.example · Reference return-42 · revision rev_3 · approved by you · approval apr_Q2x9');
+  });
+
+  it('says when the agent approved on a standing permission, and when the company declined an approval', () => {
+    const byAgent = protocolActivityRowOf({ ...operation, client_info: { ...operation.client_info, approver: 'agent' } });
+    expect(protocolActivityDetail(byAgent!)).toContain('approved by your agent on your standing permission');
+    const declined = protocolActivityRowOf({
+      ...operation, method: 'pap.error', decision: 'refused', outcome: 'error',
+      client_info: { ...operation.client_info, code: 'approval_declined' }
+    });
+    expect(declined).toMatchObject({ kind: 'operation', title: 'Approval declined by the company', approver: 'user' });
+    expect(protocolActivityRowOf({ ...operation, method: 'pap.error', client_info: { ...operation.client_info, code: 'other' } })).toBeNull();
+  });
+
+  it('reads no revision from a numbered one and no approver it does not know', () => {
+    const row = protocolActivityRowOf({ ...operation, client_info: { ...operation.client_info, revision: 3, approver: 'robot' } });
+    expect(row).toMatchObject({ revision: null, approver: null, approvalReference: '' });
   });
 
   it('uses only a hostname and validates a purchase receipt amount', () => {
