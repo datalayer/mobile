@@ -195,12 +195,14 @@ describe('prompt, stream, stop and resume', () => {
   beforeEach(() => { ids = 0; });
 
   it('starts a new conversation with the first message on the deployment kept runtime', async () => {
-    const { sessions, calls } = fakeSessions([turn({ type: 'CUSTOM', name: 'loop.session', value: { uid: 'id-2', state: 'open' } }, ...words('a1', 'Hello Ada'))]);
+    // The runtime mints the session's uid, a ULID, and names it first.
+    const minted = '01KA1B2C3D4E5F6G7H8J9K0M1N';
+    const { sessions, calls } = fakeSessions([turn({ type: 'CUSTOM', name: 'loop.session', value: { uid: minted, state: 'open' } }, ...words('a1', 'Hello Ada'))]);
     const controller = new ConversationController(appTarget(sessions), null, newId);
     expect(await controller.send('  Hi  ')).toBe(true);
-    expect(calls).toEqual([['start', { agent: 'desk-agent', deploymentUid: 'd1', appUid: 'a1', version: 3, opener: 'Hi', session: 'id-2' }]]);
+    expect(calls).toEqual([['start', { agent: 'desk-agent', deploymentUid: 'd1', appUid: 'a1', version: 3, opener: 'Hi' }]]);
     expect(texts(controller)).toEqual(['message:Hi', 'message:Hello Ada']);
-    expect(controller.getView().uid).toBe('id-2');
+    expect(controller.getView().uid).toBe(minted);
     expect(controller.running).toBe(false);
   });
 
