@@ -491,7 +491,7 @@ jobs:
   # After every flow: the computers the prompt flow started for the test account's own
   # conversations with the chat test application (when nothing ran it) are stopped, so each
   # lives minutes rather than until its 10 credits are spent. Run once both platforms and the
-  # screenshots are done, as they may share one; the kept computer and other runtimes stay.
+  # screenshots are done, as they may share one; the always-on computer and other runtimes stay.
   e2e-cleanup:
     needs: [e2e-account, e2e-android, e2e-ios, store-screenshots]
     if: always() && needs.e2e-account.outputs.ready == 'true'

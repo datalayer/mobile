@@ -35,9 +35,9 @@ if (reach.reach === 'closed') {
   const body = await read(`${E2E_RUN_URL}/api/iam/v1/usage/credits`);
   const held = (body.reservations ?? []).reduce((sum, r) => sum + (Number(r.credits) || 0), 0);
   const free = (Number(body.credits?.credits) || 0) - held;
-  const kept = chat.kept?.why ? ` Its kept computer: ${chat.kept.why}` : '';
+  const alwaysOn = chat.always_on_record?.why ? ` Its always-on computer: ${chat.always_on_record.why}` : '';
   const level = free < 10 ? 'warning' : 'notice';
-  console.log(`::${level} title=Prompt flow::Nothing runs the chat test application; the flow starts a computer of the test account's own (10 credits reserved). Free credits: ${free.toFixed(2)} (${held.toFixed(2)} held).${kept}`);
+  console.log(`::${level} title=Prompt flow::Nothing runs the chat test application; the flow starts a computer of the test account's own (10 credits reserved). Free credits: ${free.toFixed(2)} (${held.toFixed(2)} held).${alwaysOn}`);
 } else {
-  console.log(`::notice title=Prompt flow::The conversation is had on ${reach.reach === 'kept' ? 'its kept computer' : "a computer of the test account's own already running"}.`);
+  console.log(`::notice title=Prompt flow::The conversation is had on ${reach.reach === 'always_on' ? 'its always-on computer' : "a computer of the test account's own already running"}.`);
 }

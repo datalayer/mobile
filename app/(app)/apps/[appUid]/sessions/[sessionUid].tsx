@@ -6,7 +6,7 @@
 /**
  * A conversation with an application. A thread
  * is continued where ai-agents says it continues now, asked on every open:
- * the runtime its deployment is kept on, a runtime of the person's
+ * its deployment's always-on runtime, a runtime of the person's
  * own — started here first, after they agree, when nothing runs it for them —
  * or nowhere, in ai-agents' sentence. That holds for an application somebody
  * shared with them as for their own. `new` starts a conversation with the
