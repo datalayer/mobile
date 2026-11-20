@@ -16,7 +16,6 @@ describe('the resolved-bundle gate', () => {
       '/node_modules/@datalayer/jupyter-react/lib/index.js',
       '/tech/jupyter/ui/packages/react/lib/index.js',
       '/node_modules/@primer/react/lib/index.js',
-      '/node_modules/@primer/react-brand/lib/index.js',
       '/node_modules/styled-components/dist/styled-components.cjs.js',
       '/node_modules/react-dom/index.js',
       '/node_modules/@primer/primitives/dist/css/base.css',

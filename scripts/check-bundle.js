@@ -27,7 +27,7 @@ const FORBIDDEN = [
   { pattern: /\/node_modules\/@jupyterlab\//, why: 'JupyterLab' },
   { pattern: /\/node_modules\/@lumino\//, why: 'Lumino' },
   { pattern: /\/node_modules\/@datalayer\/jupyter-|\/tech\/jupyter\//, why: 'Datalayer Jupyter' },
-  { pattern: /\/node_modules\/@primer\/(react|react-brand)\//, why: 'Primer web' },
+  { pattern: /\/node_modules\/@primer\/react\//, why: 'Primer web' },
   { pattern: /\/node_modules\/styled-components\//, why: 'styled-components' },
   { pattern: /\/node_modules\/react-dom\//, why: 'React DOM' },
   { pattern: /\.css$/, why: 'CSS' },
