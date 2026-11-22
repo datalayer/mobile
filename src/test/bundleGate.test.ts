@@ -51,6 +51,9 @@ describe('the resolved-bundle gate', () => {
       '/tech/primer/addons/lib/theme/themes/agentThemeStyles.js',
       '/tech/primer/addons/lib/theme/css/createThemeCSSVars.js',
       '/node_modules/@datalayer/primer-addons/lib/theme/css/primerComponentsCss.js',
+      // The rounded radii the theme styles import (1.0.54).
+      '/node_modules/@datalayer/primer-addons/lib/theme/themes/roundedShape.js',
+      '/tech/primer/addons/lib/theme/themes/roundedShape.js',
       '/node_modules/react-native/index.js',
       '/node_modules/@expo/ui/build/index.js',
       '/tech/datalayer/mobile/app/(app)/_layout.tsx'

@@ -16,8 +16,9 @@ const path = require('path');
 
 // Primer Addons' portable entry and what it reaches; anything else of the package renders Primer web.
 // `css/primerComponentsCss` is a pure string builder `createThemeCSSVars` reads since 1.0.40: no DOM, no Primer React.
+// `themes/roundedShape` is the rounded radii the theme styles share since 1.0.54: plain data, a type import only.
 const PORTABLE =
-  /\/(primer\/addons|@datalayer\/primer-addons)\/lib\/theme\/(portable|portableTheme|themeTokens|fontStacks|agentEyes|colors\/[A-Za-z]+|indicators\/[A-Za-z]+|themes\/[a-z]+ThemeStyles|css\/createThemeCSSVars|css\/primerComponentsCss)\.js$/;
+  /\/(primer\/addons|@datalayer\/primer-addons)\/lib\/theme\/(portable|portableTheme|themeTokens|fontStacks|agentEyes|colors\/[A-Za-z]+|indicators\/[A-Za-z]+|themes\/[a-z]+ThemeStyles|themes\/roundedShape|css\/createThemeCSSVars|css\/primerComponentsCss)\.js$/;
 
 // Core's portable entry and the one pure model it re-exports (`personOf`, core 1.2.19: `models/Person` imports nothing).
 const CORE_PORTABLE = /\/(tech\/datalayer\/core|@datalayer\/core)\/lib\/(portable\/[A-Za-z]+|models\/Person)\.js$/;
