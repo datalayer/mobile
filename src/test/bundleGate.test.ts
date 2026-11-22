@@ -24,11 +24,11 @@ describe('the resolved-bundle gate', () => {
       '/node_modules/@datalayer/core/lib/client/index.js',
       '/node_modules/@datalayer/core/lib/models/Space.js',
       '/ai/agent-runtimes/lib/hooks/useToolApprovals.js',
-      '/tech/primer/addons/lib/theme/themes/loopTheme.js',
+      '/tech/primer/addons/lib/theme/themes/agentTheme.js',
       '/tech/primer/addons/lib/theme/themeRegistry.js',
       '/tech/primer/addons/lib/components/Box.js',
       '/node_modules/@datalayer/primer-addons/lib/index.js',
-      '/node_modules/@datalayer/primer-addons/lib/theme/themes/loopTheme.js'
+      '/node_modules/@datalayer/primer-addons/lib/theme/themes/agentTheme.js'
     ];
     const found: Violation[] = bundleViolations(forbidden);
     expect(found.map(v => v.source)).toEqual(forbidden);
@@ -44,11 +44,11 @@ describe('the resolved-bundle gate', () => {
       '/node_modules/@datalayer/agent-runtimes/lib/portable/index.js',
       '/tech/primer/addons/lib/theme/portable.js',
       '/node_modules/@datalayer/primer-addons/lib/theme/portable.js',
-      '/node_modules/@datalayer/primer-addons/lib/theme/colors/loopColors.js',
-      '/node_modules/@datalayer/primer-addons/lib/theme/themes/loopThemeStyles.js',
-      '/tech/primer/addons/lib/theme/loopEyes.js',
-      '/tech/primer/addons/lib/theme/colors/loopColors.js',
-      '/tech/primer/addons/lib/theme/themes/loopThemeStyles.js',
+      '/node_modules/@datalayer/primer-addons/lib/theme/colors/agentColors.js',
+      '/node_modules/@datalayer/primer-addons/lib/theme/themes/agentThemeStyles.js',
+      '/tech/primer/addons/lib/theme/agentEyes.js',
+      '/tech/primer/addons/lib/theme/colors/agentColors.js',
+      '/tech/primer/addons/lib/theme/themes/agentThemeStyles.js',
       '/tech/primer/addons/lib/theme/css/createThemeCSSVars.js',
       '/node_modules/@datalayer/primer-addons/lib/theme/css/primerComponentsCss.js',
       '/node_modules/react-native/index.js',

@@ -90,7 +90,7 @@ export function proofLines(): ProofLine[] {
       return problem.message;
     }),
     check('primer-addons: theme and eyes', () => {
-      const theme = exportPortableTheme('loop');
+      const theme = exportPortableTheme('agent');
       const tokens = Object.keys(theme.modes.light).length;
       expect(tokens > 0 && Object.keys(theme.modes.dark).length > 0, 'the portable theme is empty');
       const eyes = eyesGeometry('aside');

@@ -38,9 +38,9 @@
     "check": "npm run typecheck && npm run lint && npm run check:imports && npm test -- --ci"
   },
   "dependencies": {
-    "@datalayer/agent-runtimes": "^1.5.66",
+    "@datalayer/agent-runtimes": "^1.8.0",
     "@datalayer/core": "^1.2.20",
-    "@datalayer/primer-addons": "^1.0.38",
+    "@datalayer/primer-addons": "^1.0.54",
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo/material-symbols": "^0.1.1",
     "@expo/metro-runtime": "~57.0.16",

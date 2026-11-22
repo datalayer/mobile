@@ -112,7 +112,7 @@ On the *Accounting* deployment, kept running.
 ### A standalone agent (AG-UI, streamed)
 
 A runtime of the person's own, launched with Agent Runtimes' own launcher
-(`agent_runtimes.loop.launch.launch_cloud`, as `loop --cloud` does: 10 minutes,
+(`agent_runtimes.agent.launch.launch_cloud`, as `agent --cloud` does: 10 minutes,
 `example-simple`), reached directly at its agent-runtimes address with the
 person's token, as the phone reaches it (`agentRuntimesUrlOf`).
 

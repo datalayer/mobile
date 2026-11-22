@@ -198,7 +198,7 @@ describe('prompt, stream, stop and resume', () => {
   it('starts a new conversation with the first message on the deployment’s always-on runtime', async () => {
     // The runtime mints the session's uid, a ULID, and names it first.
     const minted = '01KA1B2C3D4E5F6G7H8J9K0M1N';
-    const { sessions, calls } = fakeSessions([turn({ type: 'CUSTOM', name: 'loop.session', value: { uid: minted, state: 'open' } }, ...words('a1', 'Hello Ada'))]);
+    const { sessions, calls } = fakeSessions([turn({ type: 'CUSTOM', name: 'agent.session', value: { uid: minted, state: 'open' } }, ...words('a1', 'Hello Ada'))]);
     const controller = new ConversationController(appTarget(sessions), null, newId);
     expect(await controller.send('  Hi  ')).toBe(true);
     expect(calls).toEqual([['start', { agent: 'desk-agent', deploymentUid: 'd1', appUid: 'a1', version: 3, opener: 'Hi' }]]);
