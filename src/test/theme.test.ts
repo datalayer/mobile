@@ -22,12 +22,12 @@ describe('Primer Addons tokens on a phone', () => {
 
   it('offers every theme but VS Code\'s, whose colours exist only inside the editor', () => {
     expect(themeVariants).not.toContain('vscode');
-    expect(themeVariants).toContain('loop');
+    expect(themeVariants).toContain('agent');
     expect(preferenceOf(JSON.stringify({ variant: 'vscode', colorMode: 'dark' })).variant).toBe(DEFAULT_PREFERENCE.variant);
   });
 
   it('reads the default Agents theme as the web does: white canvas, pill controls, Inter', () => {
-    const agents = nativeThemeOf(portableThemeOf('loop'), 'light');
+    const agents = nativeThemeOf(portableThemeOf('agent'), 'light');
     expect(agents.colors.background).toBe('#FFFFFF');
     expect(agents.colors.accentEmphasis).toBe('#7ADBB8');
     expect(agents.radius.control).toBe(999);
@@ -37,8 +37,8 @@ describe('Primer Addons tokens on a phone', () => {
   });
 
   it("names the default theme after the app, and every other theme as Primer Addons does", () => {
-    expect(themeLabelOf(portableThemeOf('loop'))).toBe('Agents');
-    expect(nativeThemeOf(portableThemeOf('loop'), 'dark').label).toBe('Agents');
+    expect(themeLabelOf(portableThemeOf('agent'))).toBe('Agents');
+    expect(nativeThemeOf(portableThemeOf('agent'), 'dark').label).toBe('Agents');
     expect(themeLabelOf(portableThemeOf('datalayer'))).toBe(portableThemeOf('datalayer').label);
     for (const variant of themeVariants) expect(themeLabelOf(portableThemeOf(variant))).not.toMatch(/loop/i);
   });
@@ -68,10 +68,10 @@ describe('the theme preference', () => {
   });
 
   it('resolves auto from the system, then from the theme', () => {
-    const auto = { variant: 'loop', colorMode: 'auto' } as const;
+    const auto = { variant: 'agent', colorMode: 'auto' } as const;
     expect(resolveMode(auto, 'dark', 'auto')).toBe('dark');
     expect(resolveMode(auto, null, 'dark')).toBe('dark');
     expect(resolveMode(auto, null, 'auto')).toBe('light');
-    expect(resolveMode({ variant: 'loop', colorMode: 'light' }, 'dark', 'dark')).toBe('light');
+    expect(resolveMode({ variant: 'agent', colorMode: 'light' }, 'dark', 'dark')).toBe('light');
   });
 });

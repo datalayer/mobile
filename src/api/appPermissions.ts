@@ -41,7 +41,7 @@ const parseModel = (item: Raw, expected: 'app' | 'appversion'): { spec: Raw; rev
     const value = record(stored);
     const state = record(value.state);
     const revision = Number(state.revision);
-    if (value.format !== 'loop.app.item/v1' || !value.spec || !Number.isInteger(revision) || revision < 1) return null;
+    if (value.format !== 'agent.app.item/v1' || !value.spec || !Number.isInteger(revision) || revision < 1) return null;
     return { spec: record(value.spec), revision };
   } catch {
     return null;

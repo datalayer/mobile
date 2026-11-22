@@ -27,7 +27,7 @@ export type ColorMode = 'light' | 'dark' | 'auto';
 
 export type ThemePreference = { variant: ThemeVariant; colorMode: ColorMode };
 
-export const DEFAULT_PREFERENCE: ThemePreference = { variant: 'loop', colorMode: 'auto' };
+export const DEFAULT_PREFERENCE: ThemePreference = { variant: 'agent', colorMode: 'auto' };
 
 const KEY = 'datalayer.theme';
 

@@ -10,7 +10,7 @@
  *
  * A thread names its deployment, never a runtime: where it is continued is
  * asked of ai-agents each time it is opened (`locateThread`) —
- * the runtime its deployment is kept on, a runtime of the person's own, one to
+ * its deployment's always-on runtime, a runtime of the person's own, one to
  * start, or why not — whoever's the application, so an old runtime address is
  * never trusted. A new conversation is located the same way from its
  * deployment (`locateNew`), the person's own or one shared with them.
@@ -66,12 +66,12 @@ export type ThreadPlace = { appUid: string; appName: string; deploymentUid: stri
 
 /**
  * Where one of the person's conversations is continued now (ai-agents'
- * `…/threads/{uid}/reach`): on a runtime that answers now — the one its
- * deployment is kept on, or one of their own — with a runtime of their own to
+ * `…/threads/{uid}/reach`): on a runtime that answers now — its
+ * deployment's always-on runtime, or one of their own — with a runtime of their own to
  * start first, or not, in ai-agents' sentence.
  */
 export type ThreadReach =
-  | ({ kind: 'reachable'; address: SessionAddress; on: 'kept' | 'own' } & ThreadPlace)
+  | ({ kind: 'reachable'; address: SessionAddress; on: 'always_on' | 'own' } & ThreadPlace)
   | ({ kind: 'launch' } & ThreadPlace)
   | { kind: 'closed'; why: string };
 
@@ -112,9 +112,9 @@ export function threadReachOf(raw: Raw): ThreadReach {
   if (raw.reach === 'launch') {
     return { kind: 'launch', ...place };
   }
-  if (raw.reach === 'kept' || raw.reach === 'runtime') {
+  if (raw.reach === 'always_on' || raw.reach === 'runtime') {
     const address = reachable(raw.url, raw.agent_id);
-    return address ? { kind: 'reachable', address, on: raw.reach === 'kept' ? 'kept' : 'own', ...place } : { kind: 'closed', why: REACH_UNREAD };
+    return address ? { kind: 'reachable', address, on: raw.reach === 'always_on' ? 'always_on' : 'own', ...place } : { kind: 'closed', why: REACH_UNREAD };
   }
   return { kind: 'closed', why: REACH_UNREAD };
 }

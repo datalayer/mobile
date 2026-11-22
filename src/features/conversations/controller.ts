@@ -162,7 +162,7 @@ export class ConversationController {
         type: 'MESSAGES_SNAPSHOT',
         messages: messages.map(message => ({ id: message.id, role: message.role, content: message.content }))
       });
-      conversation = reduceConversation(conversation, { type: 'CUSTOM', name: 'loop.session', value: described });
+      conversation = reduceConversation(conversation, { type: 'CUSTOM', name: 'agent.session', value: described });
       // A turn still running elsewhere is not followed here: it is read again once it ends.
       this.set({ conversation });
     } catch (error) {
@@ -202,10 +202,10 @@ export class ConversationController {
     const { sessions, agent, deploymentUid, appUid, version } = this.target;
     const uid = this.view.uid;
     if (!uid) {
-      const session = this.newId();
-      this.set({ uid: session });
+      // The runtime mints the session's uid (a ULID): its `agent.session`
+      // event, the stream's first, names it to `apply`.
       await this.stream(signal =>
-        sessions.start({ agent, deploymentUid, appUid, version, opener: said, session }, { onEvent: this.apply, signal })
+        sessions.start({ agent, deploymentUid, appUid, version, opener: said }, { onEvent: this.apply, signal })
       );
     } else {
       await this.stream(signal => sessions.message(uid, said, { onEvent: this.apply, signal }));

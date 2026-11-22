@@ -16,7 +16,6 @@ describe('the resolved-bundle gate', () => {
       '/node_modules/@datalayer/jupyter-react/lib/index.js',
       '/tech/jupyter/ui/packages/react/lib/index.js',
       '/node_modules/@primer/react/lib/index.js',
-      '/node_modules/@primer/react-brand/lib/index.js',
       '/node_modules/styled-components/dist/styled-components.cjs.js',
       '/node_modules/react-dom/index.js',
       '/node_modules/@primer/primitives/dist/css/base.css',
@@ -25,11 +24,11 @@ describe('the resolved-bundle gate', () => {
       '/node_modules/@datalayer/core/lib/client/index.js',
       '/node_modules/@datalayer/core/lib/models/Space.js',
       '/ai/agent-runtimes/lib/hooks/useToolApprovals.js',
-      '/tech/primer/addons/lib/theme/themes/loopTheme.js',
+      '/tech/primer/addons/lib/theme/themes/agentTheme.js',
       '/tech/primer/addons/lib/theme/themeRegistry.js',
       '/tech/primer/addons/lib/components/Box.js',
       '/node_modules/@datalayer/primer-addons/lib/index.js',
-      '/node_modules/@datalayer/primer-addons/lib/theme/themes/loopTheme.js'
+      '/node_modules/@datalayer/primer-addons/lib/theme/themes/agentTheme.js'
     ];
     const found: Violation[] = bundleViolations(forbidden);
     expect(found.map(v => v.source)).toEqual(forbidden);
@@ -45,13 +44,16 @@ describe('the resolved-bundle gate', () => {
       '/node_modules/@datalayer/agent-runtimes/lib/portable/index.js',
       '/tech/primer/addons/lib/theme/portable.js',
       '/node_modules/@datalayer/primer-addons/lib/theme/portable.js',
-      '/node_modules/@datalayer/primer-addons/lib/theme/colors/loopColors.js',
-      '/node_modules/@datalayer/primer-addons/lib/theme/themes/loopThemeStyles.js',
-      '/tech/primer/addons/lib/theme/loopEyes.js',
-      '/tech/primer/addons/lib/theme/colors/loopColors.js',
-      '/tech/primer/addons/lib/theme/themes/loopThemeStyles.js',
+      '/node_modules/@datalayer/primer-addons/lib/theme/colors/agentColors.js',
+      '/node_modules/@datalayer/primer-addons/lib/theme/themes/agentThemeStyles.js',
+      '/tech/primer/addons/lib/theme/agentEyes.js',
+      '/tech/primer/addons/lib/theme/colors/agentColors.js',
+      '/tech/primer/addons/lib/theme/themes/agentThemeStyles.js',
       '/tech/primer/addons/lib/theme/css/createThemeCSSVars.js',
       '/node_modules/@datalayer/primer-addons/lib/theme/css/primerComponentsCss.js',
+      // The rounded radii the theme styles import (1.0.54).
+      '/node_modules/@datalayer/primer-addons/lib/theme/themes/roundedShape.js',
+      '/tech/primer/addons/lib/theme/themes/roundedShape.js',
       '/node_modules/react-native/index.js',
       '/node_modules/@expo/ui/build/index.js',
       '/tech/datalayer/mobile/app/(app)/_layout.tsx'

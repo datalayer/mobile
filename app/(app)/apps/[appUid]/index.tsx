@@ -122,7 +122,7 @@ export default function ApplicationDetail() {
               <SectionTitle>Conversations</SectionTitle>
               {(() => {
                 // Hosted first: the conversation a person has at its address. Where it is had —
-                // kept running, or on a computer of their own started first — ai-agents says on opening.
+                // on its always-on runtime, or on a computer of their own started first — ai-agents says on opening.
                 const live = [...app.deployments]
                   .sort((a, b) => Number(b.target === 'hosted') - Number(a.target === 'hosted'))
                   .find(deployment => deployment.state === 'live' && deployment.target !== 'embedded');

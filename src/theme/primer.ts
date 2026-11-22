@@ -106,9 +106,9 @@ export const fontFamilyOf = (stack: string): string | undefined =>
 
 /**
  * The name a theme is shown with in Settings. The app's default theme is the
- * shared 'loop' variant, shown with the app's own name.
+ * shared 'agent' variant, shown as Agents.
  */
-const THEME_LABELS: Partial<Record<string, string>> = { loop: 'Agents' };
+const THEME_LABELS: Partial<Record<string, string>> = { agent: 'Agents' };
 export const themeLabelOf = (theme: { id: string; label: string }): string => THEME_LABELS[theme.id] ?? theme.label;
 
 export function nativeThemeOf(theme: PortableTheme, mode: ResolvedMode): NativeTheme {

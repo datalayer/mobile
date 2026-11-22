@@ -7,7 +7,7 @@ import { createClient } from '../api/client';
 import { readRunningPermissions } from '../api/appPermissions';
 
 const stored = (version: number, spec: Record<string, unknown>) => JSON.stringify({
-  format: 'loop.app.item/v1', state: { revision: version }, spec
+  format: 'agent.app.item/v1', state: { revision: version }, spec
 });
 
 const spec = {

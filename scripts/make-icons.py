@@ -22,7 +22,7 @@ ASSETS = Path(__file__).resolve().parent.parent / "assets"
 MARK = ASSETS / "datalayer-mark.svg"
 
 WHITE = "#FFFFFF"
-# Light tints of the brand's mint and sky (Primer Addons' loopBrand and brightPop),
+# Light tints of the brand's mint and sky (Primer Addons' agentBrand and brightPop),
 # so the green mark still reads on the development and preview icons installed beside the store one.
 DEVELOPMENT = "#DDF5EA"
 PREVIEW = "#DCEFFD"

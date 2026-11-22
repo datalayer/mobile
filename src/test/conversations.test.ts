@@ -20,9 +20,9 @@ import { ConversationController, FILE_ON_THE_WEB, ONE_TURN_AT_A_TIME } from '../
 import { blocksOf, linkAllowed, spansOf } from '../features/conversations/markdownBlocks';
 import { conversationFor, forgetConversations, HELD_LIMIT, heldCount, holdAs } from '../features/conversations/registry';
 
-const KEPT = {
+const ALWAYS_ON = {
   uid: 'd1', app_uid: 'a1', app_name: 'Desk', version: 3, target: 'hosted', state: 'live', always_on: true,
-  kept: { state: 'running', url: 'https://r1.datalayer.run/agent-runtimes/rt-9/', agent_id: 'desk-agent' }
+  always_on_record: { state: 'running', url: 'https://r1.datalayer.run/agent-runtimes/rt-9/', agent_id: 'desk-agent' }
 };
 
 describe('threads and where they are reached', () => {
@@ -38,7 +38,7 @@ describe('threads and where they are reached', () => {
   });
 
   it('never reads a conversation address from a deployment: only ai-agents locates it', () => {
-    const deployment = deploymentOf(KEPT) as Record<string, unknown>;
+    const deployment = deploymentOf(ALWAYS_ON) as Record<string, unknown>;
     expect(deployment.sessionAddress).toBeUndefined();
     expect(JSON.stringify(deployment)).not.toContain('rt-9');
   });
@@ -77,8 +77,8 @@ describe('threads and where they are reached', () => {
 
   it('continues a thread where ai-agents says it continues now, whoever the application is', async () => {
     const place = { session_uid: 's1', app_uid: 'a1', app_name: 'Desk', deployment_uid: 'd1', version: 4, owner: false };
-    expect(threadReachOf({ ...place, reach: 'kept', url: 'https://r1.datalayer.run/agent-runtimes/rt-9/', agent_id: 'desk' })).toEqual({
-      kind: 'reachable', on: 'kept', address: { baseUrl: 'https://r1.datalayer.run/agent-runtimes/rt-9', agent: 'desk' },
+    expect(threadReachOf({ ...place, reach: 'always_on', url: 'https://r1.datalayer.run/agent-runtimes/rt-9/', agent_id: 'desk' })).toEqual({
+      kind: 'reachable', on: 'always_on', address: { baseUrl: 'https://r1.datalayer.run/agent-runtimes/rt-9', agent: 'desk' },
       appUid: 'a1', appName: 'Desk', deploymentUid: 'd1', version: 4, owner: false
     });
     expect(threadReachOf({ ...place, reach: 'runtime', url: 'https://r1/agent-runtimes/rt-2', agent_id: 'desk' })).toMatchObject({ kind: 'reachable', on: 'own' });
@@ -88,10 +88,11 @@ describe('threads and where they are reached', () => {
     });
     // Fail closed: no address, not HTTPS, no agent, an unknown kind, no deployment.
     for (const raw of [
-      { ...place, reach: 'kept' },
+      { ...place, reach: 'always_on' },
+      { ...place, reach: 'kept', url: 'https://r1/agent-runtimes/rt-2', agent_id: 'desk' },
       { ...place, reach: 'runtime', url: 'http://r1/agent-runtimes/rt-2', agent_id: 'desk' },
       { ...place, reach: 'runtime', url: 'javascript:alert(1)', agent_id: 'desk' },
-      { ...place, reach: 'kept', url: 'https://r1/agent-runtimes/rt-2' },
+      { ...place, reach: 'always_on', url: 'https://r1/agent-runtimes/rt-2' },
       { ...place, reach: 'somewhere', url: 'https://r1/agent-runtimes/rt-2', agent_id: 'desk' },
       { ...place, deployment_uid: '', reach: 'launch' },
       { reach: 'closed' }
@@ -194,13 +195,15 @@ const texts = (controller: ConversationController) =>
 describe('prompt, stream, stop and resume', () => {
   beforeEach(() => { ids = 0; });
 
-  it('starts a new conversation with the first message on the deployment kept runtime', async () => {
-    const { sessions, calls } = fakeSessions([turn({ type: 'CUSTOM', name: 'loop.session', value: { uid: 'id-2', state: 'open' } }, ...words('a1', 'Hello Ada'))]);
+  it('starts a new conversation with the first message on the deployment’s always-on runtime', async () => {
+    // The runtime mints the session's uid, a ULID, and names it first.
+    const minted = '01KA1B2C3D4E5F6G7H8J9K0M1N';
+    const { sessions, calls } = fakeSessions([turn({ type: 'CUSTOM', name: 'agent.session', value: { uid: minted, state: 'open' } }, ...words('a1', 'Hello Ada'))]);
     const controller = new ConversationController(appTarget(sessions), null, newId);
     expect(await controller.send('  Hi  ')).toBe(true);
-    expect(calls).toEqual([['start', { agent: 'desk-agent', deploymentUid: 'd1', appUid: 'a1', version: 3, opener: 'Hi', session: 'id-2' }]]);
+    expect(calls).toEqual([['start', { agent: 'desk-agent', deploymentUid: 'd1', appUid: 'a1', version: 3, opener: 'Hi' }]]);
     expect(texts(controller)).toEqual(['message:Hi', 'message:Hello Ada']);
-    expect(controller.getView().uid).toBe('id-2');
+    expect(controller.getView().uid).toBe(minted);
     expect(controller.running).toBe(false);
   });
 
